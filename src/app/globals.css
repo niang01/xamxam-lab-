@@ -1,45 +1,63 @@
 @import "tailwindcss";
 
-/* Identité XAM-XAM LAB : noir profond, bleu technologique, cyan lumineux, blanc, violet, vert de fonctionnement. */
+/* Identité XAM-XAM LAB (docs/IDENTITE_VISUELLE.md) : mode sombre principal, mode clair au choix (en-tête).
+   Cyan et violet = accents ; vert = états réellement positifs ; toute couleur porteuse de sens a aussi un libellé. */
+@font-face { font-family: "Space Grotesk"; font-weight: 500; font-display: swap; src: url("/fonts/space-grotesk-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Space Grotesk"; font-weight: 700; font-display: swap; src: url("/fonts/space-grotesk-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url("/fonts/inter-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url("/fonts/inter-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url("/fonts/inter-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; font-display: swap; src: url("/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); }
+
 :root {
   color-scheme: dark;
-  --bg: #05070d;
-  --bg-2: #0a0f1c;
-  --panel: #0d1424;
-  --panel-2: #142039;
-  --line: #1f2d4d;
-  --fg: #f5f8ff;
-  --fg-2: #b5c2dd;
-  --fg-3: #7d8bab;
-  --tech: #1e5bff;
-  --tech-2: #6d95ff;
-  --cyan: #22e3ff;
+  --bg: #080d1b;
+  --bg-2: #0b1326;
+  --panel: #0e1830;
+  --panel-2: #14213f;
+  --line: #1e2e52;
+  --fg: #f8fafc;
+  --fg-2: #b8c4da;
+  --fg-3: #8a97b2;
+  --tech: #123b83;
+  --tech-2: #3b82f6;
+  --cyan: #22d3ee;
   --violet: #8b5cf6;
   --ok: #22c55e;
   --warn: #f59e0b;
   --danger: #ef4444;
 }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
+  :root[data-theme="system"] {
     color-scheme: light;
-    --bg: #f4f7fd; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #e8eef9; --line: #cdd7ea;
-    --fg: #07112a; --fg-2: #33405e; --fg-3: #5d6a87; --cyan: #0284a8; --tech-2: #1e5bff; --ok: #15803d; --warn: #b45309; --violet: #6d28d9;
+    --bg: #f8fafc; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #eef2f9; --line: #d5deec;
+    --fg: #080d1b; --fg-2: #26344f; --fg-3: #55627d; --tech-2: #123b83; --cyan: #0e7490; --violet: #6d28d9; --ok: #15803d; --warn: #b45309; --danger: #b91c1c;
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f7fd; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #e8eef9; --line: #cdd7ea;
-  --fg: #07112a; --fg-2: #33405e; --fg-3: #5d6a87; --cyan: #0284a8; --tech-2: #1e5bff; --ok: #15803d; --warn: #b45309; --violet: #6d28d9;
+  --bg: #f8fafc; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #eef2f9; --line: #d5deec;
+  --fg: #080d1b; --fg-2: #26344f; --fg-3: #55627d; --tech-2: #123b83; --cyan: #0e7490; --violet: #6d28d9; --ok: #15803d; --warn: #b45309; --danger: #b91c1c;
+}
+
+/* Logo : version claire ou sombre selon le thème effectif */
+.logo-clair { display: none; }
+:root[data-theme="light"] .logo-sombre { display: none; }
+:root[data-theme="light"] .logo-clair { display: block; }
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] .logo-sombre { display: none; }
+  :root[data-theme="system"] .logo-clair { display: block; }
 }
 
 html, body { background: var(--bg); color: var(--fg); }
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background-image: radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--tech) 14%, transparent), transparent),
                     radial-gradient(900px 500px at -10% 110%, color-mix(in srgb, var(--violet) 10%, transparent), transparent);
   background-attachment: fixed;
 }
-.font-mono, code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.font-mono, code, pre, kbd, samp { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: -0.01em; }
 
 /* Liseré « holographique » : décoratif uniquement, désactivé si l'utilisateur réduit les animations. */
 .holo { position: relative; }

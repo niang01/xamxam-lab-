@@ -69,7 +69,9 @@ Les lignes communes restantes sont des idiomes de bibliothèques et de framework
 ## 7. XAM-XAM MARKETPLACE
 La marketplace de XAM-XAM est un **module de XAM-XAM LAB** (rubrique *Tech News & Marketplace* : annonces `eco_items` de type `listing`, modération, sponsorisé identifié — commit `94e169d`). Elle ne dérive pas de BOUTIQUE E-COMMERCE : aucun fichier ni table en commun hormis les gabarits Capacitor ; aucun paiement n'y est implémenté.
 
-## 8. Ce qui reste à faire par l'exploitant
-1. **Créer le dépôt vide `xamxam-lab`** sur GitHub et y autoriser l'application Claude (la session n'a pas le droit de créer un dépôt). La session poussera alors l'extraction et vérifiera le lien.
-2. Après vérification du nouveau dépôt, et seulement sur décision de l'exploitant : retirer `xamxam-lab/` de la branche de travail du dépôt SUUF (le dossier n'a jamais été fusionné dans `main`).
-3. Donner accès à `boutique-Ecommerce` si son audit direct est souhaité.
+## 8. Transfert réalisé (17/11/2026)
+Dépôt privé **`niang01/xamxam-lab-`** créé par l'exploitant. Extraction poussée sur `main` : commit **`16eeabc32606b2b7f3363217f5ae8b9c53612f61`** « XAM-XAM LAB — import initial », **sans parent**, 441 fichiers. Vérifié depuis un **clone neuf** : 1 seul commit ; commits de la branche d'origine (`f05a256`, `8f47b57`, `70fcc11`) **absents** ; installation `npm ci`, typage, lint, 83/83 tests, build, 7/7 parcours e2e et APK Android réussis.
+
+## 9. Ce qui reste à décider par l'exploitant
+1. Après vérification du nouveau dépôt, et seulement sur décision de l'exploitant : retirer `xamxam-lab/` de la branche de travail du dépôt SUUF (le dossier n'a jamais été fusionné dans `main`).
+2. Donner accès à `boutique-Ecommerce` si son audit direct est souhaité.

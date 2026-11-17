@@ -1,6 +1,6 @@
 # XAM-XAM LAB — état de réalisation (17/11/2026)
 
-Projet autonome (code, base, comptes, API, configuration propres). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 83 tests unitaires/intégration, 7 parcours de bout en bout (serveur local et déploiement Docker sur PostgreSQL 16), build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 83 tests unitaires/intégration, 7 parcours de bout en bout (serveur local et déploiement Docker sur PostgreSQL 16), build sans avertissement.
 
 ## 1. Terminé et testé
 | Domaine | Fonctions |
@@ -18,6 +18,7 @@ Projet autonome (code, base, comptes, API, configuration propres). Preuves : [RA
 | Écosystème | Startups, concours (jury humain, conflits d'intérêts), mentors, offres et talents (consentement), actualités et annonces (sponsorisé identifié, modération), portfolio public |
 | Mobile | PWA installable ; **projets Android et iOS Capacitor ; APK et AAB Android compilés et signés** |
 | Séparation | Audit SUUF / boutique réalisé, couche API et accès base réécrits, extraction autonome vérifiée ([AUDIT_SEPARATION.md](AUDIT_SEPARATION.md)) |
+| Identité et interface | Logo A appliqué, thèmes sombre/clair/système, polices auto-hébergées, icônes web/Android/iOS, panneau contextuel XAM-XAM AI, barre d'état à valeurs réelles ([IDENTITE_VISUELLE.md](IDENTITE_VISUELLE.md)) |
 | Sécurité | Toutes les routes protégées (test automatique), rôles, limitation de débit, en-têtes, injection SPICE bloquée, processus de calcul isolés |
 
 ## 2. Partiellement opérationnel
@@ -27,7 +28,6 @@ Projet autonome (code, base, comptes, API, configuration propres). Preuves : [RA
 | Application iOS | Projet généré ; compilation sur macOS/Xcode non réalisée |
 | Visioconférence | Fonctionne en réseau local ; entre réseaux différents, un serveur TURN est nécessaire |
 | Voix (dictée, lecture) | API du navigateur ; wolof selon l'appareil, aucun service vocal wolof validé intégré |
-| Identité visuelle | 3 logos vectoriels, déclinaisons, icônes Android/iOS/web, jetons, maquettes réelles, fonds personnalisés — **en attente de validation** avant intégration ([IDENTITE_VISUELLE.md](IDENTITE_VISUELLE.md)) |
 | Textes en français uniquement | Messages ERC, libellés internes de certains calculs, réponses du moteur de règles |
 
 ## 3. En attente d'une API, d'un compte ou d'un équipement
@@ -40,8 +40,6 @@ Projet autonome (code, base, comptes, API, configuration propres). Preuves : [RA
 | Essais réels IoT / commandes / drones | Matériel de banc, habilitations, autorisation ANACIM |
 | MQTT chiffré | Certificat TLS |
 | Publication mobile | Clé de signature, comptes Google Play et Apple Developer |
-| Dépôt Git dédié | Création du dépôt vide `xamxam-lab` par l'exploitant + accès de l'application Claude (extraction prête et testée) |
-| Identité visuelle | Choix du logo (A recommandé) et validation de l'icône et du tableau de bord |
 
 ## 4. Non réalisé (affiché « non disponible » dans l'application, avec sa phase)
 CAO paramétrique (OpenCascade) et éléments finis (Gmsh/CalculiX) ; physique temps réel (Rapier) ; Digital Twin synchronisé ; émulation réseau (Containerlab) ; MAVLink/PX4/ArduPilot et SITL ; vidéo des appareils ; BLE, LoRa, Modbus ; édition simultanée (CRDT) et tableau blanc ; SMAP, NDVI, couches GIBS ; notifications push natives ; double authentification (TOTP, WebAuthn) ; paiements et abonnements ; classes virtuelles planifiées.

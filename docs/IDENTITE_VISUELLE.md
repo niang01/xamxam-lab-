@@ -1,6 +1,6 @@
-# Identité visuelle — XAM-XAM LAB (proposition du 17/11/2026, **en attente de validation**)
+# Identité visuelle — XAM-XAM LAB (proposition A appliquée le 17/11/2026)
 
-Réalisée d'après le document « XAM-XAM LAB — Design, identité, logo, icône » fourni par l'exploitant. Conformément à son § 13, **rien n'est encore intégré à l'application** : l'exploitant valide d'abord le logo, l'icône et le tableau de bord ; une seule commande applique ensuite les icônes (voir § 8).
+Réalisée d'après le document « XAM-XAM LAB — Design, identité, logo, icône » fourni par l'exploitant. L'exploitant ayant donné son autorisation générale le 17/11/2026, la **proposition A recommandée est appliquée** : jetons de couleur, polices auto-hébergées, logo dans l'en-tête (symbole seul sur téléphone), sélecteur de thème (sombre par défaut, clair, système), icônes web, Android et iOS. Changer de proposition reste possible en une commande (§ 8).
 
 Tout se trouve dans [`design/identite/`](../design/identite) et se régénère par scripts (aucune image générée par IA n'est utilisée comme logo).
 
@@ -59,13 +59,13 @@ Jetons proposés : [`design/identite/jetons.css`](../design/identite/jetons.css)
 | Panneau XAM-XAM AI CORE | `xamxam-ai-sombre.png` | `xamxam-ai-clair.png` |
 | Tableau de bord (Pixel 7) | `mobile-tableau-de-bord-sombre.png` | `mobile-tableau-de-bord-clair.png` |
 
-L'organisation décrite au § 8 du cahier (barre latérale, barre supérieure avec langues WO/FR/EN, zone centrale) existe déjà ; le panneau contextuel droit et la barre d'état inférieure sont **à concevoir après validation** (non représentés pour ne pas montrer de fonctionnalité absente).
+L'organisation décrite au § 8 du cahier est complète : barre latérale, barre supérieure (langues WO/FR/EN, thème, notifications, compte), zone centrale, **panneau contextuel droit XAM-XAM AI** (bouton ✦, même gouvernance qu'AI CORE, rubrique ouverte transmise comme contexte) et **barre d'état inférieure** (connexion, serveur et base, mode de l'IA, appareils vus depuis 15 min, commandes et actions IA en attente — valeurs réelles, libellées). Les captures du dossier `maquettes/` datent d'avant l'intégration.
 
 ## 7. Fonds d'écran personnalisés (portrait du propriétaire)
 `node design/identite/fonds.mjs <portrait-detoure.png> <dossier>` : **montage photographique** du portrait original (fond blanc retiré par remplissage depuis les bords ; visage, coiffure, teint et tenue inchangés ; aucune régénération ni retouche du visage) sur une scène vectorielle XAM-XAM. Formats : ordinateur 16:9 (3840 × 2160, zone libre à gauche pour les icônes), smartphone vertical (1290 × 2796, haut et bas dégagés), bannière de couverture (1584 × 396), visuel de profil (1080 × 1080), chacun avec et sans texte.
 Le portrait étant une donnée personnelle, **ni la photo ni les fonds ne sont versionnés** ; ils ont été remis directement à l'exploitant.
 
-## 8. Après validation
-1. Indiquer la proposition retenue (A, B ou C) et les retouches souhaitées.
+## 8. Changer de proposition
+1. Indiquer la proposition retenue (B ou C) et les retouches souhaitées ; modifier `r` dans `generer.py`.
 2. `python3 design/identite/generer.py && node design/identite/exporter.mjs --appliquer` : icônes web (`public/`), Android (`mipmap-*`, fond `#080D1B`) et iOS (`AppIcon`).
-3. Reporter `jetons.css` dans `src/app/globals.css`, remplacer le texte « XAM-XAM LAB » de l'en-tête par le logo, relancer les parcours e2e (dont « aucune page plus large que l'écran »), recompiler l'APK.
+3. Copier les nouveaux logos dans `public/brand/` (sans le rectangle de fond), relancer les parcours e2e, recompiler l'APK.
