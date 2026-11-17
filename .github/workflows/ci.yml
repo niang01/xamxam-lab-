@@ -1,0 +1,29 @@
+# Intégration continue de XAM-XAM LAB : aucune clé requise.
+name: XAM-XAM LAB
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  qualite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: package-lock.json }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r workers/requirements.txt
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: XX_PYTHON="$(which python)" npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: PW_CHROMIUM="$(node -e "console.log(require('playwright').chromium.executablePath())")" npx playwright test --trace off

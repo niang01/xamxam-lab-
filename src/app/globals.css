@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Identité XAM-XAM LAB : noir profond, bleu technologique, cyan lumineux, blanc, violet, vert de fonctionnement. */
+:root {
+  color-scheme: dark;
+  --bg: #05070d;
+  --bg-2: #0a0f1c;
+  --panel: #0d1424;
+  --panel-2: #142039;
+  --line: #1f2d4d;
+  --fg: #f5f8ff;
+  --fg-2: #b5c2dd;
+  --fg-3: #7d8bab;
+  --tech: #1e5bff;
+  --tech-2: #6d95ff;
+  --cyan: #22e3ff;
+  --violet: #8b5cf6;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f4f7fd; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #e8eef9; --line: #cdd7ea;
+    --fg: #07112a; --fg-2: #33405e; --fg-3: #5d6a87; --cyan: #0284a8; --tech-2: #1e5bff; --ok: #15803d; --warn: #b45309; --violet: #6d28d9;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f7fd; --bg-2: #ffffff; --panel: #ffffff; --panel-2: #e8eef9; --line: #cdd7ea;
+  --fg: #07112a; --fg-2: #33405e; --fg-3: #5d6a87; --cyan: #0284a8; --tech-2: #1e5bff; --ok: #15803d; --warn: #b45309; --violet: #6d28d9;
+}
+
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-image: radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--tech) 14%, transparent), transparent),
+                    radial-gradient(900px 500px at -10% 110%, color-mix(in srgb, var(--violet) 10%, transparent), transparent);
+  background-attachment: fixed;
+}
+.font-mono, code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* Liseré « holographique » : décoratif uniquement, désactivé si l'utilisateur réduit les animations. */
+.holo { position: relative; }
+.holo::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(120deg, transparent 30%, color-mix(in srgb, var(--cyan) 16%, transparent) 50%, transparent 70%);
+  background-size: 250% 100%; opacity: .35; animation: sweep 9s linear infinite;
+}
+@keyframes sweep { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .holo::before { animation: none; } }
+
+.grid-bg {
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+@media print {
+  aside, nav, header[data-shell], .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+}

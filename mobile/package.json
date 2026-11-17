@@ -1,0 +1,24 @@
+{
+  "name": "xamxam-lab-mobile",
+  "version": "0.2.0",
+  "private": true,
+  "description": "XAM-XAM LAB — applications Android et iOS (Capacitor) connectées à la plateforme",
+  "scripts": {
+    "sync": "cap sync",
+    "android:debug": "cap sync android && cd android && ./gradlew assembleDebug",
+    "android:release": "cap sync android && cd android && ./gradlew assembleRelease",
+    "ios:open": "cap sync ios && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.10",
+    "@capacitor/ios": "^7.6.10",
+    "@capacitor/network": "^7.0.4",
+    "@capacitor/status-bar": "^7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.10",
+    "typescript": "^5.9.3"
+  }
+}

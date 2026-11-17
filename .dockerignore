@@ -1,0 +1,13 @@
+node_modules
+.next
+data
+backups
+test-results
+playwright-report
+mobile
+firmware/**/.pio
+.env
+*.tsbuildinfo
+.extra-ca.pem
+.venv
+design

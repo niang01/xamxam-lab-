@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>XAM-XAM LAB</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #05070d; color: #f5f8ff; font-family: system-ui, sans-serif; padding: 24px; box-sizing: border-box; }
+  main { max-width: 420px; text-align: center; }
+  h1 { font-family: ui-monospace, monospace; letter-spacing: .2em; color: #22e3ff; font-size: 22px; }
+  p { color: #b5c2dd; line-height: 1.5; }
+  button { margin-top: 16px; background: #1e5bff; color: #fff; border: 0; border-radius: 10px; padding: 12px 20px; font-size: 16px; }
+  small { display: block; margin-top: 24px; color: #7d8bab; }
+</style>
+</head>
+<body>
+<main>
+  <h1>XAM-XAM LAB</h1>
+  <p id="msg">La plateforme est injoignable : vérifiez la connexion Internet.<br><span lang="en">The platform cannot be reached: check the Internet connection.</span></p>
+  <button id="retry">Réessayer · Retry</button>
+  <small>Aucune donnée n'est affichée hors connexion dans l'application : les pages déjà consultées restent disponibles dans le navigateur (PWA).</small>
+</main>
+<script>
+  document.getElementById("retry").addEventListener("click", function () { location.reload(); });
+</script>
+</body>
+</html>

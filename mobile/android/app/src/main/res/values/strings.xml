@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">XAM-XAM LAB</string>
+    <string name="title_activity_main">XAM-XAM LAB</string>
+    <string name="package_name">sn.xamxam.lab</string>
+    <string name="custom_url_scheme">sn.xamxam.lab</string>
+</resources>

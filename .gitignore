@@ -1,0 +1,14 @@
+node_modules
+.next
+data
+next-env.d.ts
+*.tsbuildinfo
+test-results
+playwright-report
+.env
+firmware/**/include/xx_config.h
+firmware/**/.pio
+backups
+.extra-ca.pem
+.venv/
+design/identite/export/png/
