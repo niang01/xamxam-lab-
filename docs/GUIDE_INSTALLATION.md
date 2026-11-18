@@ -19,17 +19,31 @@ XX_PYTHON=$PWD/.venv/bin/python XX_ADMIN_EMAILS=vous@exemple.sn npm run dev   # 
 Créez votre compte avec l'adresse de `XX_ADMIN_EMAILS` : il reçoit le rôle administrateur. Les données sont dans `./data/pglite`.
 
 ## 3. Production avec Docker Compose (recommandé)
+Prérequis serveur : Docker 24+ avec Compose, ports 80 et 443 ouverts, un nom de domaine dont l'enregistrement DNS pointe vers le serveur.
 ```bash
-cp .env.example .env        # renseigner au minimum POSTGRES_PASSWORD, SESSION_SECRET (openssl rand -base64 48), XX_ADMIN_EMAILS
-docker compose up -d --build
-docker compose ps           # db, app (healthy), mqtt
+git clone https://github.com/niang01/xamxam-lab-.git xamxam-lab && cd xamxam-lab
+cp .env.example .env                  # renseigner les valeurs (voir ci-dessous)
+node scripts/verifier-config.mjs      # contrôle avant mise en ligne : doit afficher « Configuration acceptable »
+docker compose --profile https up -d --build
+docker compose ps                     # db et app « healthy », backup et https « Up »
 ```
-- Application : port `3100` (variable `APP_PORT`) à placer derrière HTTPS. Exemple Caddy : `lab.mondomaine.sn { reverse_proxy 127.0.0.1:3100 }`.
-- MQTT : port `1883` ; en production, activer TLS (`MQTTS_PORT=8883`, `MQTT_TLS_CERT`, `MQTT_TLS_KEY`) et laisser `MQTT_ALLOW_INSECURE=false`.
+À renseigner dans `.env` : `POSTGRES_PASSWORD`, `SESSION_SECRET` et `XX_ENCRYPTION_KEY` (deux valeurs différentes : `openssl rand -base64 48`), `XX_ADMIN_EMAILS`, `XX_DOMAIN` (ex. `lab.mondomaine.sn`). Facultatif : `ANTHROPIC_API_KEY`, `METEOMATICS_USERNAME/PASSWORD`, `XX_TURN_*`.
+
+| Service | Rôle |
+|---|---|
+| `db` | PostgreSQL 16, volume `db-data` |
+| `app` | plateforme web (port interne 3100 ; `APP_PORT` pour un accès direct) |
+| `https` (profil `https`) | Caddy : certificat Let's Encrypt obtenu et renouvelé automatiquement, HTTP/2 et HTTP/3, redirection HTTP → HTTPS |
+| `backup` | sauvegarde complète vérifiable toutes les `XX_BACKUP_INTERVAL_S` secondes (24 h par défaut), conservée `XX_BACKUP_RETENTION_DAYS` jours (14) ; récupération : `docker compose cp backup:/app/backups ./sauvegardes` |
+| `mqtt` (profil `iot`) | passerelle MQTT des appareils ; exige TLS (`MQTTS_PORT=8883`, `MQTT_TLS_CERT`, `MQTT_TLS_KEY`) ou, sur un banc d'essai local, `MQTT_ALLOW_INSECURE=true` : `docker compose --profile https --profile iot up -d` |
+
+- Mise à jour : `git pull && docker compose --profile https up -d --build` (les migrations de base s'appliquent au démarrage, sans perte de données).
+- Sans le profil `https` : placer votre propre mandataire HTTPS devant le port 3100.
 - Registre d'images indisponible ou limité : `IMAGE_REGISTRY=mirror.gcr.io/library`.
 - Proxy d'entreprise qui intercepte TLS : `EXTRA_CA_FILE=chemin/vers/ca.pem` (fichier dans le dossier du projet ; utilisé seulement pendant la construction).
+- Essai local du HTTPS : `XX_DOMAIN=localhost`, `HTTP_PORT=8080`, `HTTPS_PORT=8443` (certificat de l'autorité locale de Caddy, non reconnu par les navigateurs ; la redirection HTTP → HTTPS vise alors le port 443).
 
-**Vérifié le 17/11/2026** : pile construite et démarrée (PostgreSQL 16, application « healthy », passerelle MQTT), 7 parcours Playwright réussis contre ce déploiement, moteur Python opérationnel dans le conteneur.
+**Vérifié le 18/11/2026** : `verifier-config` accepte la configuration ; pile `db`, `app`, `backup`, `https` démarrée ; HTTPS par Caddy (HTTP/2, HTTP/3 annoncé, HSTS, CSP, redirection 308) ; sauvegardes produites à l'intervalle demandé et rétention appliquée (fichier de plus de 14 jours supprimé) ; **10/10 parcours Playwright à travers HTTPS** (cookies `Secure`), 0 erreur dans les journaux.
 
 ## 4. Production sans Docker (systemd)
 ```bash

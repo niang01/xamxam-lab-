@@ -41,7 +41,7 @@ Les dossiers `workers/` (ngspice, Python) et `services/` (MQTT, agent local) acc
 
 ## Vérifications
 ```bash
-npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 106 tests (PGlite, ngspice, pvlib, CoolProp)
+npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 111 tests (PGlite, ngspice, pvlib, CoolProp)
 npm run build && npm run test:e2e                 # 7 parcours Playwright (ordinateur + Pixel 7, MQTT, agent série, WebRTC)
 pio run -d firmware/xamxam-node -e xiao_esp32s3   # firmware du nœud (PlatformIO)
 ```

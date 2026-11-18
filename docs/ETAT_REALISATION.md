@@ -1,6 +1,6 @@
 # XAM-XAM LAB — état de réalisation (17/11/2026)
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 106 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 111 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
 
 ## 1. Terminé et testé
 | Domaine | Fonctions |
@@ -17,6 +17,7 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Projets / Academy / Collaboration | Rapports calculé/simulé/mesuré, mémoire guidé ; cours, QCM corrigé serveur, certificats vérifiables ; messagerie, **visioconférence WebRTC** (audio, vidéo, partage d'écran) |
 | XAM-XAM MARKETPLACE | Rubrique dédiée : annonces (8 catégories, état, prix en FCFA ou sur demande, quantité, remise, caractéristiques déclarées par le vendeur), recherche et filtres, favoris, demandes avec messagerie acheteur ↔ vendeur, cycle de vie (brouillon, publiée, réservée, vendue, retirée), signalements et modération humaine motivée, sponsorisé identifié, notifications, journal d'audit. **Aucun paiement** : mise en relation uniquement |
 | Écosystème | Startups, concours (jury humain, conflits d'intérêts), mentors, offres et talents (consentement), actualités et annonces (sponsorisé identifié, modération), portfolio public |
+| Déploiement | Docker Compose clé en main : PostgreSQL 16, HTTPS automatique (Caddy, Let's Encrypt), sauvegardes périodiques avec rétention, passerelle MQTT optionnelle (profil `iot`, TLS exigé), contrôle de configuration avant mise en ligne (`scripts/verifier-config.mjs`) ; vérifié à travers HTTPS |
 | Mobile | PWA installable ; **projets Android et iOS Capacitor ; APK et AAB Android compilés et signés** |
 | Séparation | Audit SUUF / boutique réalisé, couche API et accès base réécrits, extraction autonome vérifiée ([AUDIT_SEPARATION.md](AUDIT_SEPARATION.md)) |
 | Identité et interface | Logo A appliqué, thèmes sombre/clair/système, polices auto-hébergées, icônes web/Android/iOS, panneau contextuel XAM-XAM AI, barre d'état à valeurs réelles ([IDENTITE_VISUELLE.md](IDENTITE_VISUELLE.md)) |

@@ -29,7 +29,7 @@ COPY --from=build /app/services ./services
 COPY --from=build /app/next.config.ts /app/tsconfig.json ./
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/src ./src
-RUN useradd --create-home --uid 10001 xamxam && mkdir -p /app/data && chown -R xamxam /app/data
+RUN useradd --create-home --uid 10001 xamxam && mkdir -p /app/data /app/backups && chown -R xamxam /app/data /app/backups
 USER xamxam
 EXPOSE 3100 1883
 CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3100"]

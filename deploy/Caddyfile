@@ -1,0 +1,13 @@
+# XAM-XAM LAB — mandataire HTTPS (profil Docker Compose « https »).
+# XX_DOMAIN = nom de domaine public (ex. lab.mondomaine.sn) : certificat Let's Encrypt obtenu et renouvelé automatiquement
+# (ports 80 et 443 ouverts, DNS pointant vers le serveur). XX_DOMAIN=localhost : certificat de l'autorité locale de Caddy (essais).
+{$XX_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3100 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+	log {
+		output stdout
+		format console
+	}
+}

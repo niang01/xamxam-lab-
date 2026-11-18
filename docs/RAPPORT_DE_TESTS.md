@@ -7,17 +7,19 @@ Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'env
 |---|---|---|
 | Typage strict | `npm run typecheck` | ✅ 0 erreur |
 | Lint | `npm run lint` | ✅ 0 erreur, 0 avertissement |
-| Tests unitaires + intégration | `XX_PYTHON=… npm test` | ✅ **106/106** (12 fichiers) |
+| Tests unitaires + intégration | `XX_PYTHON=… npm test` | ✅ **111/111** (13 fichiers) |
 | Build de production | `npm run build` | ✅ 0 avertissement, 0 erreur |
 | Parcours de bout en bout | `npm run test:e2e` | ✅ **10/10** (ordinateur + Pixel 7) |
 | Journaux du serveur pendant les parcours | sortie du serveur | ✅ 0 erreur |
 | Déploiement Docker (PostgreSQL 16) | `docker compose up -d --build` puis parcours avec `XX_E2E_BASE_URL` | ✅ pile saine, 4 migrations appliquées, **10/10** parcours (`XX_E2E_BASE_URL`, `XX_E2E_ADMIN`), 0 erreur dans les journaux ; sauvegarde incluant marketplace et double authentification |
+| Déploiement HTTPS (Caddy) + sauvegardes automatiques | `verifier-config`, `docker compose --profile https up -d`, parcours avec `XX_E2E_BASE_URL=https://localhost:8443` | ✅ **10/10** parcours à travers HTTPS, sauvegardes périodiques, rétention appliquée, 0 erreur |
 | Sauvegarde / restauration | `npm run db:backup` / `db:restore`, `pg_dump` | ✅ aller-retour, chaîne d'audit intègre, écrasement refusé |
 | Firmware nœud IoT | `pio run -e xiao_esp32s3` | ✅ compilé (RAM 13,2 %, Flash 20,3 %) |
 | Application Android | `gradlew assembleDebug`, `assembleRelease bundleRelease` | ✅ APK debug, APK + AAB release signés ; contrôle `aapt2` et `apksigner` ; APK recompilé le 18/11 avec les icônes de l'identité A (vérifiées dans `res/mipmap-*`) |
 | Extraction en dépôt autonome | `scripts/extraire-depot.sh` puis `npm ci`, typage, lint, tests | ✅ |
 
-## Tests unitaires (63)
+## Tests unitaires (68)
+- **Configuration de production** (`deploiement.test.ts`) : lecture `.env`, secrets manquants/courts/d'exemple refusés sans afficher leur valeur, clé de chiffrement distincte, administrateurs valides, cookies sécurisés, TLS MQTT cohérent, domaine.
 - **TOTP** (`totp.test.ts`) : vecteurs officiels RFC 4226 (HOTP) et RFC 6238 annexe B (SHA-1, SHA-256, SHA-512, 6 instants), fenêtre ±1 pas, anti-rejeu, base32 RFC 4648, URI otpauth, codes de secours ; chiffrement AES-256-GCM du secret (contexte et altération détectés).
 - **Calculs** (`eng.test.ts`) : loi d'Ohm, puissances triphasées, courant d'emploi, résistivité en température, chute de tension (valeur recalculée à la main), refus de supposer la réactance, section depuis tableau normatif, bilan de puissance ; production PV, Voc à froid, associations série/parallèle, batteries, pompage, LCOE ; couple, engrenages, vérin, COP de Carnot, parois ; sous-réseaux /24, /31, /32, VLSM.
 - **Sécurité** (`safety.test.ts`) : niveaux d'autonomie, coupe-circuit, liste blanche, approbation ; durées maximales, commandes non déclarées, arrêt toujours permis, habilitations banc/réel ; fraîcheur ; profils ; scénarios (données simulées/anciennes ignorées, temporisation, plafond, seuil obligatoire, essai à blanc).
