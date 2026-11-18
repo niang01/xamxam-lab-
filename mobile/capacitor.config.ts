@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
   appId: "sn.xamxam.lab",
   appName: "XAM-XAM LAB",
   webDir: "www",
-  backgroundColor: "#05070d",
+  backgroundColor: "#080d1b",
   server: appUrl ? { url: appUrl, cleartext: appUrl.startsWith("http://"), errorPath: "index.html", allowNavigation: [new URL(appUrl).host] } : { androidScheme: "https" },
   android: { allowMixedContent: false },
 };

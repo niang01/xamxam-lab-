@@ -1,0 +1,38 @@
+# Compilation réelle de l'application iOS (Xcode sur macOS, GitHub Actions) — sans clé ni certificat :
+# construction pour le simulateur iOS, signature désactivée. La version App Store exige le compte Apple Developer
+# de l'exploitant (certificat et profil de distribution), non fournis ici.
+# Déclenchée seulement quand l'application mobile change, ou à la demande (minutes macOS comptées plus cher).
+name: XAM-XAM LAB iOS
+
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulateur:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: XX_APP_URL=https://lab.exemple.sn npx cap sync ios
+      - run: xcodebuild -version
+      - name: Compilation (simulateur, non signée)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -n 30
+      - name: Vérification du paquet produit
+        run: |
+          APP=$(find build/Build/Products -name "App.app" -maxdepth 3 | head -1)
+          test -n "$APP" && ls -la "$APP" && /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist" && du -sh "$APP"
