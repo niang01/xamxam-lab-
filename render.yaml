@@ -1,0 +1,35 @@
+# XAM-XAM LAB — déploiement Render (HTTPS automatique) : https://render.com/deploy?repo=https://github.com/niang01/xamxam-lab-
+# Crée : la base PostgreSQL de production « xamxam-db » et le service web « xamxam-lab » (image Docker du dépôt).
+# Secrets générés par Render (jamais dans le dépôt). À saisir à la création : XX_ADMIN_EMAILS (votre adresse).
+services:
+  - type: web
+    name: xamxam-lab
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "3100"
+      - key: DATABASE_URL
+        fromDatabase: { name: xamxam-db, property: connectionString }
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: XX_ENCRYPTION_KEY
+        generateValue: true
+      - key: XX_ADMIN_EMAILS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: METEOMATICS_USERNAME
+        sync: false
+      - key: METEOMATICS_PASSWORD
+        sync: false
+      - key: OPEN_METEO_API_KEY
+        sync: false
+databases:
+  - name: xamxam-db
+    plan: free
+    databaseName: xamxam
+    user: xamxam

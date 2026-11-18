@@ -10,7 +10,7 @@ export const PROPOSAL_WINDOW_S = 1800;
 
 export interface CommandCapability { action: string; label?: string; max_duration_s: number | null; requires_duration: boolean }
 export interface DeviceForCommand {
-  status: string; environment: "virtual" | "bench" | "real";
+  status: string; environment: "virtual" | "bench" | "real"; hardware?: string;
   capabilities: { commands?: CommandCapability[] };
 }
 export interface Actor { clearances: string[]; canConfirm: boolean }
@@ -37,6 +37,7 @@ export function confirmBlockers(d: DeviceForCommand, action: string, a: Actor): 
   const out: string[] = [];
   if (!a.canConfirm) out.push("votre profil ne permet pas de confirmer une commande d'équipement");
   if (d.environment === "real" && !a.clearances.includes("operation_reelle")) out.push("habilitation « opération réelle » requise");
+  if (d.environment === "real" && d.hardware === "drone" && !a.clearances.includes("telepilote_drone")) out.push("habilitation « télépilote de drone » requise");
   if (d.environment === "bench" && !a.clearances.includes("banc_essai") && !a.clearances.includes("operation_reelle")) out.push("habilitation « banc d'essai » requise");
   return out;
 }

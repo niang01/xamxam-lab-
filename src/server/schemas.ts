@@ -36,7 +36,7 @@ export const capabilitiesSchema = z.object({
 export const deviceSchema = z.object({
   name: z.string().trim().min(2).max(80),
   hardware: z.enum(["esp32", "xiao_esp32s3", "arduino", "raspberry_pi", "plc", "drone", "robot", "weather_station", "inverter", "pump_controller", "other"]),
-  protocol: z.enum(["https", "web_serial", "mqtt", "ble", "lora", "modbus"]),
+  protocol: z.enum(["https", "web_serial", "mqtt", "ble", "lora", "modbus", "mavlink"]),
   environment: z.enum(["virtual", "bench", "real"]),
   project_id: z.string().uuid().nullable().optional(),
   capabilities: capabilitiesSchema,

@@ -46,13 +46,13 @@ export async function ingest(d: DeviceRow, readings: Reading[], source: "device"
 
 interface CommandRow { id: string; device_id: string; action: string; status: string; duration_s: number | null; proposed_by: string; expires_at: string }
 
-export async function proposeCommand(d: DeviceRow, action: string, durationS: number | null, by: "ai" | "user" | "automation", proposer: string | null, reason: string | null, rcSession: string | null = null) {
+export async function proposeCommand(d: DeviceRow, action: string, durationS: number | null, by: "ai" | "user" | "automation", proposer: string | null, reason: string | null, rcSession: string | null = null, params: Record<string, unknown> = {}) {
   if (!(await getSetting("devices_enabled", true)) && !STOP_ACTIONS.has(action)) throw new ApiFailure(423, "Commandes d'équipements suspendues depuis le Command Center", "cmd.suspended");
   const blockers = commandBlockers(d, action, durationS);
   if (blockers.length) throw new ApiFailure(409, `Commande refusée : ${blockers.join(" ; ")}`, "cmd.blocked", blockers);
-  const c = (await sql<CommandRow>(`INSERT INTO device_commands(device_id, action, duration_s, proposed_by, proposer_id, reason, status, expires_at, rc_session_id)
-    VALUES ($1,$2,$3,$4,$5,$6,'proposed', now() + ($7 || ' seconds')::interval, $8) RETURNING *`, [d.id, action, durationS, by, proposer, reason, String(PROPOSAL_WINDOW_S), rcSession]))[0];
-  await audit(proposer, by === "ai" ? "ai" : by === "automation" ? "system" : "human", "command.propose", { kind: "device_command", id: c.id }, { device: d.id, action, duration_s: durationS, reason });
+  const c = (await sql<CommandRow>(`INSERT INTO device_commands(device_id, action, duration_s, proposed_by, proposer_id, reason, status, expires_at, rc_session_id, params)
+    VALUES ($1,$2,$3,$4,$5,$6,'proposed', now() + ($7 || ' seconds')::interval, $8, $9) RETURNING *`, [d.id, action, durationS, by, proposer, reason, String(PROPOSAL_WINDOW_S), rcSession, JSON.stringify(params)]))[0];
+  await audit(proposer, by === "ai" ? "ai" : by === "automation" ? "system" : "human", "command.propose", { kind: "device_command", id: c.id }, { device: d.id, action, duration_s: durationS, reason, params });
   if (by !== "user") await notify(d.owner_id, "command.proposed", `Commande proposée : ${action} — ${d.name}`, reason, "/remote");
   return c;
 }
