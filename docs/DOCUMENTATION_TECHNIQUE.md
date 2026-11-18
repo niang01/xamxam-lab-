@@ -6,7 +6,7 @@ Navigateur / PWA / applications Capacitor (Android, iOS)
   └─ Next.js 16 (React 19, TypeScript strict, Tailwind 4) — 36 pages, 82 routes API (docs/API.md)
        ├─ src/proxy.ts                session exigée pour /api/** (sauf routes publiques et appareils)
        ├─ src/server/api.ts           endpoint() : erreurs uniformes, quota d'écriture ; readInput (zod) ; session revérifiée en base
-       ├─ src/server/ai/              XAM-XAM AI CORE : 17 agents, 17 outils, gouvernance, moteur de règles, Claude
+       ├─ src/server/ai/              XAM-XAM AI CORE : 17 agents, 18 outils, gouvernance, moteur de règles, Claude
        ├─ src/server/iot.ts           ingestion, cycle de vie des commandes, arrêt d'urgence, automatisations
        ├─ src/server/spice.ts         ngspice 45 (WebAssembly) — processus isolé workers/spice-worker.mjs
        ├─ src/server/compute.ts       pvlib / CoolProp — processus isolé workers/compute.py (XX_PYTHON)

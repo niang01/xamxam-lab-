@@ -198,7 +198,7 @@ const n = (s: string | undefined) => (s == null ? null : Number(s.replace(",", "
 async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2]): Promise<Omit<CoreAnswer, "conversationId" | "agents" | "level">> {
   const head = "**Moteur de règles (pas une IA générative)** — aucune clé de modèle d'IA n'est configurée ; seules des demandes simples sont reconnues.\n\n";
   const steps: Step[] = [];
-  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components"] as ToolName[])] }); steps.push(s); return s; };
+  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components", "search_marketplace"] as ToolName[])] }); steps.push(s); return s; };
   const out = (answer: string) => ({ mode: "rules" as const, model: null, answer: head + answer, steps: steps.map(({ output: _o, ...s }) => { void _o; return s; }) });
   const qn = question.toLowerCase();
 
@@ -226,13 +226,20 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
     const ps = (s.output as { title: string; kind: string }[]) ?? [];
     return out(ps.length ? ps.map((p) => `- ${p.title} (${p.kind})`).join("\n") : "Aucun projet. Créez-en un dans Project & Research Studio.");
   }
+  const market = question.match(/(?:marketplace|annonces?|acheter|à vendre|for sale|buy)\s*:?\s*(?:un |une |des |le |la |les |a |an |the )?([\p{L}\d -]{2,40})?/iu);
+  if (market) {
+    const query = (market[1] ?? "").trim().split(/\s+/).slice(0, 3).join(" ");
+    const s = await call("search_marketplace", { query });
+    const ls = ((s.output as { listings: { title: string; price_xof: number | null; location: string | null; seller: string; link: string }[] } | undefined)?.listings) ?? [];
+    return out(ls.length ? `Annonces de XAM-XAM MARKETPLACE${query ? ` pour « ${query} »` : ""} (caractéristiques déclarées par les vendeurs ; aucun paiement via la plateforme) :\n${ls.map((l) => `- ${l.title} — ${l.price_xof === null ? "prix sur demande" : `${l.price_xof} FCFA`}${l.location ? ` · ${l.location}` : ""} · ${l.seller} (${l.link})`).join("\n")}` : `Aucune annonce publiée${query ? ` pour « ${query} »` : ""} dans XAM-XAM MARKETPLACE.`);
+  }
   const comp = question.match(/(?:composant|component|explique[- ]moi|explain)\s*:?\s*(?:le |la |l'|the )?([\p{L}\d -]{3,40})/iu);
   if (comp) {
     const s = await call("search_components", { query: comp[1].trim().split(/\s+/)[0] });
     const cs = (s.output as { name: string; description: string; function: string | null; precautions: string | null }[]) ?? [];
     return out(cs.length ? cs.slice(0, 3).map((c) => `**${c.name}** — ${c.description}${c.function ? `\nFonction : ${c.function}` : ""}${c.precautions ? `\nPrécautions : ${c.precautions}` : ""}`).join("\n\n") : "Aucun composant correspondant dans la bibliothèque.");
   }
-  return out(`Demandes reconnues sans IA générative :\n- sous-réseau : « 192.168.1.0/24 »\n- loi d'Ohm : « U=12 R=470 »\n- irradiation solaire : « irradiation solaire 14.69, -17.44 »\n- « mes appareils », « mes projets », « explique le composant condensateur »\n\nTous les laboratoires restent utilisables directement, sans IA. Pour la compréhension libre (wolof, français, anglais) et l'orchestration complète des agents, l'administrateur doit configurer ANTHROPIC_API_KEY sur le serveur.`);
+  return out(`Demandes reconnues sans IA générative :\n- sous-réseau : « 192.168.1.0/24 »\n- loi d'Ohm : « U=12 R=470 »\n- irradiation solaire : « irradiation solaire 14.69, -17.44 »\n- « mes appareils », « mes projets », « explique le composant condensateur »\n- marketplace : « annonces relais », « acheter capteur »\n\nTous les laboratoires restent utilisables directement, sans IA. Pour la compréhension libre (wolof, français, anglais) et l'orchestration complète des agents, l'administrateur doit configurer ANTHROPIC_API_KEY sur le serveur.`);
 }
 
 export { AGENTS };

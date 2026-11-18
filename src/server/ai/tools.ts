@@ -17,6 +17,7 @@ import { projectRole } from "../access";
 import type { DeviceRow } from "../access";
 import { audit } from "../audit";
 import { automationSpec } from "@/lib/automation";
+import { MARKET_CATEGORIES } from "@/lib/market";
 import type { ToolEffect } from "@/lib/autonomy";
 
 export interface ToolCtx { user: User; projectId: string | null; conversationId: string }
@@ -77,6 +78,20 @@ export const TOOLS = {
   search_components: tool({
     description: "Recherche dans la bibliothèque de composants (fonction, brochage, précautions, statut de vérification).", effect: "read", schema: z.object({ query: z.string().max(80) }),
     run: async (i) => sql("SELECT name, category, description, function, pins, precautions, status, manufacturer, mpn, specs FROM components WHERE name ILIKE '%'||$1||'%' OR description ILIKE '%'||$1||'%' OR category ILIKE '%'||$1||'%' LIMIT 20", [i.query]),
+  }),
+  search_marketplace: tool({
+    description: "Recherche dans XAM-XAM MARKETPLACE les annonces publiées et visibles (titre, catégorie, état, prix en FCFA ou null = sur demande, quantité, localisation, vendeur). Les caractéristiques sont DÉCLARÉES par le vendeur, non vérifiées. Aucun achat ni paiement n'est possible par l'IA : l'utilisateur contacte le vendeur lui-même.",
+    effect: "read",
+    schema: z.object({ query: z.string().max(80).default(""), category: z.enum(MARKET_CATEGORIES).nullable().optional(), max_price_xof: z.number().int().min(0).nullable().optional() }),
+    run: async (i) => {
+      const rows = await sql<{ id: string; price_xof: number | null }>(`SELECT l.id, l.title, l.category, l.condition, l.price_xof::float8 AS price_xof, l.quantity, l.location, l.specs, s.display_name AS seller
+        FROM market_listings l JOIN users s ON s.id=l.seller_id
+        WHERE l.status='published' AND l.moderation='visible'
+          AND ($1='' OR l.title ILIKE '%'||$1||'%' OR l.description ILIKE '%'||$1||'%' OR l.specs::text ILIKE '%'||$1||'%')
+          AND ($2::text IS NULL OR l.category=$2) AND ($3::bigint IS NULL OR l.price_xof <= $3)
+        ORDER BY l.sponsored DESC, l.created_at DESC LIMIT 15`, [i.query, i.category ?? null, i.max_price_xof ?? null]);
+      return { listings: rows.map((r) => ({ ...r, link: `/marketplace?annonce=${r.id}`, specs_note: "déclarées par le vendeur" })), note: "Mise en relation uniquement : aucun paiement via la plateforme." };
+    },
   }),
   get_solar_climatology: tool({
     description: "Climatologie mensuelle NASA POWER (irradiation globale horizontale kWh/m²/j, températures) d'un point. Donnée MODÉLISÉE à échelle régionale.", effect: "read",

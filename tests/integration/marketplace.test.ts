@@ -14,6 +14,7 @@ import * as adminReport from "@/app/api/admin/market/reports/[id]/route";
 import * as adminListing from "@/app/api/admin/market/listings/[id]/route";
 import * as notifications from "@/app/api/notifications/route";
 import { verifyAuditChain } from "@/server/audit";
+import * as aiChat from "@/app/api/ai/chat/route";
 
 const R = registerRoute.POST as never;
 let admin: Session, seller: Session, buyer: Session, other: Session;
@@ -130,5 +131,17 @@ describe("XAM-XAM MARKETPLACE", () => {
     expect((await call(adminListing.PATCH as never, "PATCH", "/x", { session: admin, params: { id }, body: { moderation: "visible", sponsored: true, note: "Corrigée par le vendeur" } })).status).toBe(200);
     expect((await detail(buyer, id)).json.listing).toMatchObject({ sponsored: true, moderation: "visible" });
     expect((await verifyAuditChain()).ok).toBe(true);
+  });
+
+  it("XAM-XAM AI : l'outil search_marketplace ne lit que les annonces publiées et visibles", async () => {
+    await create(seller, { title: "Relais statique 40 A", category: "component", condition: "new", price_xof: 9000, location: "Saint-Louis" });
+    await create(seller, { title: "Relais brouillon caché", category: "component", condition: "new", status: "draft" });
+    const r = await call(aiChat.POST as never, "POST", "/api/ai/chat", { session: buyer, body: { question: "annonces relais", lang: "fr" } });
+    expect(r.status).toBe(200);
+    const answer = String(r.json.answer);
+    expect(answer).toContain("Relais statique 40 A — 9000 FCFA · Saint-Louis");
+    expect(answer).not.toContain("brouillon");
+    expect(answer).toContain("aucun paiement via la plateforme");
+    expect((r.json.steps as { tool: string; status: string }[])[0]).toMatchObject({ tool: "search_marketplace", status: "done" });
   });
 });

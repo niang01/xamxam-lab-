@@ -1,13 +1,13 @@
 # XAM-XAM LAB — état de réalisation (17/11/2026)
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 105 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 106 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
 
 ## 1. Terminé et testé
 | Domaine | Fonctions |
 |---|---|
 | Socle | Comptes (15 profils, administrateur par configuration), sessions révocables, projets privés par défaut, membres et rôles, notifications, paramètres, export et suppression des données, journal d'audit chaîné, sauvegarde/restauration, PostgreSQL 16 et PGlite, Docker Compose |
 | Langues | Interface FR/EN complète (catalogue typé), wolof par traductions validées uniquement (import, brouillons, validation), repli signalé, changement de langue sans perte |
-| XAM-XAM AI CORE | 17 agents à liste blanche d'outils, 17 outils, gouvernance hors modèle (coupe-circuit, agents, niveaux 1–5, approbations), journal d'exécution, moteur de règles signalé, intégration Claude (format vérifié par test) |
+| XAM-XAM AI CORE | 17 agents à liste blanche d'outils, 18 outils (dont la recherche en lecture seule dans la marketplace), gouvernance hors modèle (coupe-circuit, agents, niveaux 1–5, approbations), journal d'exécution, moteur de règles signalé, intégration Claude (format vérifié par test) |
 | AI Command Center | Coupe-circuits, agents, opérations, équipements, automatisations, sessions, autonomie, ressources, audit |
 | Engineering Lab | Electrical (calculs, tableaux normatifs saisis), Electronics (éditeur, ERC, versions, **ngspice réel**), Solar (NASA POWER, **pvlib horaire**, chaînes, batteries, pompage, rentabilité), Refrigeration (**CoolProp**, log p–h), Mechanical, Network, Component Library |
 | Studio | Rejeu des simulations, comparaison simulation/mesure, visionneuse 3D STL |
