@@ -7,6 +7,7 @@ import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select } from "@/compone
 import { del, patch } from "@/lib/client/api";
 import { LANGS } from "@/lib/i18n/runtime";
 import type { MsgKey } from "@/lib/i18n/messages";
+import { MfaCard } from "@/components/MfaCard";
 
 export default function Settings() {
   const { t, me, refreshMe, lang, setLang, fallback, setFallback } = useApp();
@@ -49,6 +50,7 @@ export default function Settings() {
         </div>
         <p className="mt-2 text-xs text-[var(--fg-3)]">{t("set.pwInfo")}</p>
       </Card>
+      <MfaCard />
       <Card title={t("set.data")}>
         <div className="flex flex-wrap gap-2">
           <a href="/api/me" className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">{t("set.export")}</a>

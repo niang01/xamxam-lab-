@@ -19,6 +19,7 @@ services:
     environment:
       DATABASE_URL: postgres://xamxam:${POSTGRES_PASSWORD}@db:5432/xamxam
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET requis}
+      XX_ENCRYPTION_KEY: ${XX_ENCRYPTION_KEY:-}
       XX_ADMIN_EMAILS: ${XX_ADMIN_EMAILS:?XX_ADMIN_EMAILS requis}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-claude-opus-5-5}

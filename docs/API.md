@@ -1,6 +1,6 @@
 # API de XAM-XAM LAB
 
-Document généré par `npm run docs:api` (93 routes). Toutes les réponses sont en JSON ; les erreurs ont la forme `{ "error": "message", "key": "clé traduisible", "details": … }`. Les corps sont validés (zod) : données invalides → 400 avec le détail des champs. Session : cookie `xx_session` (httpOnly) obtenu par `POST /api/auth/login`. Appareils : en-tête `Authorization: Bearer <jeton>`.
+Document généré par `npm run docs:api` (95 routes). Toutes les réponses sont en JSON ; les erreurs ont la forme `{ "error": "message", "key": "clé traduisible", "details": … }`. Les corps sont validés (zod) : données invalides → 400 avec le détail des champs. Session : cookie `xx_session` (httpOnly) obtenu par `POST /api/auth/login`. Appareils : en-tête `Authorization: Bearer <jeton>`.
 
 ## admin
 
@@ -33,6 +33,7 @@ Document généré par `npm run docs:api` (93 routes). Toutes les réponses sont
 | POST | `/api/auth/login` | public |  |
 | POST | `/api/auth/logout` | public |  |
 | GET | `/api/auth/me` | public |  |
+| POST | `/api/auth/mfa` | session | Seconde étape de connexion : code de l'application d'authentification ou code de secours. |
 | POST | `/api/auth/register` | public |  |
 
 ## automations
@@ -186,6 +187,8 @@ Document généré par `npm run docs:api` (93 routes). Toutes les réponses sont
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
+| GET | `/api/me/mfa` | session |  |
+| POST | `/api/me/mfa` | session | Activation (préparation puis vérification d'un premier code), désactivation et nouveaux codes de secours (mot de passe + code). |
 | PATCH | `/api/me` | session |  |
 | GET | `/api/me` | session | Export de toutes les données personnelles (portabilité). |
 | DELETE | `/api/me` | session | Suppression du compte et de ses données (cascade). |

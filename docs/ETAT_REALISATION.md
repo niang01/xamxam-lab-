@@ -1,6 +1,6 @@
 # XAM-XAM LAB — état de réalisation (17/11/2026)
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 94 tests unitaires/intégration, 9 parcours de bout en bout, build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 105 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
 
 ## 1. Terminé et testé
 | Domaine | Fonctions |
@@ -20,6 +20,7 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Mobile | PWA installable ; **projets Android et iOS Capacitor ; APK et AAB Android compilés et signés** |
 | Séparation | Audit SUUF / boutique réalisé, couche API et accès base réécrits, extraction autonome vérifiée ([AUDIT_SEPARATION.md](AUDIT_SEPARATION.md)) |
 | Identité et interface | Logo A appliqué, thèmes sombre/clair/système, polices auto-hébergées, icônes web/Android/iOS, panneau contextuel XAM-XAM AI, barre d'état à valeurs réelles ([IDENTITE_VISUELLE.md](IDENTITE_VISUELLE.md)) |
+| Double authentification | TOTP (RFC 6238, compatible Google Authenticator, Aegis, FreeOTP, 2FAS) : activation par QR code, secret chiffré AES-256-GCM, anti-rejeu, 10 codes de secours hachés à usage unique, connexion en deux étapes (défi 5 min, 5 essais), désactivation par mot de passe + second facteur, notifications et journal d'audit |
 | Sécurité | Toutes les routes protégées (test automatique), rôles, limitation de débit, en-têtes, injection SPICE bloquée, processus de calcul isolés |
 
 ## 2. Partiellement opérationnel
@@ -43,4 +44,4 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Publication mobile | Clé de signature, comptes Google Play et Apple Developer |
 
 ## 4. Non réalisé (affiché « non disponible » dans l'application, avec sa phase)
-CAO paramétrique (OpenCascade) et éléments finis (Gmsh/CalculiX) ; physique temps réel (Rapier) ; Digital Twin synchronisé ; émulation réseau (Containerlab) ; MAVLink/PX4/ArduPilot et SITL ; vidéo des appareils ; BLE, LoRa, Modbus ; édition simultanée (CRDT) et tableau blanc ; SMAP, NDVI, couches GIBS ; notifications push natives ; double authentification (TOTP, WebAuthn) ; paiements en ligne et abonnements (la marketplace fonctionne en mise en relation) ; classes virtuelles planifiées.
+CAO paramétrique (OpenCascade) et éléments finis (Gmsh/CalculiX) ; physique temps réel (Rapier) ; Digital Twin synchronisé ; émulation réseau (Containerlab) ; MAVLink/PX4/ArduPilot et SITL ; vidéo des appareils ; BLE, LoRa, Modbus ; édition simultanée (CRDT) et tableau blanc ; SMAP, NDVI, couches GIBS ; notifications push natives ; clés matérielles et passkeys (WebAuthn) ; paiements en ligne et abonnements (la marketplace fonctionne en mise en relation) ; classes virtuelles planifiées.

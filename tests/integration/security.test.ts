@@ -11,7 +11,7 @@ walk(API);
 
 /** Routes publiques assumées (et leur comportement sans session). */
 const PUBLIC: Record<string, number[]> = {
-  "auth/register": [400], "auth/login": [400, 401], "auth/logout": [200], "auth/me": [200], "i18n/catalog": [200], "health": [200],
+  "auth/register": [400], "auth/login": [400, 401], "auth/mfa": [400, 401], "auth/logout": [200], "auth/me": [200], "i18n/catalog": [200], "health": [200],
   "public/certificates/[id]": [404], "public/portfolio/[id]": [404],
   "device/ingest": [401], "device/commands": [401], "device/ack": [401], "device/whoami": [401],
 };

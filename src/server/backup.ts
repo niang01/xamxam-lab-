@@ -8,13 +8,17 @@ import crypto from "node:crypto";
 import type { Db } from "./db";
 import { canonical } from "./audit";
 
-/** Ordre d'insertion compatible avec les clés étrangères. Les tables de visioconférence (éphémères) sont exclues. */
+/**
+ * Ordre d'insertion compatible avec les clés étrangères. Exclues : visioconférence et défis de connexion (éphémères).
+ * Le secret TOTP reste chiffré : la restauration exige la même XX_ENCRYPTION_KEY (ou SESSION_SECRET).
+ */
 export const BACKUP_TABLES = [
   "users", "clearances", "projects", "project_members", "project_tasks", "project_messages", "schematics", "schematic_versions",
   "calc_runs", "normative_tables", "components", "simulations", "ai_agents", "ai_conversations", "ai_messages", "ai_steps", "ai_memory",
   "devices", "measurements", "device_commands", "automations", "automation_runs", "rc_sessions", "rc_events", "geo_requests", "geo_observations",
   "courses", "enrollments", "certificates", "eco_items", "eco_links",
   "market_listings", "market_inquiries", "market_messages", "market_favorites", "market_reports",
+  "user_mfa", "user_recovery_codes",
   "translations", "notifications", "settings", "audit_log",
 ] as const;
 const SERIAL: [string, string][] = [["measurements", "id"], ["rc_events", "id"], ["audit_log", "id"]];

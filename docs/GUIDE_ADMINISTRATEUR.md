@@ -39,7 +39,7 @@ Un contenu signalé par 3 personnes est masqué automatiquement ; les administra
 Onglet **Modération** de la rubrique (administrateurs uniquement) : signalements (motif, auteur, vendeur) et annonces masquées. Chaque décision exige un **motif écrit**, communiqué au vendeur : « Masquer l'annonce » (signalement retenu ; les autres signalements ouverts sur l'annonce sont clos) ou « Rejeter le signalement ». Depuis le détail d'une annonce : masquer / rétablir, marquer **sponsorisée** (toujours affiché comme tel). Toutes ces actions sont inscrites au journal d'audit.
 
 ## Configuration du serveur
-Variables : [.env.example](../.env.example). Points clés : `SESSION_SECRET` (obligatoire), `ANTHROPIC_API_KEY` (+ `AI_DAILY_LIMIT`), `XX_PYTHON`, `METEOMATICS_USERNAME/PASSWORD`, `XX_TURN_*` (réunions entre réseaux différents), TLS MQTT. Santé : `GET /api/health`.
+Variables : [.env.example](../.env.example). Points clés : `SESSION_SECRET` (obligatoire), `XX_ENCRYPTION_KEY` (recommandé : clé de chiffrement des secrets TOTP, distincte du secret de session ; à conserver avec les sauvegardes, sans elle les doubles authentifications restaurées sont inutilisables), `ANTHROPIC_API_KEY` (+ `AI_DAILY_LIMIT`), `XX_PYTHON`, `METEOMATICS_USERNAME/PASSWORD`, `XX_TURN_*` (réunions entre réseaux différents), TLS MQTT. Santé : `GET /api/health`.
 
 ## Sauvegardes
 Voir [SAUVEGARDE_RESTAURATION.md](SAUVEGARDE_RESTAURATION.md).

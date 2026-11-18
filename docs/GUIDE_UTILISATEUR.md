@@ -41,6 +41,9 @@ Startups (fiche, mises en relation acceptées des deux côtés), Concours (dép�
 - **Gérer** : passer l'annonce en réservée, vendue ou retirée (vendue et retirée sont définitives ; les demandes ouvertes sont alors closes et les acheteurs prévenus). Une annonce qui a reçu des demandes ne se supprime pas : retirez-la.
 - **Aucun paiement en ligne** : convenez des modalités directement et ne payez jamais avant d'avoir vérifié l'article ou la prestation. Signalez toute annonce douteuse (« Signaler l'annonce »).
 
+## Double authentification
+Paramètres → **Double authentification** : scannez le QR code avec une application d'authentification (Google Authenticator, Aegis, FreeOTP, 2FAS…), saisissez le code à 6 chiffres, puis **conservez les 10 codes de secours hors ligne** (affichés une seule fois, chacun utilisable une fois si vous perdez votre téléphone). À la connexion, le code est demandé après le mot de passe. Désactiver ou régénérer les codes exige le mot de passe et un code.
+
 ## Interface
 Thème **sombre** (par défaut), **clair** ou **système** dans la barre supérieure ; bouton **✦ AI** pour ouvrir le panneau XAM-XAM AI dans n'importe quelle rubrique ; la **barre d'état** en bas indique la connexion, l'état du serveur, le mode de l'IA, les appareils vus et ce qui attend votre confirmation.
 
