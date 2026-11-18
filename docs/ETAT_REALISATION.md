@@ -30,7 +30,7 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Fonction | Ce qui manque |
 |---|---|
 | Application Android | Vérifiée par les outils Android, **non exécutée sur un appareil** (pas d'émulateur) ; à recompiler avec l'adresse réelle du serveur |
-| Application iOS | Projet Xcode (Capacitor 7, SPM) ; compilation réelle sur macOS par GitHub Actions (`ios.yml`) — voir RAPPORT_FINAL § 7 bis ; aucune version signée |
+| Application iOS | Projet Xcode (Capacitor 7, SPM) ; workflow de compilation macOS prêt (`ios.yml`) mais **non exécuté** : GitHub a annulé la tâche faute de machine macOS attribuée (18/11) — iOS **non compilé** ; aucune version signée |
 | Visioconférence | Fonctionne en réseau local ; entre réseaux différents, un serveur TURN est nécessaire |
 | Voix (dictée, lecture) | API du navigateur ; wolof selon l'appareil, aucun service vocal wolof validé intégré |
 | Textes en français uniquement | Messages ERC, libellés internes de certains calculs, réponses du moteur de règles |

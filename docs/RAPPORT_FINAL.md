@@ -67,7 +67,7 @@ Procédure : [GUIDE_INSTALLATION.md](GUIDE_INSTALLATION.md) § 3 — serveur Lin
 | **Firmware ESP32** (XIAO ESP32-S3) | ✅ compilé (PlatformIO, RAM 13,2 %, Flash 20,3 %) avec la configuration d'exemple ; ❌ non testé sur matériel |
 
 ### 7 bis. Résultat de la compilation iOS
-Exécution GitHub Actions n° 1 (run `44292065391`, commit `b62748e`) : **en file d'attente** au moment de la rédaction — aucune machine macOS attribuée. **La compilation iOS n'est donc pas encore confirmée.** Suivi : onglet *Actions* du dépôt, workflow « XAM-XAM LAB iOS ».
+Exécution GitHub Actions n° 1 (run `44292065391`, commit `b62748e`) : **annulée par GitHub** après 15 min d'attente (11:09 → 11:24 UTC) : aucune machine macOS n'a été attribuée et aucun journal n'existe (la tâche n'a jamais démarré). Cause probable : machines macOS non disponibles ou quota de minutes macOS insuffisant pour ce dépôt privé. **La compilation iOS n'est donc PAS réalisée.** Pour l'obtenir : relancer le workflow « XAM-XAM LAB iOS » (bouton *Run workflow*) une fois les minutes macOS disponibles, ou compiler sur un Mac avec Xcode (`mobile/README.md`). Suivi : onglet *Actions* du dépôt, workflow « XAM-XAM LAB iOS ».
 
 ## 8. Services externes exigeant vos propres clés ou comptes
 | Service | Pour | Variable / lieu | Sans lui |
