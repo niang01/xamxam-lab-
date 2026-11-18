@@ -11,10 +11,10 @@ Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'env
 | Build de production | `npm run build` | ✅ 0 avertissement, 0 erreur |
 | Parcours de bout en bout | `npm run test:e2e` | ✅ **10/10** (ordinateur + Pixel 7) |
 | Journaux du serveur pendant les parcours | sortie du serveur | ✅ 0 erreur |
-| Déploiement Docker (PostgreSQL 16) | `docker compose up -d --build` puis parcours avec `XX_E2E_BASE_URL` | ✅ pile saine, 7/7 parcours (campagne du 17/11, avant marketplace et interface), 0 erreur dans les journaux |
+| Déploiement Docker (PostgreSQL 16) | `docker compose up -d --build` puis parcours avec `XX_E2E_BASE_URL` | ✅ pile saine, 4 migrations appliquées, **10/10** parcours (`XX_E2E_BASE_URL`, `XX_E2E_ADMIN`), 0 erreur dans les journaux ; sauvegarde incluant marketplace et double authentification |
 | Sauvegarde / restauration | `npm run db:backup` / `db:restore`, `pg_dump` | ✅ aller-retour, chaîne d'audit intègre, écrasement refusé |
 | Firmware nœud IoT | `pio run -e xiao_esp32s3` | ✅ compilé (RAM 13,2 %, Flash 20,3 %) |
-| Application Android | `gradlew assembleDebug`, `assembleRelease bundleRelease` | ✅ APK debug, APK + AAB release signés ; contrôle `aapt2` et `apksigner` |
+| Application Android | `gradlew assembleDebug`, `assembleRelease bundleRelease` | ✅ APK debug, APK + AAB release signés ; contrôle `aapt2` et `apksigner` ; APK recompilé le 18/11 avec les icônes de l'identité A (vérifiées dans `res/mipmap-*`) |
 | Extraction en dépôt autonome | `scripts/extraire-depot.sh` puis `npm ci`, typage, lint, tests | ✅ |
 
 ## Tests unitaires (63)

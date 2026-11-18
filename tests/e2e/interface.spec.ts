@@ -25,7 +25,8 @@ test("identité : logo, thème sombre par défaut puis clair mémorisé, barre d
   await page.selectOption("[data-testid=theme]", "dark");
 
   // Barre d'état : états mesurés (serveur, base, IA en moteur de règles faute de clé, appareils)
-  await expect(page.locator("[data-testid=status-server]")).toContainText("Serveur opérationnel · PGlite");
+  const db = ((await (await page.request.get("/api/health")).json()) as { db: string }).db;
+  await expect(page.locator("[data-testid=status-server]")).toContainText(`Serveur opérationnel · ${db === "postgres" ? "PostgreSQL" : "PGlite"}`);
   await expect(page.locator("[data-testid=status-ai]")).toContainText("moteur de règles");
   await expect(page.locator("[data-testid=status-devices]")).toContainText("0 vus / 0");
   await expect(page.locator("[data-testid=status-network]")).toContainText("En ligne");
