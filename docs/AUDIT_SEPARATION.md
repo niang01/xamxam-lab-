@@ -72,6 +72,47 @@ La marketplace de XAM-XAM est un **module de XAM-XAM LAB** (rubrique *Tech News 
 ## 8. Transfert réalisé (17/11/2026)
 Dépôt privé **`niang01/xamxam-lab-`** créé par l'exploitant. Extraction poussée sur `main` : commit **`16eeabc32606b2b7f3363217f5ae8b9c53612f61`** « XAM-XAM LAB — import initial », **sans parent**, 441 fichiers. Vérifié depuis un **clone neuf** : 1 seul commit ; commits de la branche d'origine (`f05a256`, `8f47b57`, `70fcc11`) **absents** ; installation `npm ci`, typage, lint, 83/83 tests, build, 7/7 parcours e2e et APK Android réussis.
 
-## 9. Ce qui reste à décider par l'exploitant
-1. Après vérification du nouveau dépôt, et seulement sur décision de l'exploitant : retirer `xamxam-lab/` de la branche de travail du dépôt SUUF (le dossier n'a jamais été fusionné dans `main`).
-2. Donner accès à `boutique-Ecommerce` si son audit direct est souhaité.
+## 9. Séparation définitive (18/11/2026)
+
+### 9.1 Vérifications du projet XAM-XAM LAB dans trois environnements sans SUUF
+| Environnement | Ce qui a été exécuté | Résultat |
+|---|---|---|
+| **Session cloud distincte** (`session_013BZ2Jh1SupuisFs4NETCfv`, environnement « xamxam-lab », seul dépôt rattaché : `niang01/xamxam-lab-`) | `ls -d /home/user/*/` → **uniquement `xamxam-lab-`** (aucun dossier SUUF) ; `npm ci`, typage, lint, `npm test`, build, `next start` + santé, inscription et tableau de bord, `npm run test:e2e` | ✅ 106/106 tests, build OK, démarrage OK (base PGlite neuve), **10/10** parcours |
+| **Clone neuf local** dans une racine séparée (`/home/user/xamxam-lab-verif`, `.git` propre, `node_modules` et `.venv` installés de zéro) | mêmes étapes | ✅ 106/106, build, démarrage (santé, inscription, tableau de bord, page d'accueil HTTP 200), **10/10** parcours |
+| **GitHub Actions** du dépôt indépendant (`.github/workflows/ci.yml`) | intégration continue à chaque envoi | ✅ 6/6 exécutions réussies, dont `9e158a6` |
+
+Également vérifié le 18/11 sur PostgreSQL 16 (Docker Compose propre au projet) : 4 migrations, 10/10 parcours, 0 erreur, sauvegarde complète.
+
+### 9.2 Indépendance Git
+| Contrôle | Résultat |
+|---|---|
+| Racine, `.git`, `origin` | `/home/user/xamxam-lab-verif/.git` ; `origin = https://github.com/niang01/xamxam-lab-` (seul distant) |
+| Branches | `main` seulement (localement et sur GitHub) |
+| Historique | 6 commits, **une seule racine** `16eeabc` sans parent ; aucun ancêtre commun avec SUUF (`git merge-base` impossible) ; commits de l'ancienne branche (`f05a256`, `8f47b57`, `70fcc11`) absents |
+| Synchronisation | `main` local = `origin/main` = `9e158a60e41c8512e5227c59d740ca3e69fad06f` |
+| Fichiers | Tout fichier suivi de l'ancien dossier existe dans le dépôt indépendant (sauf `src/server/http.ts`, volontairement remplacé) — aucun fichier perdu |
+
+### 9.3 Aucune dépendance vers SUUF
+| Domaine | XAM-XAM LAB | SUUF SPACE NAZA |
+|---|---|---|
+| Paquet | `xamxam-lab` (29 dépendances npm publiques, 0 `file:`/`link:`/`git:`) | `suuf-space-naza` |
+| Code | 0 mention de SUUF/NAZA/`snz_`/onrender hors documentation d'audit ; 0 chemin absolu ; 0 import hors de la racine | 0 mention de XAM-XAM (vérifié sur `main` et la branche de travail) |
+| Base | `xamxam` (PostgreSQL) ou `./data/pglite` ; table `xx_migrations` | `suuf` (PostGIS) ; table `schema_migrations` |
+| Sessions | cookie `xx_session` | cookies `snz_user`, `snz_admin`, `snz_pilot` |
+| Variables | `SESSION_SECRET`, `XX_*`, `DATABASE_URL`, `ANTHROPIC_API_KEY`, `METEOMATICS_*`, `MQTT_*` — **valeurs propres à fournir**, aucune n'est définie dans l'environnement XAM-XAM | propres à SUUF |
+| Déploiement | `Dockerfile`, `docker-compose.yml` (db `xamxam`, app, mqtt), `.env.example`, port 3100 | `deploy/` (PostGIS, Caddy), Render |
+| Environnement cloud | « xamxam-lab » : **aucune variable, aucun secret réseau** ; hôtes NASA POWER, Google (SDK Android), PlatformIO | « SUUF-SPACE-NAZA » : secrets Meteomatics et Hugging Face, hôtes propres à SUUF |
+
+**Identifiants de SUUF non réutilisables** : depuis l'environnement XAM-XAM, le proxy refuse (HTTP 403) `api.meteomatics.com`, `router.huggingface.co` et `suuf-naza.onrender.com` ; les secrets enregistrés sur l'environnement SUUF ne sont donc jamais transmis. Le code XAM-XAM n'envoie d'identifiants Meteomatics que s'ils sont configurés dans **son** `METEOMATICS_USERNAME/PASSWORD` (aucun aujourd'hui → fonction signalée « en attente d'un compte »).
+
+### 9.4 Retrait de l'ancien dossier (après les vérifications ci-dessus)
+- Sauvegarde préalable : paquet Git de la branche SUUF avant retrait (SHA-256 `f9bd6ff386db7e444de4b5472507a64b4a86232046ac52d7cf2b4c797f537a8a`, sommet `70fcc11`).
+- Commit `9ff8a29` sur la branche de travail `ccr-859cc6b2-lvx9c5` du dépôt SUUF : suppression de `xamxam-lab/` et retour des 3 fichiers d'outillage (`tsconfig.json`, `eslint.config.mjs`, `.dockerignore`) à leur version de `main`. **L'arbre de la branche est strictement identique à celui de `main` de SUUF** (`e7a1243`, même empreinte d'arbre Git) : aucun fichier de SUUF n'est modifié ou supprimé. La branche `main` de SUUF n'a jamais contenu XAM-XAM et n'a pas été touchée.
+- SUUF vérifié seul avant et après le retrait : typage ✅, lint ✅, **301 tests** réussis (3 ignorés, identique), build ✅.
+
+**Conclusion** : les deux projets s'installent, se compilent, se testent, démarrent et se déploient séparément, chacun avec son dépôt, son environnement, sa base, ses comptes et ses secrets.
+
+## 10. Ce qui reste à décider par l'exploitant
+1. Nom du dépôt : il s'appelle `niang01/xamxam-lab-` (avec un tiret final). Pour `niang01/xamxam-lab`, le renommer sur GitHub (Settings → Repository name) ; GitHub redirige l'ancienne adresse.
+2. Branches de travail du dépôt SUUF créées par les sessions de développement (`ccr-…`) : leur historique contient encore les anciennes versions de `xamxam-lab/` ; les supprimer est une décision de l'exploitant (opération irréversible, non effectuée).
+3. Donner accès à `boutique-Ecommerce` si son audit direct est souhaité.
