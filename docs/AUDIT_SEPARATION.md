@@ -112,7 +112,19 @@ Dépôt privé **`niang01/xamxam-lab-`** créé par l'exploitant. Extraction pou
 
 **Conclusion** : les deux projets s'installent, se compilent, se testent, démarrent et se déploient séparément, chacun avec son dépôt, son environnement, sa base, ses comptes et ses secrets.
 
-## 10. Ce qui reste à décider par l'exploitant
+## 10. Confirmation technique définitive (18/11/2026)
+| # | Exigence | Preuve | Verdict |
+|---|---|---|---|
+| 1 | Le dépôt contient tout le projet | Dépôt **`niang01/xamxam-lab-`** (le nom sans tiret n'existe pas : `git ls-remote` le refuse) ; clone neuf : 484 fichiers, 7 commits, une seule racine `16eeabc` sans parent, aucun sous-module, aucun lien symbolique ; tout fichier de l'ancien dossier y figure | ✅ |
+| 2 | Claude Code travaille sur XAM-XAM sans ouvrir SUUF | Session `session_013BZ2Jh1SupuisFs4NETCfv` : environnement « xamxam-lab », **seul dépôt rattaché `niang01/xamxam-lab-`**, `ls -d /home/user/*/` → uniquement `xamxam-lab-` ; installation, tests, build, démarrage et 10/10 parcours réussis ; le dépôt fournit ses propres instructions (`CLAUDE.md`) | ✅ |
+| 3 | Base, variables, clés API, environnement cloud propres | Base `xamxam` / `./data/pglite`, table `xx_migrations` ; variables `XX_*`, `SESSION_SECRET`, `XX_ENCRYPTION_KEY`… (`.env.example`) ; environnement cloud « xamxam-lab » sans aucune variable ni secret ; **aucune clé API de SUUF accessible** (proxy : 403 vers Meteomatics, Hugging Face, serveur SUUF). Les clés propres à XAM-XAM (Anthropic, Meteomatics) **restent à créer par l'exploitant** : sans elles, les fonctions concernées sont signalées « en attente » | ✅ (clés à fournir) |
+| 4 | Installation, compilation, démarrage depuis un clone neuf | `/home/user/xamxam-lab-neuf`, `npm ci` avec **cache vide**, `pip --no-cache-dir` : typage ✅, lint ✅, **106/106** ✅, build ✅ (83 pages) ; `next start` sur base neuve : santé, inscription, pages `/`, `/marketplace`, `/lab/electronics`, `/settings` en HTTP 200, calcul réel (loi d'Ohm), 0 erreur ; **10/10** parcours e2e | ✅ |
+| 5 | Aucun fichier de SUUF nécessaire | Clone hors de tout dossier SUUF ; 0 import hors de la racine, 0 chemin absolu, 0 dépendance `file:`/`git:`, 0 mention de SUUF dans le code ; session distincte sans SUUF dans le conteneur | ✅ |
+| 6 | Modifier XAM-XAM ne peut pas modifier SUUF | Seul distant : `niang01/xamxam-lab-` ; aucun ancêtre commun avec SUUF ; CI limitée à `actions/checkout` du dépôt lui-même, sans jeton ni autre dépôt ; SUUF inchangé pendant ces vérifications (`main` = `7dbfab8`, branche de travail = `9ff8a29`, arbre de travail propre) | ✅ |
+
+**Recommandation d'exploitation** : pour garantir mécaniquement l'étanchéité, poursuivre le développement dans une session Claude Code ouverte **uniquement** sur `niang01/xamxam-lab-` dans l'environnement « xamxam-lab » (comme la session de vérification ci-dessus) : SUUF n'y est ni cloné ni accessible en écriture.
+
+## 11. Ce qui reste à décider par l'exploitant
 1. Nom du dépôt : il s'appelle `niang01/xamxam-lab-` (avec un tiret final). Pour `niang01/xamxam-lab`, le renommer sur GitHub (Settings → Repository name) ; GitHub redirige l'ancienne adresse.
 2. Branches de travail du dépôt SUUF créées par les sessions de développement (`ccr-…`) : leur historique contient encore les anciennes versions de `xamxam-lab/` ; les supprimer est une décision de l'exploitant (opération irréversible, non effectuée).
 3. Donner accès à `boutique-Ecommerce` si son audit direct est souhaité.
