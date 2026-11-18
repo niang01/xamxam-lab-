@@ -32,7 +32,17 @@ Posez une question en wolof, français ou anglais, ou choisissez des agents. Sou
 - **Collaborative Engineering** : messagerie du projet, **réunion vidéo** (audio, vidéo, partage d'écran) réservée aux membres, résumé par l'IA.
 
 ## Écosystème
-Startups (fiche, mises en relation acceptées des deux côtés), Concours (dépôt d'une version figée de votre projet, jury humain, classement publié), Mentors (réservation de créneaux), Talents & Carrières (offres, candidatures ; recherche limitée aux profils publics), Actualités & Marketplace (contenu sponsorisé identifié, signalement). **Mon portfolio** : rendez-le public pour qu'il apparaisse aux recruteurs.
+Startups (fiche, mises en relation acceptées des deux côtés), Concours (dépôt d'une version figée de votre projet, jury humain, classement publié), Mentors (réservation de créneaux), Talents & Carrières (offres, candidatures ; recherche limitée aux profils publics), Tech News & annonces (contenu sponsorisé identifié, signalement). **Mon portfolio** : rendez-le public pour qu'il apparaisse aux recruteurs.
+
+## XAM-XAM MARKETPLACE
+- **Publier** : titre, catégorie (composant, kit, équipement, outil, service, logiciel, formation, offre de projet), état pour le matériel, prix en FCFA (vide = « prix sur demande »), quantité, localisation, modes de remise, caractéristiques (une par ligne : `nom = valeur`). Les caractéristiques sont affichées comme **déclarées par le vendeur**. Vous pouvez enregistrer un brouillon.
+- **Parcourir** : recherche (titre, description, caractéristiques), catégorie, prix minimum et maximum, tri ; ♡ pour les favoris.
+- **Demandes** : « Contacter le vendeur » ouvre un échange privé entre vous deux. Le vendeur accepte ou décline ; chacun peut clore.
+- **Gérer** : passer l'annonce en réservée, vendue ou retirée (vendue et retirée sont définitives ; les demandes ouvertes sont alors closes et les acheteurs prévenus). Une annonce qui a reçu des demandes ne se supprime pas : retirez-la.
+- **Aucun paiement en ligne** : convenez des modalités directement et ne payez jamais avant d'avoir vérifié l'article ou la prestation. Signalez toute annonce douteuse (« Signaler l'annonce »).
+
+## Interface
+Thème **sombre** (par défaut), **clair** ou **système** dans la barre supérieure ; bouton **✦ AI** pour ouvrir le panneau XAM-XAM AI dans n'importe quelle rubrique ; la **barre d'état** en bas indique la connexion, l'état du serveur, le mode de l'IA, les appareils vus et ce qui attend votre confirmation.
 
 ## Paramètres
 Profil, langue et langue de repli, niveau d'autonomie de l'IA (1 à 5), mot de passe (déconnecte toutes vos sessions), **export de toutes vos données**, suppression du compte.

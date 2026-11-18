@@ -1,12 +1,15 @@
 # API de XAM-XAM LAB
 
-Document généré par `npm run docs:api` (82 routes). Toutes les réponses sont en JSON ; les erreurs ont la forme `{ "error": "message", "key": "clé traduisible", "details": … }`. Les corps sont validés (zod) : données invalides → 400 avec le détail des champs. Session : cookie `xx_session` (httpOnly) obtenu par `POST /api/auth/login`. Appareils : en-tête `Authorization: Bearer <jeton>`.
+Document généré par `npm run docs:api` (93 routes). Toutes les réponses sont en JSON ; les erreurs ont la forme `{ "error": "message", "key": "clé traduisible", "details": … }`. Les corps sont validés (zod) : données invalides → 400 avec le détail des champs. Session : cookie `xx_session` (httpOnly) obtenu par `POST /api/auth/login`. Appareils : en-tête `Authorization: Bearer <jeton>`.
 
 ## admin
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
 | GET | `/api/admin/backup` | administrateur | Téléchargement d'une sauvegarde complète (administrateur). Contient des données personnelles : à conserver chiffrée. |
+| PATCH | `/api/admin/market/listings/[id]` | administrateur | Actions d'administration sur une annonce : masquer / rétablir (motif obligatoire), marquer sponsorisée (toujours affiché). |
+| PATCH | `/api/admin/market/reports/[id]` | administrateur | Décision humaine sur un signalement : retenu (annonce masquée, vendeur prévenu avec le motif) ou rejeté. |
+| GET | `/api/admin/market` | administrateur | Modération : signalements ouverts et récents, annonces masquées. |
 | POST | `/api/admin/users/[id]/clearances` | administrateur | Habilitation nominative : justificatif obligatoire (référence de formation, autorisation, attestation), date d'expiration facultative. |
 | DELETE | `/api/admin/users/[id]/clearances` | administrateur |  |
 | GET | `/api/admin/users` | administrateur |  |
@@ -161,6 +164,23 @@ Document généré par `npm run docs:api` (82 routes). Toutes les réponses sont
 | PATCH | `/api/i18n/entries` | session | Validation ligne à ligne par un locuteur natif habilité (nom du validateur enregistré). |
 | GET | `/api/i18n/export` | administrateur | Export de toutes les clés (référence française et anglaise, texte actuel, statut) pour les traducteurs. |
 | POST | `/api/i18n/import` | administrateur | Import d'un fichier fourni par l'exploitant (décision du 16/11/2026) : les cellules remplies sont VALIDÉES automatiquement (« Fichier importé par l'administrateur », inscrit au journal), ou importées en brouillon à relire. Clés acceptées : clés de l'interface, et « gloss.<terme> » (glossaire scientifique). Paramètres {x} conservés obligatoirement. |
+
+## market
+
+| Méthode | Chemin | Accès | Description |
+|---|---|---|---|
+| POST | `/api/market/inquiries/[id]/messages` | session |  |
+| GET | `/api/market/inquiries/[id]` | session | Fil d'une demande (réservé aux deux parties). |
+| PATCH | `/api/market/inquiries/[id]` | session | Le vendeur accepte ou décline ; l'une ou l'autre partie clôt. Accepter n'engage aucun paiement via la plateforme. |
+| GET | `/api/market/inquiries` | session | Mes demandes : envoyées (acheteur) et reçues (vendeur), avec le dernier message. |
+| POST | `/api/market/listings/[id]/favorite` | session | Ajoute ou retire une annonce des favoris de l'utilisateur. |
+| POST | `/api/market/listings/[id]/inquiries` | session | Demande d'un acheteur, avec un premier message au vendeur. Aucun engagement de paiement n'est pris par la plateforme. |
+| POST | `/api/market/listings/[id]/report` | session | Signalement d'une annonce à la modération (une fois par utilisateur tant qu'il n'est pas traité). |
+| GET | `/api/market/listings/[id]` | session | Détail d'une annonce : pour le vendeur, les demandes reçues ; pour un acheteur, sa demande en cours. |
+| PATCH | `/api/market/listings/[id]` | session |  |
+| DELETE | `/api/market/listings/[id]` | session | Suppression : uniquement sans demande reçue (sinon, retirer l'annonce pour garder l'historique des échanges). |
+| GET | `/api/market/listings` | session | Parcours des annonces (visibles), de mes annonces (tous états) ou de mes favoris. Le sponsorisé est signalé, jamais caché. |
+| POST | `/api/market/listings` | session |  |
 
 ## me
 

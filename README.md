@@ -13,7 +13,7 @@ Plateforme autonome d'ingénierie, d'IA, de simulation, de formation et d'innova
 | [docs/GUIDE_UTILISATEUR.md](docs/GUIDE_UTILISATEUR.md) | Utilisation de chaque rubrique |
 | [docs/GUIDE_ADMINISTRATEUR.md](docs/GUIDE_ADMINISTRATEUR.md) | Comptes, habilitations, traductions, Command Center, modération |
 | [docs/DOCUMENTATION_TECHNIQUE.md](docs/DOCUMENTATION_TECHNIQUE.md) | Architecture, sécurité, données, IA |
-| [docs/API.md](docs/API.md) | 82 routes (généré : `npm run docs:api`) |
+| [docs/API.md](docs/API.md) | 93 routes (généré : `npm run docs:api`) |
 | [docs/AUDIT_SEPARATION.md](docs/AUDIT_SEPARATION.md) | Audit de séparation SUUF / boutique, corrections et preuves d'indépendance |
 | [docs/IDENTITE_VISUELLE.md](docs/IDENTITE_VISUELLE.md) | Logos, icônes, palette, typographie, maquettes (en attente de validation) |
 | [docs/SAUVEGARDE_RESTAURATION.md](docs/SAUVEGARDE_RESTAURATION.md) | Procédures testées |
@@ -41,7 +41,7 @@ Les dossiers `workers/` (ngspice, Python) et `services/` (MQTT, agent local) acc
 
 ## Vérifications
 ```bash
-npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 83 tests (PGlite, ngspice, pvlib, CoolProp)
+npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 94 tests (PGlite, ngspice, pvlib, CoolProp)
 npm run build && npm run test:e2e                 # 7 parcours Playwright (ordinateur + Pixel 7, MQTT, agent série, WebRTC)
 pio run -d firmware/xamxam-node -e xiao_esp32s3   # firmware du nœud (PlatformIO)
 ```
@@ -50,7 +50,7 @@ pio run -d firmware/xamxam-node -e xiao_esp32s3   # firmware du nœud (PlatformI
 | Chemin | Rôle |
 |---|---|
 | `src/app/**/page.tsx` | 27 écrans (26 rubriques + Automation Studio), administration, pages publiques `/p/…` |
-| `src/app/api/**/route.ts` | 82 routes ; `endpoint()` erreurs uniformes, `readInput` zod, contrôle d'accès revérifié en base |
+| `src/app/api/**/route.ts` | 93 routes ; `endpoint()` erreurs uniformes, `readInput` zod, contrôle d'accès revérifié en base |
 | `src/lib/eng/` | calculs purs testés : électrotechnique, solaire, mécanique, thermique, réseau |
 | `src/lib/spice/` | schéma → netlist SPICE, ERC, filtrage anti-injection |
 | `src/lib/{autonomy,commands,automation}.ts` | gouvernance de l'IA, sécurité des commandes, scénarios |

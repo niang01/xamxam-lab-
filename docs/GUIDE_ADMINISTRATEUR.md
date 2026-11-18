@@ -32,8 +32,11 @@ Contrôler les références ajoutées par les utilisateurs contre leur fiche tec
 - Activer/désactiver chaque **agent** ; suivre les opérations IA, simulations, équipements (révocation), automatisations (désactivation), sessions de télépilotage (fin), comptes à autonomie élevée (retour au niveau 2), ressources consommées.
 - **Journal d'audit** : intégrité de la chaîne d'empreintes affichée ; toute modification d'une entrée est détectée.
 
-## Modération (Tech News & Marketplace, écosystème)
+## Modération (Tech News & annonces, écosystème)
 Un contenu signalé par 3 personnes est masqué automatiquement ; les administrateurs sont notifiés et peuvent le masquer ou le rétablir.
+
+## Modération de XAM-XAM MARKETPLACE
+Onglet **Modération** de la rubrique (administrateurs uniquement) : signalements (motif, auteur, vendeur) et annonces masquées. Chaque décision exige un **motif écrit**, communiqué au vendeur : « Masquer l'annonce » (signalement retenu ; les autres signalements ouverts sur l'annonce sont clos) ou « Rejeter le signalement ». Depuis le détail d'une annonce : masquer / rétablir, marquer **sponsorisée** (toujours affiché comme tel). Toutes ces actions sont inscrites au journal d'audit.
 
 ## Configuration du serveur
 Variables : [.env.example](../.env.example). Points clés : `SESSION_SECRET` (obligatoire), `ANTHROPIC_API_KEY` (+ `AI_DAILY_LIMIT`), `XX_PYTHON`, `METEOMATICS_USERNAME/PASSWORD`, `XX_TURN_*` (réunions entre réseaux différents), TLS MQTT. Santé : `GET /api/health`.

@@ -4,7 +4,7 @@ import { RUBRICS } from "../../src/lib/catalog";
 
 test.describe.configure({ mode: "serial" });
 
-test("parcours complet : inscription, langues, 27 rubriques, labos, simulation, IoT, IA, Command Center", async ({ page }) => {
+test("parcours complet : inscription, langues, toutes les rubriques, labos, simulation, IoT, IA, Command Center", async ({ page }) => {
   await signup(page, process.env.XX_E2E_ADMIN ?? "admin@e2e.local");
 
   // Wolof par défaut : textes non validés affichés en repli, signalés.

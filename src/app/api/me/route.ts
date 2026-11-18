@@ -49,7 +49,9 @@ export const GET = endpoint(async (req) => {
     ["calc_runs", "SELECT * FROM calc_runs WHERE user_id=$1"], ["simulations", "SELECT id, engine, engine_version, analysis, status, created_at FROM simulations WHERE user_id=$1"],
     ["devices", "SELECT id, name, hardware, protocol, environment, capabilities, created_at FROM devices WHERE owner_id=$1"],
     ["ai_messages", "SELECT m.* FROM ai_messages m JOIN ai_conversations c ON c.id=m.conversation_id WHERE c.user_id=$1"],
-    ["eco_items", "SELECT * FROM eco_items WHERE owner_id=$1"], ["enrollments", "SELECT * FROM enrollments WHERE user_id=$1"], ["certificates", "SELECT * FROM certificates WHERE user_id=$1"],
+    ["eco_items", "SELECT * FROM eco_items WHERE owner_id=$1"],
+    ["market_listings", "SELECT * FROM market_listings WHERE seller_id=$1"], ["market_inquiries", "SELECT * FROM market_inquiries WHERE buyer_id=$1"],
+    ["market_messages", "SELECT * FROM market_messages WHERE author_id=$1"], ["market_favorites", "SELECT * FROM market_favorites WHERE user_id=$1"], ["enrollments", "SELECT * FROM enrollments WHERE user_id=$1"], ["certificates", "SELECT * FROM certificates WHERE user_id=$1"],
   ];
   const out: Record<string, unknown> = { user: u, exported_at: new Date().toISOString() };
   for (const [k, statement] of tables) out[k] = await sql(statement, [u.id]);
