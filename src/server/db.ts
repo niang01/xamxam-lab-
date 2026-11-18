@@ -31,12 +31,31 @@ async function openPglite(dir: string | null): Promise<Db> {
   };
 }
 
+/**
+ * Paramètres TLS explicites (indépendants des interprétations de « sslmode » selon les versions de pg) :
+ * sslmode=require|verify-ca|verify-full → TLS AVEC vérification du certificat (hébergeurs publics : Neon, etc.) ;
+ * DB_TLS_ALLOW_SELF_SIGNED=true seulement pour un serveur interne à certificat auto-signé. Sans sslmode : pas de TLS
+ * (réseau privé Docker). channel_binding=require → liaison de canal SCRAM-SHA-256-PLUS.
+ */
+export function postgresConnection(url: string): { connectionString: string; ssl?: { rejectUnauthorized: boolean }; enableChannelBinding?: boolean } {
+  const u = new URL(url);
+  const mode = u.searchParams.get("sslmode");
+  const binding = u.searchParams.get("channel_binding");
+  u.searchParams.delete("sslmode"); u.searchParams.delete("channel_binding");
+  const tls = mode != null && ["require", "verify-ca", "verify-full"].includes(mode);
+  return {
+    connectionString: u.toString(),
+    ...(tls ? { ssl: { rejectUnauthorized: process.env.DB_TLS_ALLOW_SELF_SIGNED !== "true" } } : {}),
+    ...(binding === "require" ? { enableChannelBinding: true } : {}),
+  };
+}
+
 async function openPostgres(url: string): Promise<Db> {
   const pg = await import("pg");
   pg.types.setTypeParser(TYPE_DATE, (v: string) => v);
   pg.types.setTypeParser(TYPE_INT8, Number);
   pg.types.setTypeParser(TYPE_NUMERIC, Number);
-  const pool = new pg.Pool({ connectionString: url, max: Number(process.env.DB_POOL_SIZE ?? 10), ssl: /sslmode=require/.test(url) ? { rejectUnauthorized: false } : undefined });
+  const pool = new pg.Pool({ max: Number(process.env.DB_POOL_SIZE ?? 10), ...postgresConnection(url) });
   return {
     driver: "postgres",
     query: async <T,>(sql: string, params: unknown[] = []) => ({ rows: (await pool.query(sql, params)).rows as T[] }),

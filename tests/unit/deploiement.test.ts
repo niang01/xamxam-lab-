@@ -39,3 +39,23 @@ describe("Contrôle de configuration de production", () => {
     expect(checkConfig({ ...GOOD, XX_DOMAIN: "pas un domaine" }).errors.join(" ")).toContain("XX_DOMAIN invalide");
   });
 });
+
+describe("Connexion PostgreSQL hébergée (Neon)", () => {
+  it("TLS avec vérification du certificat, paramètres retirés de l'URL, liaison de canal", async () => {
+    const { postgresConnection } = await import("@/server/db");
+    const c = postgresConnection("postgresql://u:p@ep-x-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require");
+    expect(c.ssl).toEqual({ rejectUnauthorized: true });
+    expect(c.enableChannelBinding).toBe(true);
+    expect(c.connectionString).toBe("postgresql://u:p@ep-x-pooler.eu-central-1.aws.neon.tech/neondb");
+    expect(postgresConnection("postgres://xamxam:pw@db:5432/xamxam").ssl).toBeUndefined();
+  });
+});
+
+describe("Base hébergée : chiffrement exigé", () => {
+  it("refuse une base externe sans sslmode=require ; accepte la base Docker locale", () => {
+    const base = { SESSION_SECRET: "Zq8vN3rT6yW1mB4kP9sD2fH5jL7xC0aE-uI", XX_ENCRYPTION_KEY: "Kt4Rw8Yp2Nb6Vm0Qz3Hs7Jd1Lf5Gc9Xa-oE", XX_ADMIN_EMAILS: "a@lab.sn", XX_DOMAIN: "lab.example.sn" };
+    expect(checkConfig({ ...base, DATABASE_URL: "postgresql://u:p@ep-x.eu-central-1.aws.neon.tech/neondb" }).errors.join(" ")).toContain("sslmode=require");
+    expect(checkConfig({ ...base, DATABASE_URL: "postgresql://u:p@ep-x.eu-central-1.aws.neon.tech/neondb?sslmode=require" }).errors).toEqual([]);
+    expect(checkConfig({ ...base, DATABASE_URL: "postgres://xamxam:pw@db:5432/xamxam" }).errors).toEqual([]);
+  });
+});

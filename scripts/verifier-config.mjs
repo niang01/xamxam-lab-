@@ -37,6 +37,13 @@ export function checkConfig(env) {
 
   strong("SESSION_SECRET", 32);
   if (!v("DATABASE_URL")) strong("POSTGRES_PASSWORD", 16);
+  else {
+    let host = "";
+    try { host = new URL(v("DATABASE_URL")).hostname; } catch { errors.push("DATABASE_URL invalide"); }
+    if (host && !["db", "localhost", "127.0.0.1"].includes(host) && !/sslmode=(require|verify-ca|verify-full)/.test(v("DATABASE_URL"))) {
+      errors.push("DATABASE_URL vers un hébergeur externe sans « sslmode=require » : connexion non chiffrée refusée");
+    }
+  }
 
   const admins = v("XX_ADMIN_EMAILS").split(",").map((s) => s.trim()).filter(Boolean);
   if (!admins.length) errors.push("XX_ADMIN_EMAILS manquant : aucun compte ne pourra administrer la plateforme");

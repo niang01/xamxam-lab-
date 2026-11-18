@@ -5,6 +5,7 @@ Ce que l'exploitant doit fournir pour activer chaque fonction en conditions rée
 | Besoin | Pour | Où le configurer | Coût indicatif |
 |---|---|---|---|
 | **Dépôt Git dédié `xamxam-lab`** | Séparer totalement le code (exigence d'indépendance) | Créer le dépôt vide sur GitHub, puis `bash scripts/extraire-depot.sh ../xamxam-lab-depot <url>` | Gratuit |
+| **Option gratuite** : Render Free + Neon Free (voir GUIDE_INSTALLATION § 2 bis) | Première mise en ligne sans budget | `render.yaml`, champs sécurisés Render | 0 € |
 | Serveur (VPS, 2 vCPU / 4 Go recommandés) + nom de domaine | Mise en ligne (HTTPS automatique inclus) | `.env` puis `docker compose --profile https up -d --build` | Quelques dizaines d'USD/mois |
 | `SESSION_SECRET`, `XX_ADMIN_EMAILS`, `POSTGRES_PASSWORD` | Sécurité, administration | `.env` | — |
 | Clé **Anthropic** (`ANTHROPIC_API_KEY`) | Compréhension libre WO/FR/EN, orchestration des agents | `.env` | Opus 5.5 : 4 $ / 20 $ par million de jetons (entrée/sortie) ; plafond `AI_DAILY_LIMIT` |

@@ -1,0 +1,37 @@
+# Sauvegarde GRATUITE de la base de production (Neon) : chaque jour, sauvegarde complète vérifiable (format
+# xamxam-backup-v1, empreinte SHA-256) conservée 30 jours comme artefact privé du dépôt.
+# Prérequis : secret de dépôt PRODUCTION_DATABASE_URL (Settings → Secrets and variables → Actions). Sans ce secret,
+# la tâche s'arrête sans erreur. Coût : quelques minutes par jour sur le quota gratuit de GitHub Actions.
+# Restauration : télécharger l'artefact, puis `DATABASE_URL=<base vide> npm run db:restore -- fichier.json`.
+name: Sauvegarde de la base
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+    steps:
+      - name: Secret présent ?
+        id: secret
+        run: if [ -n "$DATABASE_URL" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "PRODUCTION_DATABASE_URL absent : aucune sauvegarde."; fi
+      - uses: actions/checkout@v4
+        if: steps.secret.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secret.outputs.ok == 'true'
+        with: { node-version: 22, cache: npm, cache-dependency-path: package-lock.json }
+      - if: steps.secret.outputs.ok == 'true'
+        run: npm ci --omit=optional
+      - if: steps.secret.outputs.ok == 'true'
+        run: npx tsx scripts/backup.mts "sauvegardes/xamxam-$(date -u +%Y%m%dT%H%M%SZ).json"
+      - uses: actions/upload-artifact@v4
+        if: steps.secret.outputs.ok == 'true'
+        with: { name: "sauvegarde-xamxam-${{ github.run_id }}", path: sauvegardes/, retention-days: 30, if-no-files-found: error }

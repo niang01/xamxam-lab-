@@ -18,6 +18,18 @@ XX_PYTHON=$PWD/.venv/bin/python XX_ADMIN_EMAILS=vous@exemple.sn npm run dev   # 
 ```
 Créez votre compte avec l'adresse de `XX_ADMIN_EMAILS` : il reçoit le rôle administrateur. Les données sont dans `./data/pglite`.
 
+## 2 bis. Déploiement gratuit : Render (Free) + Neon (Free)
+Coût : **0 €**, sans carte bancaire. Limites : veille après 15 min sans visite (réveil ≈ 1 min), 512 Mo de mémoire (mesuré : ≈ 140 Mo avec PostgreSQL), base de 1 Go, pas de MQTT ; les calculs Python sont plus lents qu'en local.
+
+1. **Neon** (neon.com, offre Free) : créer un projet, région *AWS Europe Central 1 (Frankfurt)*, PostgreSQL 16 ou 17. Copier l'adresse de connexion **avec pooling** (`…-pooler…`, elle contient `sslmode=require`).
+2. **GitHub** : dans Render → *Account Settings → GitHub*, autoriser l'accès au dépôt `niang01/xamxam-lab-`.
+3. **Render** → *New → Blueprint* → dépôt `niang01/xamxam-lab-`, branche `main` : Render lit `render.yaml`. **Vérifier que le plan affiché est « Free »** et qu'aucune base Render n'est proposée. Saisir dans les champs sécurisés : `DATABASE_URL` (adresse Neon) et `XX_ADMIN_EMAILS` (votre adresse). `SESSION_SECRET` et `XX_ENCRYPTION_KEY` sont générés par Render.
+4. Premier déploiement : les migrations s'appliquent automatiquement sur Neon au démarrage. Santé : `https://<service>.onrender.com/api/health` doit afficher `"db":"postgres"`.
+5. Créer votre compte avec l'adresse déclarée dans `XX_ADMIN_EMAILS` (vous devenez administrateur).
+6. **Sauvegardes gratuites** : dans GitHub → *Settings → Secrets and variables → Actions*, créer le secret `PRODUCTION_DATABASE_URL` (même adresse Neon) ; le workflow « Sauvegarde de la base » s'exécute chaque jour et conserve 30 jours de sauvegardes vérifiables.
+
+À ne pas faire pour rester gratuit : ne pas créer de base PostgreSQL sur Render (payante ou expirant après 30 jours), ne pas changer le plan du service, ne pas ajouter de disque, ne pas lancer la compilation iOS sur macOS sans nécessité (minutes décomptées 10 fois plus vite).
+
 ## 3. Production avec Docker Compose (recommandé)
 Prérequis serveur : Docker 24+ avec Compose, ports 80 et 443 ouverts, un nom de domaine dont l'enregistrement DNS pointe vers le serveur.
 ```bash

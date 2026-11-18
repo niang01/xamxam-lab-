@@ -1,13 +1,11 @@
 # Compilation réelle de l'application iOS (Xcode sur macOS, GitHub Actions) — sans clé ni certificat :
 # construction pour le simulateur iOS, signature désactivée. La version App Store exige le compte Apple Developer
 # de l'exploitant (certificat et profil de distribution), non fournis ici.
-# Déclenchée seulement quand l'application mobile change, ou à la demande (minutes macOS comptées plus cher).
+# Lancement MANUEL uniquement (onglet Actions → « Run workflow ») : les minutes macOS sont décomptées 10 fois plus
+# vite du quota gratuit de GitHub ; aucune exécution automatique.
 name: XAM-XAM LAB iOS
 
 on:
-  push:
-    branches: [main]
-    paths: ["mobile/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
 
 permissions:
