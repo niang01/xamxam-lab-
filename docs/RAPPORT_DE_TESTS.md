@@ -7,7 +7,7 @@ Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'env
 |---|---|---|
 | Typage strict | `npm run typecheck` | ✅ 0 erreur |
 | Lint | `npm run lint` | ✅ 0 erreur, 0 avertissement |
-| Tests unitaires + intégration | `XX_PYTHON=… npm test` | ✅ **111/111** (13 fichiers) |
+| Tests unitaires + intégration | `XX_PYTHON=… npm test` | ✅ **112/112** (13 fichiers) |
 | Build de production | `npm run build` | ✅ 0 avertissement, 0 erreur |
 | Parcours de bout en bout | `npm run test:e2e` | ✅ **10/10** (ordinateur + Pixel 7) |
 | Journaux du serveur pendant les parcours | sortie du serveur | ✅ 0 erreur |
@@ -26,7 +26,7 @@ Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'env
 - **Marketplace** (`market.test.ts`) : état exigé pour un matériel et interdit pour une prestation, prix entier positif, cycle de vie (vendu/retiré définitifs), droits sur les demandes, visibilité, refus (propre annonce, quantité, indisponible), format FCFA.
 - **Netlist, langues, divers** (`spice-i18n.test.ts`) : nœuds, netlist, ERC, **injection de directives SPICE refusée** ; interpolation simulation/mesure ; chaque texte FR/EN présent avec les mêmes paramètres ; aucun texte wolof dans le code ; clés dynamiques et toutes les clés `t("…")` du code présentes ; CSV (aller-retour, protection contre les formules) ; QCM ; classement ; JSON canonique ; lecture série.
 
-## Tests d'intégration (43) — base PGlite neuve par fichier, routes réelles
+## Tests d'intégration (44) — base PGlite neuve par fichier, routes réelles
 - **Double authentification** (`mfa.test.ts`) : secret chiffré en base, premier code exigé, codes de secours hachés ; pas de session après le mot de passe seul ; code réutilisé refusé ; défi consommé ; 5 essais au plus ; code de secours à usage unique ; désactivation exigeant mot de passe et second facteur.
 - **Marketplace** (`marketplace.test.ts`) : publication, brouillon invisible, état incohérent refusé, filtres prix/catégorie ; modification réservée au vendeur ; demande sur sa propre annonce refusée, quantité excessive refusée, doublon refusé, notification du vendeur ; fil accessible aux deux seules parties ; seul le vendeur accepte ; vente déclarée → demandes closes et acheteur prévenu, plus de retour en vente ni de suppression ; outil IA `search_marketplace` limité aux annonces publiées et visibles ; signalement unique, file de modération réservée aux administrateurs, motif obligatoire, annonce masquée et vendeur informé, rétablissement et sponsorisé tracés, chaîne d'audit intègre.
 - **Plateforme** : administrateur seulement par configuration ; révocation des sessions ; projets privés (non-membre → 404, lecteur → 403 en écriture) ; calculs tracés ; tableaux normatifs réservés ; **ngspice réel** (pont diviseur 10/3 V, charge RC ≈ 5(1−e⁻⁵)) ; ERC bloquant ; rapport ; import wolof (validation, paramètres, clés inconnues, brouillons invisibles) ; détection d'une altération du journal d'audit.

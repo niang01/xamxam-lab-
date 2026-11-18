@@ -14,6 +14,7 @@ Plateforme autonome d'ingénierie, d'IA, de simulation, de formation et d'innova
 | [docs/GUIDE_ADMINISTRATEUR.md](docs/GUIDE_ADMINISTRATEUR.md) | Comptes, habilitations, traductions, Command Center, modération |
 | [docs/DOCUMENTATION_TECHNIQUE.md](docs/DOCUMENTATION_TECHNIQUE.md) | Architecture, sécurité, données, IA |
 | [docs/API.md](docs/API.md) | 95 routes (généré : `npm run docs:api`) |
+| [docs/RAPPORT_FINAL.md](docs/RAPPORT_FINAL.md) | **Rapport final avant mise en production** : vérifications réelles, versions, services externes, bilan |
 | [docs/AUDIT_SEPARATION.md](docs/AUDIT_SEPARATION.md) | Audit de séparation SUUF / boutique, corrections et preuves d'indépendance |
 | [docs/IDENTITE_VISUELLE.md](docs/IDENTITE_VISUELLE.md) | Logos, icônes, palette, typographie, maquettes (en attente de validation) |
 | [docs/SAUVEGARDE_RESTAURATION.md](docs/SAUVEGARDE_RESTAURATION.md) | Procédures testées |
@@ -41,7 +42,7 @@ Les dossiers `workers/` (ngspice, Python) et `services/` (MQTT, agent local) acc
 
 ## Vérifications
 ```bash
-npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 111 tests (PGlite, ngspice, pvlib, CoolProp)
+npm run typecheck && npm run lint && XX_PYTHON=.venv/bin/python npm test   # 112 tests (PGlite, ngspice, pvlib, CoolProp)
 npm run build && npm run test:e2e                 # 7 parcours Playwright (ordinateur + Pixel 7, MQTT, agent série, WebRTC)
 pio run -d firmware/xamxam-node -e xiao_esp32s3   # firmware du nœud (PlatformIO)
 ```

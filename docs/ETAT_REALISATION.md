@@ -1,6 +1,8 @@
-# XAM-XAM LAB — état de réalisation (17/11/2026)
+# XAM-XAM LAB — état de réalisation (18/11/2026)
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 111 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
+Synthèse avant mise en production : [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
+
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 112 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
 
 ## 1. Terminé et testé
 | Domaine | Fonctions |
@@ -28,7 +30,7 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Fonction | Ce qui manque |
 |---|---|
 | Application Android | Vérifiée par les outils Android, **non exécutée sur un appareil** (pas d'émulateur) ; à recompiler avec l'adresse réelle du serveur |
-| Application iOS | Projet généré ; compilation sur macOS/Xcode non réalisée |
+| Application iOS | Projet Xcode (Capacitor 7, SPM) ; compilation réelle sur macOS par GitHub Actions (`ios.yml`) — voir RAPPORT_FINAL § 7 bis ; aucune version signée |
 | Visioconférence | Fonctionne en réseau local ; entre réseaux différents, un serveur TURN est nécessaire |
 | Voix (dictée, lecture) | API du navigateur ; wolof selon l'appareil, aucun service vocal wolof validé intégré |
 | Textes en français uniquement | Messages ERC, libellés internes de certains calculs, réponses du moteur de règles |
@@ -40,7 +42,7 @@ Projet autonome (code, base, comptes, API, configuration propres), dans son prop
 | Prévisions Meteomatics | Compte Meteomatics de XAM-XAM LAB |
 | Wolof dans l'interface | Fichiers de traduction validés par des locuteurs natifs |
 | Section de câble | Tableaux de la norme achetée, saisis par un ingénieur |
-| Essais réels IoT / commandes / drones | Matériel de banc, habilitations, autorisation ANACIM |
+| Essais réels IoT / commandes / drones | Matériel de banc, habilitations, autorisation ANACIM (aucun vol piloté : liaison MAVLink non réalisée) |
 | MQTT chiffré | Certificat TLS |
 | Publication mobile | Clé de signature, comptes Google Play et Apple Developer |
 
