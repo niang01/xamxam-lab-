@@ -35,3 +35,14 @@ describe.skipIf(!available)("Moteur Python (pvlib, CoolProp)", () => {
     expect(day.performance_ratio).toBeLessThan(1);
   }, 60000);
 });
+
+describe("Meteomatics sans compte propre", () => {
+  it("aucun appel sortant : refus explicite au lieu d'une requête non authentifiée", async () => {
+    const { meteomaticsForecast, MeteomaticsNotConfigured } = await import("@/server/integrations/geo");
+    let called = false;
+    const fetchImpl = (async () => { called = true; return new Response("{}"); }) as unknown as typeof fetch;
+    delete process.env.METEOMATICS_USERNAME; delete process.env.METEOMATICS_PASSWORD;
+    await expect(meteomaticsForecast(14.69, -17.44, 3, fetchImpl)).rejects.toBeInstanceOf(MeteomaticsNotConfigured);
+    expect(called).toBe(false);
+  });
+});

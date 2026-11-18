@@ -13,6 +13,8 @@ test("double authentification : activation par QR code, connexion en deux étape
   // L'application d'authentification est simulée par le calcul RFC 6238 du test lui-même.
   await page.fill("input[name=mfa-code]", totp(secret, Date.now() / 1000));
   await page.click("[data-testid=mfa-enable]");
+  // Attendre la réponse du serveur (allTextContents ne patiente pas) : les 10 codes de secours affichés une seule fois.
+  await expect(page.locator("[data-testid=recovery-codes] li")).toHaveCount(10);
   const codes = (await page.locator("[data-testid=recovery-codes] li").allTextContents()).map((c) => c.trim());
   expect(codes).toHaveLength(10);
   await expect(page.locator("[data-testid=mfa]")).toContainText("Activée");

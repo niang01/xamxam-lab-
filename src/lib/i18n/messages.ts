@@ -247,6 +247,8 @@ export const MESSAGES = {
   "mfa.err.challenge": e("Étape expirée ou trop d'essais : reconnectez-vous.", "Step expired or too many attempts: sign in again."),
   "mfa.err.already": e("Double authentification déjà active.", "Two-factor authentication already enabled."),
   "mfa.err.inactive": e("Double authentification inactive.", "Two-factor authentication not enabled."),
+  "geo.err.meteomaticsMissing": e("Prévisions indisponibles : aucun compte Meteomatics n'est configuré pour XAM-XAM LAB (administrateur : METEOMATICS_USERNAME / METEOMATICS_PASSWORD).", "Forecasts unavailable: no Meteomatics account is configured for XAM-XAM LAB (administrator: METEOMATICS_USERNAME / METEOMATICS_PASSWORD)."),
+  "geo.err.upstream": e("Le service de données externe n'a pas répondu correctement. Aucune valeur n'est affichée à la place.", "The external data service did not respond correctly. No value is shown instead."),
   "theme.label": e("Thème d'affichage", "Display theme"),
   "status.label": e("État des services", "Service status"),
   "status.online": e("En ligne", "Online"),

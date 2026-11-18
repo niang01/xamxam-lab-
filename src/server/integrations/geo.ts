@@ -107,11 +107,16 @@ export async function powerDaily(lat: number, lon: number, start: string, end: s
   }
 }
 
+export class MeteomaticsNotConfigured extends Error {
+  constructor() { super("Prévisions Meteomatics non configurées : l'administrateur doit renseigner METEOMATICS_USERNAME et METEOMATICS_PASSWORD (compte Meteomatics de XAM-XAM LAB)."); this.name = "MeteomaticsNotConfigured"; }
+}
+
 /** Prévisions journalières Meteomatics (PRÉDICTIONS). Identifiants côté serveur uniquement. */
 export async function meteomaticsForecast(lat: number, lon: number, days: number, fetchImpl: typeof fetch = outboundFetch): Promise<GeoSeries> {
+  // Sans compte Meteomatics propre à XAM-XAM LAB : aucun appel sortant (rien n'est envoyé, rien n'est inventé).
+  if (!env.meteomaticsUser || !env.meteomaticsPassword) throw new MeteomaticsNotConfigured();
   const url = buildMeteomaticsUrl(lat, lon, days);
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (env.meteomaticsUser && env.meteomaticsPassword) headers.Authorization = `Basic ${Buffer.from(`${env.meteomaticsUser}:${env.meteomaticsPassword}`).toString("base64")}`;
+  const headers: Record<string, string> = { Accept: "application/json", Authorization: `Basic ${Buffer.from(`${env.meteomaticsUser}:${env.meteomaticsPassword}`).toString("base64")}` };
   let status: number | null = null;
   try {
     const r = await fetchImpl(url, { headers, signal: AbortSignal.timeout(30000) });
