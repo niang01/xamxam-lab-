@@ -19,6 +19,7 @@ export const RUBRICS: Rubric[] = [
   { key: "studio", path: "/studio", group: "lab", icon: "◭" },
   { key: "gateway", path: "/iot", group: "connect", icon: "⇄" },
   { key: "remote", path: "/remote", group: "connect", icon: "◎" },
+  { key: "drones", path: "/drones", group: "connect", icon: "✈" },
   { key: "earth", path: "/earth", group: "connect", icon: "◐" },
   { key: "projects", path: "/projects", group: "knowledge", icon: "▤" },
   { key: "academy", path: "/academy", group: "knowledge", icon: "✎" },
