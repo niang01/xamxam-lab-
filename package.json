@@ -21,6 +21,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^1.9.0",
     "@electric-sql/pglite": "^0.5.16",
+    "@neon/config": "^1.14.3",
+    "@neon/env": "^2.1.6",
     "@serialport/binding-mock": "^10.2.2",
     "aedes": "^1.2.0",
     "eecircuit-engine": "^1.9.0",

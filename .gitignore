@@ -12,3 +12,7 @@ backups
 .extra-ca.pem
 .venv/
 design/identite/export/png/
+.neon
+.env.local
+.env.*.local
+.env.production
