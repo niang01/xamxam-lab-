@@ -8,7 +8,7 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 159/159 (18 fichiers) |
+| Tests unitaires + intégration | ✅ 161/161 (19 fichiers) |
 | Parcours de bout en bout (Playwright) | ✅ 13/13 (ordinateur + Pixel 7) |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |

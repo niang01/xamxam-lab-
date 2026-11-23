@@ -47,6 +47,7 @@ export function UsersAdmin() {
               {!u.email_verified_at && <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "verify_email" }))}>{t("adm.markVerified")}</Btn>}
               {u.locked_until && <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "unlock" }))}>{t("adm.unlock")}</Btn>}
               <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "extend_trial", days: 30 }))}>{t("adm.extendTrial")}</Btn>
+              {u.id !== me?.id && <Btn kind="danger" data-testid="delete-account" onClick={() => { const c = prompt(t("adm.deleteConfirm", { email: u.email })); if (c !== null) void run(() => act(u.id, { action: "delete_account", confirm_email: c })); }}>{t("adm.deleteAccount")}</Btn>}
             </div>
             <div className="flex flex-wrap gap-1">{u.clearances.map((x) => <span key={x.kind} className="inline-flex items-center gap-1 rounded bg-[var(--panel-2)] px-2 py-0.5 text-xs" title={x.evidence}>{t(`clr.${x.kind}` as MsgKey)}{x.valid_until ? ` (≤ ${x.valid_until})` : ""}<button aria-label={t("c.delete")} onClick={() => run(() => del(`/api/admin/users/${u.id}/clearances?kind=${x.kind}`))}>✕</button></span>)}</div>
             <div className="flex flex-wrap items-end gap-2">

@@ -1450,6 +1450,8 @@ export const MESSAGES = {
   "adm.resetLink": e("Lien de réinitialisation", "Reset link"),
   "adm.resetLinkInfo": e("Lien pour {email}, valable 24 h et utilisable une seule fois. Transmettez-le par un canal sûr ; il ne sera plus affiché.", "Link for {email}, valid 24 h, single use. Send it through a safe channel; it will not be shown again."),
   "adm.markVerified": e("Marquer l'adresse comme vérifiée", "Mark address as verified"),
+  "adm.deleteAccount": e("Supprimer le compte", "Delete account"),
+  "adm.deleteConfirm": e("Suppression définitive du compte et de ses données privées. Recopiez l'adresse « {email} » pour confirmer :", "Permanent deletion of the account and its private data. Type the address \"{email}\" to confirm:"),
   "adm.unlock": e("Débloquer", "Unlock"),
   "adm.extendTrial": e("Prolonger l'essai de 30 jours", "Extend trial by 30 days"),
   "err.tokenInvalid": e("Lien invalide, expiré ou déjà utilisé.", "Invalid, expired or already used link."),

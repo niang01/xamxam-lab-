@@ -14,6 +14,7 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("extend_trial"), days: z.number().int().min(1).max(365) }),
   z.object({ action: z.literal("set_profile"), profile_kind: z.enum(PROFILES as unknown as [string, ...string[]]) }),
   z.object({ action: z.literal("set_admin"), is_admin: z.boolean() }),
+  z.object({ action: z.literal("delete_account"), confirm_email: z.string().trim().toLowerCase() }),
 ]);
 
 /** Actions d'administration sur un compte (toutes journalisées). */
@@ -40,6 +41,14 @@ export const POST = endpoint(async (req, ctx: { params: Promise<Record<string, s
       await sql("UPDATE users SET is_admin=$2, session_version=session_version+1, updated_at=now() WHERE id=$1", [id, b.is_admin]);
       forgetEntitlements();
       break;
+    }
+    case "delete_account": {
+      if (id === a.id) throw new ApiFailure(400, "Supprimez votre propre compte depuis Paramètres", "err.forbidden");
+      if (b.confirm_email !== target.email) throw new ApiFailure(400, "L'adresse de confirmation ne correspond pas", "err.invalid");
+      await audit(a.id, "human", "admin.user.delete_account", { kind: "user", id }, { email_hash: (await import("@/server/security/crypto")).sha256(target.email) });
+      await sql("DELETE FROM users WHERE id=$1", [id]);
+      forgetEntitlements();
+      return ok({ ok: true, deleted: true });
     }
   }
   await audit(a.id, "human", `admin.user.${b.action}`, { kind: "user", id }, b.action === "reset_link" ? {} : { ...b });
