@@ -2,7 +2,17 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
-## Synthèse
+## Campagne du 23/11/2026 (comptes, licences, Aláji IA, espaces 2D/3D/4D, bibliothèque, projets)
+| Contrôle | Résultat |
+|---|---|
+| Typage strict, lint | ✅ 0 erreur |
+| Tests unitaires + intégration | ✅ **159/159** (18 fichiers) — dont `accounts.test.ts` (13 : clés en base, admin, verrouillage, réinitialisation, vérification d'adresse, courriel avec `fetchImpl` explicite, code d'initialisation, essai, fraude sur les dates, licences : émission, activation, postes, renouvellement, révocation), `alaji.test.ts` (8 : analyse, vérificateur, mode sans clé, rapport, fournisseur compatible OpenAI avec `fetchImpl` explicite), `espaces.test.ts` (unitaires 8 + intégration 6 : bibliothèque, modèles, schémas 2D, bilans 4D, maquette 3D, budget, exports) |
+| Build de production | ✅ |
+| Parcours de bout en bout | ✅ **13/13** — dont `comptes.spec.ts` (inscription → profil → déconnexion → mot de passe oublié → lien administrateur → nouvelle connexion → activation de licence) et `espaces.spec.ts` (modèle de projet, budget, bibliothèque, schéma 2D relié et enregistré, scénario 4D au bilan nul, maquette 3D avec masse) |
+| Production (https://xamxam-lab.onrender.com) | ✅ inscription, configuration du profil, guide, tableau de bord, déconnexion, reconnexion, session conservée après rechargement, sur téléphone Android (Pixel 7), tablette (Galaxy Tab S4) et ordinateur (émulation Playwright), sans débordement ; comptes de test supprimés |
+| Non vérifiable ici | Fournisseur d'IA réel (aucun configuré ; le routeur Hugging Face est bloqué par le réseau de développement) ; envoi réel de courriel (aucun fournisseur configuré) |
+
+## Synthèse (campagne du 18/11/2026)
 | Contrôle | Commande | Résultat |
 |---|---|---|
 | Typage strict | `npm run typecheck` | ✅ 0 erreur |

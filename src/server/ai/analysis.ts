@@ -150,3 +150,23 @@ export function budget(items: { name: string; qty: number; unit_price: number | 
   return ["| Article | Qté | Prix unitaire | Total |", "|---|---|---|---|", ...lines, "",
     `**Total** : ${[...totals].map(([cur, v]) => `${v} ${cur}`).join(" + ") || "—"}${unpriced.length ? ` — ${unpriced.length} article(s) sans prix : total incomplet.` : ""}`].join("\n");
 }
+
+/** Support de présentation (diapositives séparées par « --- », compatible Marp) à partir des données du projet. */
+export function projectSlidesMarkdown(r: Rep): string {
+  const p = r.project;
+  const firstLines = (s: string | null | undefined, n = 6) => (s ?? "").split("\n").filter((l) => l.trim()).slice(0, n).join("\n") || "_À compléter._";
+  const done = r.tasks.filter((t) => t.status === "done").length;
+  const slides = [
+    `# ${p.title}\n\n${p.level && p.level in PROJECT_TYPE_LABEL ? PROJECT_TYPE_LABEL[p.level as Exclude<ProjectType, null>] : ""}${p.owner_name ? `\n\n${p.owner_name}` : ""}`,
+    `## Contexte et problématique\n\n${firstLines(p.description, 3)}\n\n${firstLines(p.problem, 3)}`,
+    `## Objectifs\n\n${firstLines(p.objectives)}`,
+    `## Méthodologie\n\n${firstLines(p.methodology)}`,
+    `## Architecture\n\n${firstLines(p.architecture)}`,
+    `## Composants et budget\n\n${r.components.slice(0, 10).map((c) => `- ${c.qty} × ${c.name}`).join("\n") || "_À compléter._"}\n\n${budget(r.components).split("\n").at(-1) ?? ""}`,
+    `## Calculs et simulations\n\n${r.calcs.slice(0, 6).map((c) => `- ${c.calc_kind} : ${Object.values(c.outputs?.outputs ?? {}).slice(0, 2).map((o) => `${o.label} = ${o.value} ${o.unit ?? ""}`).join(" ; ")}`).join("\n") || "_Aucun calcul enregistré._"}\n\n${r.sims.length} simulation(s) enregistrée(s).`,
+    `## Résultats\n\n${firstLines(p.results)}`,
+    `## Avancement\n\n${done}/${r.tasks.length} tâche(s) terminée(s).`,
+    `## Conclusion et perspectives\n\n${firstLines(p.conclusion)}`,
+  ];
+  return `---\nmarp: true\n---\n\n${slides.join("\n\n---\n\n")}\n`;
+}

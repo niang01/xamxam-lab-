@@ -4,13 +4,14 @@ import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
 import { patch, post } from "@/lib/client/api";
+import { DISCIPLINE_LABEL, type Discipline } from "@/lib/library";
 
-type Comp = { id: string; category: string; name: string; symbol_kind: string | null; description: string; function: string | null; manufacturer: string | null; mpn: string | null; datasheet_url: string | null; specs: Record<string, string>; pins: string[]; precautions: string | null; status: string; source: string | null };
+type Comp = { id: string; category: string; name: string; symbol_kind: string | null; discipline: string | null; params: { key: string; label: string; unit: string }[]; doc: string | null; symbol2d: string | null; description: string; function: string | null; manufacturer: string | null; mpn: string | null; datasheet_url: string | null; specs: Record<string, string>; pins: string[]; precautions: string | null; status: string; source: string | null };
 
 export default function Components() {
   const { t, me } = useApp();
-  const [text, setText] = useState(""); const [cat, setCat] = useState("");
-  const { data, reload } = useData<{ items: Comp[]; categories: { category: string; n: number }[] }>(`/api/components?q=${encodeURIComponent(text)}${cat ? `&category=${encodeURIComponent(cat)}` : ""}`);
+  const [text, setText] = useState(""); const [cat, setCat] = useState(""); const [disc, setDisc] = useState("");
+  const { data, reload } = useData<{ items: Comp[]; categories: { category: string; n: number }[]; disciplines: { discipline: string; n: number }[] }>(`/api/components?q=${encodeURIComponent(text)}${cat ? `&category=${encodeURIComponent(cat)}` : ""}${disc ? `&discipline=${disc}` : ""}`);
   const [open, setOpen] = useState<string | null>(null);
   const [add, setAdd] = useState(false);
   const [f, setF] = useState({ category: "", name: "", description: "", function: "", manufacturer: "", mpn: "", datasheet_url: "", specs: "", pins: "", precautions: "" });
@@ -40,6 +41,7 @@ export default function Components() {
       )}
       <Card>
         <div className="mb-3 flex flex-wrap gap-2">
+          <Select value={disc} onChange={(e) => setDisc(e.target.value)} className="!w-auto" aria-label={t("comp.discipline")} name="discipline"><option value="">{t("comp.allDisciplines")}</option>{data?.disciplines.map((d) => <option key={d.discipline} value={d.discipline}>{DISCIPLINE_LABEL[d.discipline as Discipline] ?? d.discipline} ({d.n})</option>)}</Select>
           <Input placeholder={t("c.search")} value={text} onChange={(e) => setText(e.target.value)} className="!w-64" aria-label={t("c.search")} />
           <Select value={cat} onChange={(e) => setCat(e.target.value)} className="!w-auto" aria-label={t("comp.category")}><option value="">{t("c.all")}</option>{data?.categories.map((c) => <option key={c.category} value={c.category}>{c.category} ({c.n})</option>)}</Select>
         </div>
@@ -56,10 +58,13 @@ export default function Components() {
                   {c.function && <p><strong>{t("comp.f.function")} :</strong> {c.function}</p>}
                   {c.pins.length > 0 && <p><strong>{t("comp.f.pins")} :</strong> {c.pins.join(" · ")}</p>}
                   {Object.keys(c.specs).length > 0 && <table className="text-xs"><tbody>{Object.entries(c.specs).map(([k, v]) => <tr key={k}><td className="pr-4">{k}</td><td className="font-mono">{v}</td></tr>)}</tbody></table>}
+                  {c.params?.length > 0 && <div><strong>{t("comp.params")} :</strong><table className="mt-1 text-xs" data-testid="comp-params"><tbody>{c.params.map((p) => <tr key={p.key}><td className="pr-4">{p.label}</td><td className="font-mono text-[var(--fg-3)]">{p.unit || "—"}</td></tr>)}</tbody></table><p className="text-xs text-[var(--fg-3)]">{t("comp.paramsInfo")}</p></div>}
                   {c.precautions && <p className="text-[var(--warn)]">⚠ {c.precautions}</p>}
+                  {c.doc && <p className="text-xs">📘 {c.doc}</p>}
                   {c.datasheet_url && <a href={c.datasheet_url} target="_blank" rel="noreferrer noopener" className="text-[var(--cyan)] underline">{t("comp.datasheet")}</a>}
                   <p className="text-xs text-[var(--fg-3)]">{c.source}</p>
                   <div className="flex gap-2">
+                    <a href={`/schemas?ajout=${encodeURIComponent(c.id)}`} className="text-xs text-[var(--cyan)] underline">{t("comp.useInDiagram")}</a>
                     {c.symbol_kind && <a href="/lab/electronics" className="text-xs text-[var(--cyan)] underline">{t("comp.useInEditor")}</a>}
                     <a href={`/ai?q=${encodeURIComponent(`${t("comp.explainPrompt")} ${c.name}`)}`} className="text-xs text-[var(--cyan)] underline">{t("comp.explain")}</a>
                     {me?.is_admin && c.status !== "generic" && <Btn kind="ghost" onClick={async () => { await patch(`/api/components/${c.id}`, { status: c.status === "verified" ? "to_verify" : "verified" }); reload(); }}>{c.status === "verified" ? t("comp.unverify") : t("comp.verify")}</Btn>}

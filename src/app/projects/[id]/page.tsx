@@ -7,6 +7,8 @@ import { Btn, Card, ErrorBox, Field, Input, Nature, Page, Pill, Select, Textarea
 import { useData } from "@/lib/client/hooks";
 import { del, patch, post } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
+import { ProjectDossier, type Dossier } from "@/components/project/ProjectDossier";
+import { ProjectBom, type Line } from "@/components/project/ProjectBom";
 
 type Proj = { id: string; title: string; description: string | null; objectives: string | null; problem: string | null; specs: string | null; kind: string; visibility: string; owner_name: string };
 type D = {
@@ -17,6 +19,7 @@ type D = {
   calcs: { id: string; calc_kind: string; initiated_by: string; missing: string[]; created_at: string }[];
   sims: { id: string; engine: string; engine_version: string; analysis: string; status: string; initiated_by: string; created_at: string }[];
   devices: { id: string; name: string; environment: string; last_seen: string | null }[];
+  components: Line[];
 };
 
 const THESIS_STEPS: MsgKey[] = ["thesis.s1", "thesis.s2", "thesis.s3", "thesis.s4", "thesis.s5", "thesis.s6", "thesis.s7", "thesis.s8", "thesis.s9", "thesis.s10"];
@@ -26,7 +29,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const { t } = useApp();
   const router = useRouter();
   const { data, error, reload } = useData<D>(`/api/projects/${id}`);
-  const [tab, setTab] = useState<"sheet" | "members" | "tasks" | "objects">("sheet");
+  const [tab, setTab] = useState<"sheet" | "dossier" | "bom" | "members" | "tasks" | "objects">("sheet");
   const [err, setErr] = useState<unknown>(null);
   const [edit, setEdit] = useState<Partial<Proj> | null>(null);
   const [inv, setInv] = useState({ email: "", role: "editor" });
@@ -36,7 +39,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
   const p = data.project;
   const canEdit = data.role === "owner" || data.role === "editor";
   const run = async (fn: () => Promise<unknown>) => { setErr(null); try { await fn(); reload(); } catch (x) { setErr(x); } };
-  const tabs: [typeof tab, MsgKey][] = [["sheet", "proj.sheet"], ["members", "c.members"], ["tasks", "proj.tasks"], ["objects", "proj.objects"]];
+  const tabs: [typeof tab, MsgKey][] = [["sheet", "proj.sheet"], ["dossier", "proj.dossier"], ["bom", "proj.bom"], ["members", "c.members"], ["tasks", "proj.tasks"], ["objects", "proj.objects"]];
   return (
     <Page title={p.title} subtitle={`${t(`proj.kind.${p.kind}` as MsgKey)} · ${t("c.owner")} : ${p.owner_name}`}
       actions={<>
@@ -45,7 +48,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
         <Link href={`/ai?projet=${id}`} className="rounded-lg bg-[var(--tech)] px-3 py-1.5 text-sm text-white">{t("c.askAi")}</Link>
       </>}>
       <div className="flex flex-wrap gap-1" role="tablist">
-        {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-lg px-3 py-1.5 text-sm ${tab === k ? "bg-[var(--tech)] text-white" : "border border-[var(--line)] text-[var(--fg-2)]"}`}>{t(l)}</button>)}
+        {tabs.map(([k, l]) => <button key={k} role="tab" data-tab={k} aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-lg px-3 py-1.5 text-sm ${tab === k ? "bg-[var(--tech)] text-white" : "border border-[var(--line)] text-[var(--fg-2)]"}`}>{t(l)}</button>)}
       </div>
       <ErrorBox error={err} />
       {tab === "sheet" && (
@@ -70,6 +73,8 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
           {data.role === "owner" && !edit && <div className="mt-4"><Btn kind="danger" onClick={() => { if (confirm(t("proj.confirmDelete"))) void del(`/api/projects/${id}`).then(() => router.push("/projects")).catch(setErr); }}>{t("c.delete")}</Btn></div>}
         </Card>
       )}
+      {tab === "dossier" && <ProjectDossier id={id} project={p as unknown as Dossier} canEdit={canEdit} onSaved={reload} />}
+      {tab === "bom" && <ProjectBom id={id} items={data.components} canEdit={canEdit} onChange={reload} />}
       {tab === "members" && (
         <Card title={t("c.members")}>
           <ul className="mb-4 divide-y divide-[var(--line)] text-sm">

@@ -3,7 +3,9 @@
  * Aucune valeur constructeur n'est inventée : un composant réel s'ajoute avec sa référence et sa fiche technique
  * (statut « à vérifier » jusqu'à vérification).
  */
+import { createHash } from "node:crypto";
 import type { Db } from "./db";
+import { LIBRARY } from "@/lib/library";
 
 type C = [category: string, name: string, symbol: string | null, description: string, fn: string, pins: string[], precautions: string | null];
 
@@ -37,11 +39,38 @@ export const GENERIC_COMPONENTS: C[] = [
   ["solaire", "Batterie", null, "Accumulateur électrochimique stockant l'énergie (plomb, lithium-fer-phosphate…).", "Autonomie des systèmes solaires.", ["+", "−"], "Profondeur de décharge et courant maximal selon la technologie et le fabricant."],
 ];
 
+/** Anciens noms des composants génériques (renommés dans src/lib/library.ts) : renommés en place, sans doublon. */
+const RENAMED: Record<string, string> = {
+  "Diode (modèle générique)": "Diode", "Transistor bipolaire NPN": "Transistor NPN", "Transistor MOSFET canal N": "MOSFET canal N",
+  "Batterie": "Batterie plomb", "Onduleur": "Onduleur autonome", "Relais": "Module relais",
+};
+const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);
+
 export async function seed(db: Db) {
+  // La bibliothèque n'est réécrite que si son contenu a changé (empreinte conservée en base).
+  const fingerprint = createHash("sha256").update(JSON.stringify(LIBRARY)).digest("hex");
+  const done = (await db.query<{ value: string }>("SELECT value FROM server_keys WHERE name='library_version'")).rows[0]?.value;
+  if (done === fingerprint) return;
   for (const [category, name, symbol, description, fn, pins, precautions] of GENERIC_COMPONENTS) {
     await db.query(
       `INSERT INTO components(category, name, symbol_kind, description, function, pins, precautions, status, source, mpn)
        VALUES ($1,$2,$3,$4,$5,$6,$7,'generic','Composant générique XAM-XAM LAB (aucune caractéristique de fabricant)','generic')
        ON CONFLICT (category, name, mpn) DO NOTHING`, [category, name, symbol, description, fn, JSON.stringify(pins), precautions]);
   }
+  for (const [from, to] of Object.entries(RENAMED)) {
+    await db.query("UPDATE components SET name=$2 WHERE name=$1 AND mpn='generic' AND NOT EXISTS (SELECT 1 FROM components WHERE name=$2 AND mpn='generic')", [from, to]);
+  }
+  for (const c of LIBRARY) {
+    const values = [c.category, c.name, SIMULABLE.has(c.symbol) ? c.symbol : null, c.description, c.fn, JSON.stringify(c.pins), c.precautions, c.discipline, JSON.stringify(c.params), c.symbol, c.doc || null];
+    const updated = await db.query(
+      `UPDATE components SET category=$1, symbol_kind=COALESCE(symbol_kind, $3), description=$4, function=$5, pins=$6, precautions=$7, discipline=$8, params=$9, symbol2d=$10, doc=$11
+        WHERE name=$2 AND mpn='generic' RETURNING id`, values);
+    if (!updated.rows.length) {
+      await db.query(
+        `INSERT INTO components(category, name, symbol_kind, description, function, pins, precautions, discipline, params, symbol2d, doc, status, source, mpn)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'generic','Composant générique XAM-XAM LAB (aucune caractéristique de fabricant)','generic')
+         ON CONFLICT (category, name, mpn) DO NOTHING`, values);
+    }
+  }
+  await db.query("INSERT INTO server_keys(name, value) VALUES ('library_version', $1) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value", [fingerprint]);
 }

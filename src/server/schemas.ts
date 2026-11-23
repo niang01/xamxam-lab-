@@ -10,6 +10,13 @@ export const projectSchema = z.object({
   kind: z.enum(["engineering", "thesis", "research", "startup", "course"]).default("engineering"),
   visibility: z.enum(["private", "members", "public"]).default("private"),
   autonomy_level: z.number().int().min(1).max(5).nullable().optional(),
+  level: z.enum(["memoire_technicien", "projet_bts", "projet_ingenieur", "recherche", "fin_formation", "startup"]).nullable().optional(),
+  methodology: z.string().trim().max(20000).nullable().optional(),
+  architecture: z.string().trim().max(20000).nullable().optional(),
+  programming: z.string().trim().max(20000).nullable().optional(),
+  tests: z.string().trim().max(20000).nullable().optional(),
+  results: z.string().trim().max(20000).nullable().optional(),
+  conclusion: z.string().trim().max(20000).nullable().optional(),
 });
 
 
@@ -52,4 +59,11 @@ export const courseSchema = z.object({
   pass_mark: z.number().int().min(1).max(100).default(70),
   lab_link: z.string().regex(/^\/lab\/[a-z]+$|^\/components$|^\/studio$/).nullable().optional(),
   published: z.boolean().default(false),
+});
+
+/** Ligne de nomenclature d'un projet (prix saisi par l'équipe, jamais estimé). */
+export const componentLine = z.object({
+  component_id: z.string().uuid().nullable().optional(), name: z.string().trim().min(1).max(160), qty: z.number().positive().max(1e6),
+  unit_price: z.number().nonnegative().max(1e12).nullable().optional(), currency: z.string().trim().regex(/^[A-Z]{3}$/).default("XOF"),
+  supplier: z.string().trim().max(160).nullable().optional(), note: z.string().trim().max(500).nullable().optional(),
 });

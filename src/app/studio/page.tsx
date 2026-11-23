@@ -5,7 +5,9 @@ import { useT } from "@/components/providers";
 import { Card, Field, Input, LineChart, Nature, Page, Pill, Select, Unavailable } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
 import { compare } from "@/lib/compare";
+import { ScenarioPanel } from "@/components/ScenarioPanel";
 
+const AssemblyEditor = dynamic(() => import("@/components/AssemblyEditor").then((m) => m.AssemblyEditor), { ssr: false });
 const StlViewer = dynamic(() => import("@/components/StlViewer").then((m) => m.StlViewer), { ssr: false });
 
 type SimRow = { id: string; engine_version: string; analysis: string; status: string; created_at: string; project_title: string | null; kind: string };
@@ -72,6 +74,8 @@ export default function Studio() {
           </div>
         )}
       </Card>
+      <ScenarioPanel />
+      <AssemblyEditor />
       <Card title={t("studio.viewer3d")}>
         <p className="mb-2 text-xs text-[var(--fg-3)]">{t("studio.viewerInfo")}</p>
         <input type="file" accept=".stl,model/stl" onChange={(e) => setStl(e.target.files?.[0] ?? null)} className="text-sm" aria-label={t("studio.viewer3d")} />

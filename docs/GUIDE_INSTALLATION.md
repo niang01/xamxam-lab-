@@ -30,6 +30,15 @@ Coût : **0 €**, sans carte bancaire. Limites : veille après 15 min sans visi
 
 À ne pas faire pour rester gratuit : ne pas créer de base PostgreSQL sur Render (payante ou expirant après 30 jours), ne pas changer le plan du service, ne pas ajouter de disque, ne pas lancer la compilation iOS sur macOS sans nécessité (minutes décomptées 10 fois plus vite).
 
+### Variables facultatives (toutes gratuites à configurer ; aucun service payant imposé)
+| Variable | Rôle |
+|---|---|
+| `SESSION_SECRET`, `XX_ENCRYPTION_KEY` | Recommandées. Absentes : clés aléatoires générées une fois et conservées dans la base (`server_keys`). |
+| `XX_ADMIN_EMAILS` | Adresse(s) de l'administrateur principal (promu à l'inscription ou à la connexion). Secours : code d'initialisation dans les journaux, page `/installation`. |
+| `XX_MAIL_PROVIDER` (`brevo` ou `resend`), `XX_MAIL_API_KEY`, `XX_MAIL_FROM` | Envoi des liens de réinitialisation et de vérification. Absent : liens générés par l'administrateur. |
+| `AI_PROVIDER` (`anthropic` ou `openai_compatible`), `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY` / `ANTHROPIC_API_KEY` | Fournisseur d'IA d'Aláji. Absent : mode sans clé (règles déterministes). |
+| `XX_APP_URL` | Adresse publique utilisée dans les liens envoyés (Render fournit `RENDER_EXTERNAL_URL`). |
+
 ## 3. Production avec Docker Compose (recommandé)
 Prérequis serveur : Docker 24+ avec Compose, ports 80 et 443 ouverts, un nom de domaine dont l'enregistrement DNS pointe vers le serveur.
 ```bash

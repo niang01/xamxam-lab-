@@ -7,6 +7,7 @@ import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from 
 import { useData } from "@/lib/client/hooks";
 import { post } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
+import { LEVELS } from "@/lib/project-templates";
 
 type P = { id: string; title: string; kind: string; visibility: string; role: string; owner_name: string; updated_at: string };
 const KINDS = ["engineering", "thesis", "research", "startup", "course"];
@@ -16,17 +17,38 @@ export default function Projects() {
   const { data } = useData<{ items: P[] }>("/api/projects");
   const router = useRouter();
   const [show, setShow] = useState(false);
+  const [tpl, setTpl] = useState(false);
+  const { data: templates } = useData<{ items: { key: string; title: string; domain: string; summary: string; components: number; tasks: number }[] }>(tpl ? "/api/projects/from-template" : null);
+  const [g, setG] = useState({ template_key: "", level: "projet_bts", title: "" });
   const [f, setF] = useState({ title: "", description: "", objectives: "", problem: "", kind: "engineering" });
   const [err, setErr] = useState<unknown>(null);
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { if (new URLSearchParams(window.location.search).get("nouveau")) setShow(true); }, []);
+  useEffect(() => { const sp = new URLSearchParams(window.location.search); if (sp.get("nouveau")) setShow(true); if (sp.get("modele")) setTpl(true); }, []);
+  async function fromTemplate() {
+    setErr(null);
+    try { const r = await post<{ id: string }>("/api/projects/from-template", g); router.push(`/projects/${r.id}`); } catch (x) { setErr(x); }
+  }
   async function create(e: React.FormEvent) {
     e.preventDefault(); setErr(null);
     try { const r = await post<{ id: string }>("/api/projects", { ...f, description: f.description || null, objectives: f.objectives || null, problem: f.problem || null }); router.push(`/projects/${r.id}`); }
     catch (x) { setErr(x); }
   }
   return (
-    <Page title={t("nav.projects")} subtitle={t("proj.subtitle")} actions={<Btn onClick={() => setShow((s) => !s)} data-testid="new-project">{t("dash.newProject")}</Btn>}>
+    <Page title={t("nav.projects")} subtitle={t("proj.subtitle")} actions={<span className="flex flex-wrap gap-2"><Btn kind="ghost" onClick={() => setTpl((s) => !s)} data-testid="new-from-template">{t("proj.fromTemplate")}</Btn><Btn onClick={() => setShow((s) => !s)} data-testid="new-project">{t("dash.newProject")}</Btn></span>}>
+      {tpl && (
+        <Card title={t("proj.fromTemplate")} testId="templates">
+          <p className="mb-2 text-xs text-[var(--fg-3)]">{t("proj.templateInfo")}</p>
+          <div className="grid gap-2 md:grid-cols-2">{templates?.items.map((m) => (
+            <button key={m.key} data-template={m.key} onClick={() => setG({ ...g, template_key: m.key, title: g.title || m.title })} className={`rounded-lg border p-3 text-left text-sm ${g.template_key === m.key ? "border-[var(--cyan)]" : "border-[var(--line)]"}`}>
+              <strong>{m.title}</strong><span className="block text-xs text-[var(--fg-3)]">{m.domain} · {m.components} {t("proj.compCount")} · {m.tasks} {t("proj.taskCount")}</span><span className="mt-1 block text-xs text-[var(--fg-2)]">{m.summary}</span>
+            </button>))}</div>
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            <Field label={t("proj.level")}><Select name="level" value={g.level} onChange={(e) => setG({ ...g, level: e.target.value })}>{LEVELS.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</Select></Field>
+            <Field label={t("c.title")}><Input name="template-title" value={g.title} onChange={(e) => setG({ ...g, title: e.target.value })} /></Field>
+            <div className="flex items-end"><Btn data-testid="create-from-template" disabled={!g.template_key || g.title.trim().length < 2} onClick={fromTemplate}>{t("c.create")}</Btn></div>
+          </div>
+        </Card>
+      )}
       {show && (
         <Card title={t("dash.newProject")}>
           <form onSubmit={create} className="grid gap-3 md:grid-cols-2">

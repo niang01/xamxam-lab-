@@ -76,7 +76,7 @@ describe("Configuration incomplète", () => {
       const reg = (await import(path.join(API, "auth/register/route.ts"))).POST as never;
       const r = await call(reg, "POST", "/api/auth/register", { body: { email: "sans-secret@test.local", password: "motdepasse-123", display_name: "Sans secret", profile_kind: "engineer", locale: "fr" }, headers: { "x-forwarded-for": "203.0.113.77" } });
       expect(r.status).toBe(201);
-      const stored = await db.sql<{ name: string; value: string }>("SELECT name, value FROM server_keys ORDER BY name");
+      const stored = await db.sql<{ name: string; value: string }>("SELECT name, value FROM server_keys WHERE name <> 'library_version' ORDER BY name");
       expect(stored.map((k) => k.name)).toEqual(["encryption_key", "integrity_key", "session_secret"]);
       expect(stored.every((k) => k.value.length >= 60)).toBe(true);
       expect(keys.keySources()).toEqual({ session: "database", encryption: "database" });
