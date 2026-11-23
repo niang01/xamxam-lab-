@@ -26,6 +26,6 @@ export default defineConfig({
     stdout: "pipe",
     stderr: "pipe",
     timeout: 120_000,
-    env: { PGLITE_DIR: DB, XX_ADMIN_EMAILS: "admin@e2e.local", SESSION_SECRET: "e2e-secret-0123456789-abcdef", INSECURE_COOKIES: "true", NODE_ENV: "production" },
+    env: { PGLITE_DIR: DB, XX_ADMIN_EMAILS: "admin@e2e.local,admin-comptes@e2e.local", SESSION_SECRET: "e2e-secret-0123456789-abcdef", INSECURE_COOKIES: "true", NODE_ENV: "production" },
   },
 });

@@ -15,7 +15,7 @@ export default function Register() {
   const [err, setErr] = useState<unknown>(null); const [busy, setBusy] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
-    try { await post("/api/auth/register", { ...f, locale: lang, fallback_locale: fallback }); await refreshMe(); router.replace("/"); }
+    try { await post("/api/auth/register", { ...f, locale: lang, fallback_locale: fallback }); await refreshMe(); router.replace("/bienvenue"); }
     catch (x) { setErr(x); } finally { setBusy(false); }
   }
   return (
@@ -23,8 +23,8 @@ export default function Register() {
       <h1 className="font-mono text-3xl font-bold tracking-widest text-[var(--cyan)]">XAM-XAM LAB</h1>
       <Card className="mt-6" title={t("auth.register")}>
         <form onSubmit={submit} className="space-y-3">
-          <Field label={t("auth.displayName")}><Input name="display_name" required value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} /></Field>
-          <Field label={t("auth.email")}><Input name="email" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
+          <Field label={t("auth.displayName")}><Input name="display_name" autoComplete="name" required minLength={2} value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} /></Field>
+          <Field label={t("auth.email")}><Input name="email" type="email" autoComplete="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
           <Field label={t("auth.password")} hint={t("auth.passwordHint")}><Input name="password" type="password" minLength={10} required autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></Field>
           <Field label={t("auth.profile")}>
             <Select name="profile_kind" value={f.profile_kind} onChange={(e) => setF({ ...f, profile_kind: e.target.value })}>
@@ -32,6 +32,7 @@ export default function Register() {
             </Select>
           </Field>
           <p className="text-xs text-[var(--fg-3)]">{t("auth.privacy")}</p>
+          <p className="text-xs text-[var(--fg-3)]">{t("auth.trialInfo")}</p>
           <ErrorBox error={err} />
           <Btn type="submit" disabled={busy} className="w-full">{t("auth.register")}</Btn>
         </form>

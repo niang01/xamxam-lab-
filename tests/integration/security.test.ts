@@ -11,7 +11,7 @@ walk(API);
 
 /** Routes publiques assumées (et leur comportement sans session). */
 const PUBLIC: Record<string, number[]> = {
-  "auth/register": [400], "auth/login": [400, 401], "auth/mfa": [400, 401], "auth/logout": [200], "auth/me": [200], "i18n/catalog": [200], "health": [200],
+  "auth/register": [400], "auth/login": [400, 401], "auth/password/forgot": [400], "auth/password/reset": [400], "auth/verify-email": [400], "auth/mfa": [400, 401], "auth/logout": [200], "auth/me": [200], "i18n/catalog": [200], "health": [200],
   "public/certificates/[id]": [404], "public/portfolio/[id]": [404],
   "device/ingest": [401], "device/commands": [401], "device/ack": [401], "device/whoami": [401],
 };
@@ -66,16 +66,33 @@ describe("Sécurité de l'API", () => {
 });
 
 describe("Configuration incomplète", () => {
-  it("sans SESSION_SECRET en production : inscription refusée AVANT toute création de compte", async () => {
-    const { sql } = await import("@/server/db");
+  it("sans SESSION_SECRET en production : clé aléatoire générée UNE fois et conservée en base ; inscription et session fonctionnent", async () => {
+    const db = await import("@/server/db");
+    const keys = await import("@/server/keys");
     const saved = { s: process.env.SESSION_SECRET, n: process.env.NODE_ENV };
     delete process.env.SESSION_SECRET; (process.env as Record<string, string>).NODE_ENV = "production";
     try {
+      await db.closeDb(); keys.resetServerKeys();
       const reg = (await import(path.join(API, "auth/register/route.ts"))).POST as never;
-      const r = await call(reg, "POST", "/api/auth/register", { body: { email: "orphelin@test.local", password: "motdepasse-123", display_name: "Orphelin", profile_kind: "engineer", locale: "fr" }, headers: { "x-forwarded-for": "203.0.113.77" } });
-      expect(r.status).toBe(503);
-      expect(r.json.key).toBe("err.serverConfig");
-      expect((await sql("SELECT 1 FROM users WHERE email='orphelin@test.local'")).length).toBe(0);
-    } finally { process.env.SESSION_SECRET = saved.s; (process.env as Record<string, string>).NODE_ENV = saved.n!; }
+      const r = await call(reg, "POST", "/api/auth/register", { body: { email: "sans-secret@test.local", password: "motdepasse-123", display_name: "Sans secret", profile_kind: "engineer", locale: "fr" }, headers: { "x-forwarded-for": "203.0.113.77" } });
+      expect(r.status).toBe(201);
+      const stored = await db.sql<{ name: string; value: string }>("SELECT name, value FROM server_keys ORDER BY name");
+      expect(stored.map((k) => k.name)).toEqual(["encryption_key", "integrity_key", "session_secret"]);
+      expect(stored.every((k) => k.value.length >= 60)).toBe(true);
+      expect(keys.keySources()).toEqual({ session: "database", encryption: "database" });
+      // La session ouverte avec la clé conservée est reconnue ; la clé n'est jamais renvoyée par l'API.
+      const cookie = (r.headers.get("set-cookie") ?? "").split(";")[0];
+      const me = await call((await import(path.join(API, "auth/me/route.ts"))).GET as never, "GET", "/api/auth/me", { session: { cookie } });
+      expect((me.json.user as { email: string }).email).toBe("sans-secret@test.local");
+      const health = await call((await import(path.join(API, "health/route.ts"))).GET as never, "GET", "/api/health");
+      expect(health.json.session_key_source).toBe("database");
+      for (const k of stored) expect(JSON.stringify(health.json) + JSON.stringify(me.json)).not.toContain(k.value);
+      // Redémarrage : la même clé est relue (les sessions survivent).
+      keys.resetServerKeys(); await keys.loadServerKeys(await db.getDb());
+      expect(keys.cachedSessionSecret()).toBe(stored.find((k) => k.name === "session_secret")!.value);
+    } finally {
+      process.env.SESSION_SECRET = saved.s; (process.env as Record<string, string>).NODE_ENV = saved.n!;
+      await db.closeDb(); keys.resetServerKeys();
+    }
   });
 });

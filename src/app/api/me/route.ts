@@ -4,6 +4,7 @@ import { sql } from "@/server/db";
 import { hashPassword, verifyPassword } from "@/server/security/crypto";
 import { audit } from "@/server/audit";
 import { closeSession } from "@/server/auth";
+import { SELF_SERVICE_PROFILES } from "@/lib/profiles";
 
 const schema = z.object({
   display_name: z.string().trim().min(2).max(80).optional(),
@@ -14,6 +15,10 @@ const schema = z.object({
   skills: z.array(z.string().trim().min(1).max(60)).max(50).optional(),
   public_profile: z.boolean().optional(),
   autonomy_level: z.number().int().min(1).max(5).optional(),
+  organization: z.string().trim().max(120).nullable().optional(),
+  job_title: z.string().trim().max(120).nullable().optional(),
+  profile_kind: z.enum(SELF_SERVICE_PROFILES as [string, ...string[]]).optional(),
+  onboarded: z.literal(true).optional(),
   password: z.object({ current: z.string(), next: z.string().min(10).max(200) }).optional(),
 });
 
@@ -21,9 +26,12 @@ export const PATCH = endpoint(async (req) => {
   const u = await mustBeSignedIn(req);
   const b = await readInput(req, schema);
   const sets: string[] = []; const vals: unknown[] = [];
-  for (const k of ["display_name", "locale", "fallback_locale", "country", "bio", "public_profile", "autonomy_level"] as const) {
+  for (const k of ["display_name", "locale", "fallback_locale", "country", "bio", "public_profile", "autonomy_level", "organization", "job_title"] as const) {
     if (b[k] !== undefined) { vals.push(b[k]); sets.push(`${k}=$${vals.length}`); }
   }
+  // Un administrateur garde son profil « administrator » ; les autres choisissent parmi les profils libres.
+  if (b.profile_kind && !u.is_admin) { vals.push(b.profile_kind); sets.push(`profile_kind=$${vals.length}`); }
+  if (b.onboarded) sets.push("onboarded_at=COALESCE(onboarded_at, now())");
   if (b.skills) { vals.push(JSON.stringify(b.skills)); sets.push(`skills=$${vals.length}`); }
   if (b.password) {
     const row = (await sql<{ password_hash: string }>("SELECT password_hash FROM users WHERE id=$1", [u.id]))[0];

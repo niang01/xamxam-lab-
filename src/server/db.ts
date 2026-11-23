@@ -9,6 +9,7 @@ import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { env } from "./env";
 import { seed } from "./seed";
+import { loadServerKeys } from "./keys";
 
 export type Row = Record<string, unknown>;
 export interface Queryable { query<T = Row>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> }
@@ -89,7 +90,7 @@ const holder = globalThis as unknown as { __xamxamDb?: Promise<Db> };
 
 /** Connexion partagée du processus ; migrations et données de référence appliquées à la première ouverture. */
 export function getDb(): Promise<Db> {
-  holder.__xamxamDb ??= (async () => { const db = await openDb(); await migrate(db); await seed(db); return db; })()
+  holder.__xamxamDb ??= (async () => { const db = await openDb(); await migrate(db); await seed(db); await loadServerKeys(db); return db; })()
     .catch((e) => { holder.__xamxamDb = undefined; throw e; });
   return holder.__xamxamDb;
 }

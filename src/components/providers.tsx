@@ -8,6 +8,8 @@ import { MSG_KEYS, type MsgKey } from "@/lib/i18n/messages";
 export interface Me {
   id: string; email: string; display_name: string; profile_kind: string; is_admin: boolean; locale: Lang; fallback_locale: "fr" | "en";
   autonomy_level: number; public_profile: boolean; country: string | null; bio: string | null; skills: string[]; clearances: string[]; capabilities: string[];
+  organization: string | null; job_title: string | null; onboarded_at: string | null; email_verified_at: string | null; created_at: string;
+  access: { state: "admin" | "trial" | "licensed" | "expired" | "tampered"; allowed: boolean; trial_ends_at: string | null; days_left: number | null };
 }
 
 interface Ctx {

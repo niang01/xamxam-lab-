@@ -56,7 +56,8 @@ export default function Login() {
           <ErrorBox error={err} />
           <Btn type="submit" disabled={busy} className="w-full">{t("auth.login")}</Btn>
         </form>
-        <p className="mt-4 text-sm text-[var(--fg-2)]">{t("auth.noAccount")} <Link className="text-[var(--cyan)] underline" href="/inscription">{t("auth.register")}</Link></p>
+        <p className="mt-3 text-sm"><Link className="text-[var(--cyan)] underline" href="/mot-de-passe-oublie" data-testid="forgot-link">{t("pw.forgotLink")}</Link></p>
+        <p className="mt-2 text-sm text-[var(--fg-2)]">{t("auth.noAccount")} <Link className="text-[var(--cyan)] underline" href="/inscription">{t("auth.register")}</Link></p>
       </Card>
       )}
       <p className="mt-6 text-center font-mono text-[10px] tracking-widest text-[var(--fg-3)]">{t("app.motto")}</p>

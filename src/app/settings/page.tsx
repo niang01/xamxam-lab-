@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select } from "@/components/ui";
-import { del, patch } from "@/lib/client/api";
+import { del, patch, post } from "@/lib/client/api";
 import { LANGS } from "@/lib/i18n/runtime";
 import type { MsgKey } from "@/lib/i18n/messages";
 import { MfaCard } from "@/components/MfaCard";
@@ -27,7 +27,9 @@ export default function Settings() {
           <Field label={t("auth.displayName")}><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <Btn onClick={() => run(() => patch("/api/me", { display_name: name }))}>{t("c.save")}</Btn>
         </div>
-        <p className="mt-2 text-sm text-[var(--fg-2)]">{me.email} · {t(`profile.${me.profile_kind}` as MsgKey)}</p>
+        <p className="mt-2 text-sm text-[var(--fg-2)]">{me.email} · {t(`profile.${me.profile_kind}` as MsgKey)}{me.organization ? ` · ${me.organization}` : ""}</p>
+        <p className="mt-1 text-xs">{me.email_verified_at ? <Pill tone="ok">{t("adm.verified")}</Pill> : <><Pill tone="warn">{t("adm.notVerified")}</Pill> <button className="underline" onClick={() => run(async () => { const r = await post<{ verification: string }>("/api/me/verify-email", {}); if (r.verification === "not_configured") throw new Error(t("ver.notConfigured")); }, t("ver.sent"))}>{t("ver.resend")}</button></>}</p>
+        <div className="mt-2 flex flex-wrap gap-2"><Link href="/bienvenue" className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">{t("onb.edit")}</Link><Link href="/licence" className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">{t("lic.title")}</Link>{!me.is_admin && <Link href="/installation" className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">{t("inst.title")}</Link>}</div>
         <p className="mt-1 text-xs text-[var(--fg-3)]">{t("set.clearances")} : {me.clearances.length ? me.clearances.join(", ") : t("c.none")}</p>
       </Card>
       <Card title={t("c.language")}>

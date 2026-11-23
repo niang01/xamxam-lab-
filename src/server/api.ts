@@ -10,11 +10,16 @@
  *   version de session) — un jeton valide d'un compte désactivé est refusé.
  */
 import { ZodError, z } from "zod";
+
+// Messages de validation en français (affichés dans l'interface).
+z.config(z.locales.fr());
 import { SESSION_COOKIE, verifySession } from "./security/session";
 import { callerAddress, rateLimit } from "./security/rateLimit";
 import { ConfigError } from "./security/crypto";
 import { env } from "./env";
-import { sqlOne } from "./db";
+import { getDb, sqlOne } from "./db";
+import { cachedEntitlement, licenceFree } from "./licensing";
+import { LicenceError } from "./licensing";
 
 /** Échec métier : statut HTTP, message (journal / repli) et clé de message traduisible pour l'interface. */
 export class ApiFailure extends Error {
@@ -70,15 +75,17 @@ export function readCookie(req: Request, name: string): string | null {
 export interface User {
   id: string; email: string; display_name: string; profile_kind: string; is_admin: boolean; locale: string; fallback_locale: string;
   autonomy_level: number; public_profile: boolean; country: string | null; bio: string | null; skills: string[]; clearances: string[];
+  organization: string | null; job_title: string | null; onboarded_at: string | null; email_verified_at: string | null; created_at: string;
 }
 
 /** Utilisateur de la session, ou null (jeton absent, invalide, expiré, compte désactivé ou session révoquée). */
 export async function sessionUser(req: Request): Promise<User | null> {
+  await getDb(); // charge les clés du serveur (src/server/keys.ts) avant de vérifier la signature
   const token = await verifySession(readCookie(req, SESSION_COOKIE), env.sessionSecret);
   if (!token) return null;
   const row = await sqlOne<User & { status: string; session_version: number }>(
     `SELECT u.id, u.email, u.display_name, u.profile_kind, u.is_admin, u.locale, u.fallback_locale, u.autonomy_level, u.public_profile,
-            u.country, u.bio, u.skills, u.status, u.session_version,
+            u.country, u.bio, u.skills, u.status, u.session_version, u.organization, u.job_title, u.onboarded_at, u.email_verified_at, u.created_at,
             COALESCE((SELECT json_agg(c.kind) FROM clearances c WHERE c.user_id = u.id AND (c.valid_until IS NULL OR c.valid_until >= CURRENT_DATE)), '[]') AS clearances
        FROM users u WHERE u.id = $1`, [token.sub]);
   if (!row || row.status !== "active" || row.session_version !== token.ver) return null;
@@ -90,11 +97,20 @@ export async function sessionUser(req: Request): Promise<User | null> {
 export async function mustBeSignedIn(req: Request): Promise<User> {
   const user = await sessionUser(req);
   if (!user) throw new ApiFailure(401, "Connexion requise", "err.login");
+  // Essai gratuit / licence : contrôlé côté serveur sur toutes les fonctions soumises à licence.
+  if (!user.is_admin && !licenceFree(new URL(req.url).pathname)) {
+    const e = await cachedEntitlement(user.id, false);
+    if (!e.allowed) throw new ApiFailure(402, e.state === "tampered"
+      ? "Incohérence détectée sur votre essai ou votre licence : contactez l'administrateur"
+      : "Votre période d'essai est terminée : activez une licence (Paramètres → Licence)", e.state === "tampered" ? "err.licenceTampered" : "err.licence");
+  }
   return user;
 }
 
 export async function mustBeAdmin(req: Request): Promise<User> {
-  const user = await mustBeSignedIn(req);
+  // Pas de contrôle de licence ici : un non-administrateur reçoit 403, un administrateur a toujours accès.
+  const user = await sessionUser(req);
+  if (!user) throw new ApiFailure(401, "Connexion requise", "err.login");
   if (!user.is_admin) throw new ApiFailure(403, "Réservé aux administrateurs", "err.admin");
   return user;
 }
@@ -110,6 +126,7 @@ export function endpoint<C = unknown>(handler: Handler<C>): Handler<C> {
     } catch (err) {
       if (err instanceof ApiFailure) return failure(err.status, err.message, err.key, err.details);
       if (err instanceof ZodError) return failure(400, "Données invalides", "err.invalid", err.issues.map((i) => ({ path: i.path.join("."), message: i.message })));
+      if (err instanceof LicenceError) return failure(err.status, err.message, err.key);
       if (err instanceof ConfigError) return failure(503, err.message);
       console.error(`[xamxam-api] ${req.method} ${new URL(req.url).pathname} —`, err);
       return failure(500, "Erreur interne du serveur", "err.internal");

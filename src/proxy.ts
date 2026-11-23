@@ -23,7 +23,10 @@ export async function proxy(request: NextRequest) {
   const open = OPEN_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   if (open) return NextResponse.next();
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const valid = await verifySession(token, sessionSecret());
+  const secret = sessionSecret();
+  // Sans SESSION_SECRET, la clé est conservée en base (src/server/keys.ts), inaccessible ici : la barrière se limite
+  // à exiger un jeton bien formé ; chaque route vérifie ensuite la signature et le compte (mustBeSignedIn).
+  const valid = secret ? await verifySession(token, secret) : !!token && /^xx1\.[\w-]+\.[\w-]+$/.test(token);
   return valid ? NextResponse.next() : Response.json({ error: "Connexion requise", key: "err.login" }, { status: 401, headers: { "Cache-Control": "no-store" } });
 }
 

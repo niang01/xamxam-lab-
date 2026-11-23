@@ -1,58 +1,43 @@
 "use client";
 import { useState } from "react";
 import { useApp } from "@/components/providers";
-import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
+import { Btn, Card, ErrorBox, Field, Input, Page, Select, Textarea } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
-import { api, del, patch, post } from "@/lib/client/api";
-import { CLEARANCES } from "@/lib/profiles";
-import type { MsgKey } from "@/lib/i18n/messages";
+import { api, patch, post } from "@/lib/client/api";
+import { UsersAdmin } from "@/components/admin/UsersAdmin";
+import { LicencesAdmin } from "@/components/admin/LicencesAdmin";
 
-type U = { id: string; email: string; display_name: string; profile_kind: string; is_admin: boolean; status: string; autonomy_level: number; clearances: { kind: string; valid_until: string | null; evidence: string }[] };
 type Draft = { key: string; text: string; status: string };
 
 export default function Admin() {
   const { t, me } = useApp();
   const isAdmin = !!me?.is_admin;
   const canValidate = isAdmin || !!me?.clearances.includes("validateur_traduction_wo");
-  const { data: users, reload } = useData<{ items: U[] }>(isAdmin ? "/api/admin/users" : null);
   const { data: drafts, reload: reloadDrafts } = useData<{ items: Draft[] }>(canValidate ? "/api/i18n/entries" : null);
-  const [cl, setCl] = useState<Record<string, { kind: string; evidence: string; until: string }>>({});
+  const [tab, setTab] = useState<"users" | "licences" | "other">("users");
   const [imp, setImp] = useState({ format: "csv", mode: "validated", content: "" });
   const [res, setRes] = useState<{ imported: number; rejected: string[] } | null>(null);
   const [edit, setEdit] = useState<Record<string, string>>({});
   const [err, setErr] = useState<unknown>(null);
-  const run = async (fn: () => Promise<unknown>) => { setErr(null); try { await fn(); reload(); reloadDrafts(); } catch (e) { setErr(e); } };
+  const run = async (fn: () => Promise<unknown>) => { setErr(null); try { await fn(); reloadDrafts(); } catch (e) { setErr(e); } };
   if (!canValidate) return <Page title={t("set.admin")}><p className="text-sm">{t("err.admin")}</p></Page>;
   return (
     <Page title={t("set.admin")}>
       <ErrorBox error={err} />
-      {isAdmin && (
+      {isAdmin && tab === "other" && (
         <Card title={t("adm.backup")}>
           <p className="mb-2 text-sm text-[var(--fg-2)]">{t("adm.backupInfo")}</p>
           <a className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm" href="/api/admin/backup" data-testid="backup-download">{t("adm.backupDownload")}</a>
         </Card>
       )}
       {isAdmin && (
-        <Card title={t("adm.users")}>
-          <ul className="divide-y divide-[var(--line)] text-sm">{users?.items.map((u) => {
-            const c = cl[u.id] ?? { kind: CLEARANCES[0], evidence: "", until: "" };
-            return (
-              <li key={u.id} className="space-y-1 py-2" data-user={u.email}>
-                <div className="flex flex-wrap items-center justify-between gap-2"><span><strong>{u.display_name}</strong> <span className="text-xs text-[var(--fg-3)]">{u.email} · {t(`profile.${u.profile_kind}` as MsgKey)} · N{u.autonomy_level}</span></span>
-                  <span className="flex gap-1">{u.is_admin && <Pill tone="info">admin</Pill>}<Pill tone={u.status === "active" ? "ok" : "danger"}>{u.status}</Pill>{u.id !== me?.id && <Btn kind="ghost" onClick={() => run(() => patch("/api/admin/users", { id: u.id, status: u.status === "active" ? "disabled" : "active" }))}>{u.status === "active" ? t("adm.disable") : t("adm.enable")}</Btn>}</span></div>
-                <div className="flex flex-wrap gap-1">{u.clearances.map((x) => <span key={x.kind} className="inline-flex items-center gap-1 rounded bg-[var(--panel-2)] px-2 py-0.5 text-xs" title={x.evidence}>{t(`clr.${x.kind}` as MsgKey)}{x.valid_until ? ` (≤ ${x.valid_until})` : ""}<button aria-label={t("c.delete")} onClick={() => run(() => del(`/api/admin/users/${u.id}/clearances?kind=${x.kind}`))}>✕</button></span>)}</div>
-                <div className="flex flex-wrap items-end gap-2">
-                  <Select aria-label={t("adm.clearance")} value={c.kind} onChange={(e) => setCl({ ...cl, [u.id]: { ...c, kind: e.target.value } })} className="!w-auto">{CLEARANCES.map((k) => <option key={k} value={k}>{t(`clr.${k}` as MsgKey)}</option>)}</Select>
-                  <Input aria-label={t("adm.evidence")} placeholder={t("adm.evidence")} value={c.evidence} onChange={(e) => setCl({ ...cl, [u.id]: { ...c, evidence: e.target.value } })} className="!w-64" />
-                  <Input aria-label={t("adm.until")} type="date" value={c.until} onChange={(e) => setCl({ ...cl, [u.id]: { ...c, until: e.target.value } })} className="!w-40" />
-                  <Btn kind="ghost" data-testid="grant-clearance" onClick={() => run(() => post(`/api/admin/users/${u.id}/clearances`, { kind: c.kind, evidence: c.evidence, valid_until: c.until || null }))}>{t("adm.grant")}</Btn>
-                </div>
-              </li>
-            );
-          })}</ul>
-        </Card>
+        <div role="tablist" className="flex flex-wrap gap-2">
+          {(["users", "licences", "other"] as const).map((k) => <Btn key={k} kind={tab === k ? "primary" : "ghost"} role="tab" aria-selected={tab === k} data-testid={`admin-tab-${k}`} onClick={() => setTab(k)}>{t(`adm.tab.${k}`)}</Btn>)}
+        </div>
       )}
-      {isAdmin && (
+      {isAdmin && tab === "users" && <UsersAdmin />}
+      {isAdmin && tab === "licences" && <LicencesAdmin />}
+      {isAdmin && tab === "other" && (
         <Card title={t("adm.i18n")}>
           <p className="mb-2 text-sm text-[var(--fg-2)]">{t("adm.i18nInfo")}</p>
           <div className="flex flex-wrap gap-2">

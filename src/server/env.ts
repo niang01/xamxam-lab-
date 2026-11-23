@@ -1,5 +1,6 @@
 /** Configuration serveur (variables d'environnement). Aucune variable NEXT_PUBLIC_* sensible. */
 import path from "node:path";
+import { cachedSessionSecret } from "./keys";
 
 const list = (v: string | undefined) => (v ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 
@@ -7,12 +8,8 @@ export const env = {
   get dbDriver() { return process.env.DB_DRIVER ?? (process.env.DATABASE_URL ? "postgres" : "pglite"); },
   get databaseUrl() { return process.env.DATABASE_URL ?? null; },
   get pgliteDir() { return process.env.PGLITE_DIR ?? path.join(/* turbopackIgnore: true */ process.cwd(), "data", "pglite"); },
-  /** Secret de signature des sessions. En développement, une valeur locale est utilisée (signalée dans /api/health). */
-  get sessionSecret() {
-    const s = process.env.SESSION_SECRET;
-    if (s && s.length >= 16) return s;
-    return process.env.NODE_ENV === "production" ? null : "xamxam-dev-secret-not-for-production";
-  },
+  /** Secret de signature des sessions : SESSION_SECRET, sinon clé générée et conservée en base (src/server/keys.ts). */
+  get sessionSecret() { return cachedSessionSecret(); },
   /** Comptes administrateurs : adresses listées (aucun compte administrateur créé d'office). */
   get adminEmails() { return list(process.env.XX_ADMIN_EMAILS); },
   get anthropicKey() { return process.env.ANTHROPIC_API_KEY ?? null; },

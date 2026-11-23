@@ -11,7 +11,9 @@ import { api, post } from "@/lib/client/api";
 import { StatusBar } from "./StatusBar";
 import { AiPanel } from "./AiPanel";
 
-const PUBLIC = ["/connexion", "/inscription"];
+const PUBLIC = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reinitialisation", "/verification"];
+/** Pages accessibles même sans essai ni licence valide. */
+const LICENCE_FREE = ["/licence", "/settings", "/bienvenue", "/installation", "/admin"];
 const THEMES = ["dark", "light", "system"] as const;
 type Theme = (typeof THEMES)[number];
 
@@ -62,7 +64,10 @@ export function LabShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (meLoaded && !me && !isPublic) router.replace(`/connexion?suite=${encodeURIComponent(path)}`);
+    // Compte neuf : configuration du profil avant toute autre page.
+    else if (me && !me.onboarded_at && !isPublic && path !== "/bienvenue") router.replace("/bienvenue");
   }, [meLoaded, me, isPublic, path, router]);
+  const blocked = !!me && !me.access?.allowed && !LICENCE_FREE.some((p) => path.startsWith(p)) && !path.startsWith("/guide");
 
   useEffect(() => {
     if (!me) return;
@@ -156,10 +161,19 @@ export function LabShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       {banner}
+      {me.access && me.access.state !== "admin" && (me.access.state !== "licensed" || (me.access.days_left ?? 99) <= 15) && (
+        <div role="status" data-testid="access-banner" className={`border-b border-[var(--line)] px-4 py-1.5 text-xs ${me.access.allowed ? "bg-[color-mix(in_srgb,var(--cyan)_10%,transparent)]" : "bg-[color-mix(in_srgb,var(--danger)_18%,transparent)]"}`}>
+          {me.access.state === "trial" ? t("lic.bannerTrial", { n: me.access.days_left ?? 0 }) : me.access.state === "licensed" ? t("lic.bannerSoon", { n: me.access.days_left ?? 0 }) : me.access.state === "tampered" ? t("err.licenceTampered") : t("err.licence")}
+          {" "}<Link href="/licence" className="underline">{t("lic.title")}</Link>
+        </div>
+      )}
       {offline && <div role="status" className="border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--warn)_18%,transparent)] px-4 py-1.5 text-xs">{t("c.offline")}</div>}
       <div className="flex">
         <aside className={`${open ? "fixed inset-0 top-[49px] z-20 block overflow-y-auto bg-[var(--bg)] p-3" : "hidden"} w-64 shrink-0 border-r border-[var(--line)] lg:sticky lg:top-[49px] lg:block lg:h-[calc(100dvh-49px)] lg:overflow-y-auto lg:p-3`}>{nav}</aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">{blocked ? (
+          <div className="mx-auto max-w-xl p-6" data-testid="licence-required"><h1 className="text-xl font-semibold">{t("lic.requiredTitle")}</h1><p className="mt-2 text-sm text-[var(--fg-2)]">{me.access.state === "tampered" ? t("err.licenceTampered") : t("err.licence")}</p>
+            <Link href="/licence" className="mt-3 inline-block rounded-lg bg-[var(--tech)] px-3 py-2 text-sm text-white">{t("lic.activate")}</Link></div>
+        ) : children}</main>
       </div>
       <AiPanel open={aiOpen && path !== "/ai"} onClose={() => setAiOpen(false)} path={path} />
       <StatusBar />

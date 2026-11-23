@@ -4,6 +4,7 @@
  *  - jetons : 32 octets aléatoires (base64url) ; seule leur empreinte SHA-256 est stockée ;
  *  - comparaisons à temps constant.
  */
+import { encryptionMasters } from "../keys";
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 export class ConfigError extends Error {}
@@ -37,15 +38,20 @@ export function verifyPassword(password: string, stored: string | null | undefin
  * Format : « xxe1:<nonce>:<données>:<étiquette> » (base64url).
  */
 
-function dataKey(purpose: string): Buffer {
-  const master = process.env.XX_ENCRYPTION_KEY || process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? null : "xamxam-dev-secret-not-for-production");
-  if (!master || master.length < 16) throw new ConfigError("XX_ENCRYPTION_KEY ou SESSION_SECRET (≥ 16 caractères) requis pour chiffrer les secrets");
+function deriveKey(master: string, purpose: string): Buffer {
   return Buffer.from(hkdfSync("sha256", master, "xamxam-lab", `xx-data-key:${purpose}`, 32));
+}
+
+/** Clés candidates : XX_ENCRYPTION_KEY, sinon clé générée en base ; les anciennes restent utilisables en lecture. */
+function dataKeys(purpose: string): Buffer[] {
+  const masters = encryptionMasters();
+  if (!masters.length) throw new ConfigError("Clé de chiffrement indisponible (XX_ENCRYPTION_KEY absent et base non ouverte)");
+  return masters.map((m) => deriveKey(m, purpose));
 }
 
 export function encryptSecret(plain: Buffer, purpose: string): string {
   const nonce = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", dataKey(purpose), nonce);
+  const cipher = createCipheriv("aes-256-gcm", dataKeys(purpose)[0], nonce);
   const data = Buffer.concat([cipher.update(plain), cipher.final()]);
   return ["xxe1", nonce.toString("base64url"), data.toString("base64url"), cipher.getAuthTag().toString("base64url")].join(":");
 }
@@ -53,7 +59,13 @@ export function encryptSecret(plain: Buffer, purpose: string): string {
 export function decryptSecret(stored: string, purpose: string): Buffer {
   const [tag, nonce, data, auth] = stored.split(":");
   if (tag !== "xxe1" || !nonce || !data || !auth) throw new Error("Format chiffré inconnu");
-  const decipher = createDecipheriv("aes-256-gcm", dataKey(purpose), Buffer.from(nonce, "base64url"));
-  decipher.setAuthTag(Buffer.from(auth, "base64url"));
-  return Buffer.concat([decipher.update(Buffer.from(data, "base64url")), decipher.final()]);
+  let last: unknown = null;
+  for (const key of dataKeys(purpose)) {
+    try {
+      const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(nonce, "base64url"));
+      decipher.setAuthTag(Buffer.from(auth, "base64url"));
+      return Buffer.concat([decipher.update(Buffer.from(data, "base64url")), decipher.final()]);
+    } catch (e) { last = e; }
+  }
+  throw last instanceof Error ? last : new Error("Déchiffrement impossible");
 }
