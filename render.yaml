@@ -3,6 +3,7 @@
 #   - plan: free OBLIGATOIRE (vérifier avant toute création ; ne jamais choisir un autre plan sans accord écrit) ;
 #   - secrets : SESSION_SECRET et XX_ENCRYPTION_KEY générés par Render ; DATABASE_URL et XX_ADMIN_EMAILS saisis
 #     dans les champs sécurisés de Render (sync: false), jamais dans le dépôt.
+# Port : Render fournit PORT=10000, lu par la commande de démarrage de l'image (ne pas le fixer ici).
 # Limites de l'offre gratuite : veille après 15 min sans visite (réveil ≈ 1 min), 512 Mo de mémoire, heures partagées
 # avec les autres services gratuits du workspace ; pas de MQTT (HTTP seulement), pas de disque persistant.
 services:
@@ -16,8 +17,6 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
-      - key: PORT
-        value: "3100"
       - key: NODE_OPTIONS
         value: "--max-old-space-size=384"
       - key: DB_POOL_SIZE

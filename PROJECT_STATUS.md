@@ -25,6 +25,11 @@ Comptes et 15 profils, double authentification TOTP, projets et rôles, FR/EN (+
 - ❌ **Non validé** : armement / décollage / mission sur le SITL (le simulateur demandait une calibration de l'accéléromètre — « PreArm: 3D Accel calibration needed » ; travail suspendu à la demande de l'exploitant). **Aucun drone réel n'est pilotable** tant que ce test et un essai sur banc n'ont pas été faits.
 - ⚠️ Conditions de vol : code Open-Meteo prêt et testé sur le format ; appel réel refusé depuis l'environnement de développement (« quota quotidien dépassé » sur l'adresse IP partagée) — fonctionnera depuis le serveur de production ou avec `OPEN_METEO_API_KEY`. Meteomatics : code prêt, compte requis.
 
+## Correctif du 23/11 — port d'écoute (déploiement Render)
+- Cause (journaux Render de l'exploitant) : l'image démarrait avec `-p 3100` fixé, Render attend `PORT` (10000) → « Port scan timeout ».
+- Correction : `CMD next start -H 0.0.0.0` (port lu dans `PORT`, 10000 par défaut dans l'image) ; Docker Compose fixe `PORT=3100` ; `render.yaml` ne fixe plus le port.
+- Vérifié localement sur l'image construite : écoute `0.0.0.0:10000` sans variable, `0.0.0.0:3100` avec `PORT=3100`, santé HTTP 200 dans les deux cas.
+
 ## Déploiement gratuit — état
 - ✅ `render.yaml` : service web **plan free** (Francfort), aucune base Render ; `DATABASE_URL` (Neon) en champ sécurisé.
 - ✅ Projet Neon `xamxam-db` créé par l'exploitant ; `neon init` exécuté (`neon.ts`, projet `delicate-bread-36592173`, branche `production`).

@@ -18,7 +18,8 @@ COPY --from=node /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 COPY workers/requirements.txt workers/requirements.txt
 RUN --mount=type=secret,id=extra_ca,required=false sh -c 'if [ -s /run/secrets/extra_ca ]; then export PIP_CERT=/run/secrets/extra_ca; fi; pip install --no-cache-dir -r workers/requirements.txt'
-ENV NODE_ENV=production XX_PYTHON=/usr/local/bin/python PORT=3100
+# PORT : fourni par l'hébergeur (Render : 10000) ; 10000 par défaut. Docker Compose fixe PORT=3100.
+ENV NODE_ENV=production XX_PYTHON=/usr/local/bin/python PORT=10000
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
@@ -31,5 +32,6 @@ COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/src ./src
 RUN useradd --create-home --uid 10001 xamxam && mkdir -p /app/data /app/backups && chown -R xamxam /app/data /app/backups
 USER xamxam
-EXPOSE 3100 1883
-CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3100"]
+EXPOSE 10000 1883
+# Écoute sur toutes les interfaces, port lu dans $PORT (next start, option -p liée à la variable PORT).
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-H", "0.0.0.0"]
