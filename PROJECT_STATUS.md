@@ -30,18 +30,20 @@ Comptes et 15 profils, double authentification TOTP, projets et rôles, FR/EN (+
 - Correction : `CMD next start -H 0.0.0.0` (port lu dans `PORT`, 10000 par défaut dans l'image) ; Docker Compose fixe `PORT=3100` ; `render.yaml` ne fixe plus le port.
 - Vérifié localement sur l'image construite : écoute `0.0.0.0:10000` sans variable, `0.0.0.0:3100` avec `PORT=3100`, santé HTTP 200 dans les deux cas.
 
-## Déploiement gratuit — état
-- ✅ `render.yaml` : service web **plan free** (Francfort), aucune base Render ; `DATABASE_URL` (Neon) en champ sécurisé.
-- ✅ Projet Neon `xamxam-db` créé par l'exploitant ; `neon init` exécuté (`neon.ts`, projet `delicate-bread-36592173`, branche `production`).
-- ❌ **Bloqué** : la clé d'API Neon enregistrée est **rejetée par Neon** (HTTP 401) → impossible de lire l'adresse de connexion ; la connexion par navigateur (`neon login`) ne peut pas revenir vers le conteneur cloud.
-- ❌ Service Render non créé (en attente de l'adresse Neon). Aucune ressource payante créée.
+## Déploiement gratuit — état (vérifié le 23/11)
+- ✅ Service Render `xamxam-lab-` (créé par l'exploitant) : **plan free**, déploiement automatique depuis `main`, **en ligne** : https://xamxam-lab.onrender.com (déploiement `2b5ca0d` « live »).
+- ✅ HTTPS, HSTS, CSP ; `/api/health` → `"db":"postgres"` (base externe connectée) ; pages de connexion et d'inscription vérifiées sur téléphone (Pixel 7) : HTTP 200, aucun débordement.
+- ❌ **Bloquant** : `session_secret: "missing"` et `admins_configured: false` → les variables `SESSION_SECRET`, `XX_ENCRYPTION_KEY` et `XX_ADMIN_EMAILS` ne sont pas définies sur le service. Inscription/connexion refusées proprement (HTTP 503, aucun compte créé — vérifié en production).
+- La clé d'API Render disponible ne permet ni de lire ni d'écrire les variables d'environnement (`forbidden`) : réglage à faire dans le tableau de bord Render.
 
 ## Prochaine tâche exacte
-1. L'exploitant copie l'adresse de connexion Neon (Neon Console → projet `xamxam-db` → *Connect* → chaîne **pooled**, avec `sslmode=require`) et soit :
-   - la saisit lui-même dans Render (*New → Blueprint* → dépôt `niang01/xamxam-lab-` → vérifier **Free** → champ `DATABASE_URL`) ;
-   - soit fournit une nouvelle clé d'API Neon valide (limitée au projet).
-2. Ensuite : premier déploiement Render, vérification réelle (santé `"db":"postgres"`, inscription, connexion, tableau de bord sur téléphone), puis recompilation de l'APK avec l'adresse publique.
-3. Reprendre la validation SITL (calibration accéléromètre du simulateur, armement, décollage 10 m, RTL).
+1. Exploitant — Render → service `xamxam-lab-` → *Environment* → ajouter :
+   - `SESSION_SECRET` : valeur aléatoire ≥ 32 caractères (bouton *Generate*, ou `openssl rand -base64 48`) ;
+   - `XX_ENCRYPTION_KEY` : autre valeur aléatoire ≥ 32 caractères, différente de la précédente ;
+   - `XX_ADMIN_EMAILS` : votre adresse électronique ;
+   puis *Save, rebuild and deploy*.
+2. Ensuite (Claude) : vérifier `/api/health` (`session_secret: configured`), inscription, connexion et tableau de bord en production sur téléphone ; recompiler l'APK Android avec `XX_APP_URL=https://xamxam-lab.onrender.com`.
+3. Reprendre : Sentinel-2 (recherche + NDVI, lecture réelle des bandes déjà vérifiée), validation SITL des drones.
 
 ## Limites connues
 Voir `docs/RAPPORT_FINAL.md` § 8–9 (clés et comptes à fournir, fonctions non réalisées).
