@@ -32,6 +32,21 @@ export const GUIDES: Guide[] = [
     ],
   },
   {
+    slug: "alaji-ia", title: "Utiliser Aláji IA", audience: "Tous",
+    summary: "Poser une demande, comprendre l'analyse, suivre les agents et les outils exécutés, générer un rapport.",
+    steps: [
+      { title: "Ouvrir Aláji IA", body: "Menu → Aláji IA, ou le bouton ✦ en haut de n'importe quelle page (panneau latéral, même fonctionnement).", link: { href: "/ai", label: "Aláji IA" } },
+      { title: "Vérifier le mode", body: "Le bandeau indique le mode : « IA » avec le nom du modèle si un fournisseur est configuré par l'administrateur ; sinon « Mode sans clé » : Aláji analyse la demande et exécute les calculs, rapports et recherches par règles déterministes, mais ne rédige pas librement." },
+      { title: "Poser la demande", body: "Écrivez en français, anglais ou wolof. Exemples compris en mode sans clé : « calcul pump flowM3h=5 headM=30 pumpEff=0.6 motorEff=0.85 dailyVolumeM3=20 », « U=12 R=470 », « 192.168.1.0/24 », « irradiation solaire 14.69, -17.44 », « rapport du projet Irrigation solaire », « suivi de mes projets », « explique le condensateur »." },
+      { title: "Lire l'analyse", body: "Chaque réponse commence par l'analyse : disciplines détectées, type de projet (mémoire, BTS, ingénieur, R&D, start-up), intention, agents mobilisés, puis les laboratoires où travailler." },
+      { title: "Choisir les agents (facultatif)", body: "Touchez des agents (électricité, solaire, IoT…) pour imposer les spécialistes ; le nombre après le nom indique leurs exécutions réelles. Sans choix, Aláji les sélectionne selon la demande." },
+      { title: "Contrôler le journal", body: "« Journal d'exécution » liste chaque outil appelé et son état (exécutée, en attente, bloquée). L'agent vérificateur contrôle ensuite les résultats : paramètres manquants, valeurs non finies, unités, mesures simulées. Pastille « Vérifié » ou « N point(s) à vérifier »." },
+      { title: "Approuver les actions", body: "Une action qui modifie des données au-delà de votre niveau d'autonomie (Paramètres) attend votre approbation dans « Actions de l'IA en attente ». Aucune commande d'équipement n'est exécutée par l'IA : elle est seulement proposée." },
+      { title: "Historique", body: "« Historique des conversations » rouvre une conversation précédente ; elle reste liée au projet choisi en haut de page." },
+    ],
+    limits: ["Sans fournisseur d'IA configuré, la compréhension libre et la rédaction ne sont pas disponibles.", "Aláji n'invente aucune mesure, donnée satellite, référence ou prix : une valeur absente est signalée comme paramètre manquant."],
+  },
+  {
     slug: "licence", title: "Essai gratuit et licence", audience: "Tous",
     summary: "Comprendre l'essai de 90 jours et activer une licence.",
     steps: [

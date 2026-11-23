@@ -56,7 +56,7 @@ test("parcours complet : inscription, langues, toutes les rubriques, labos, simu
 
   // IA : moteur de règles signalé, calcul exécuté via l'outil.
   await page.goto("/ai");
-  await expect(page.getByTestId("ai-mode")).toContainText("Moteur de règles");
+  await expect(page.getByTestId("ai-mode")).toContainText("sans clé");
   await page.fill("textarea[name=question]", "Sous-réseau 192.168.1.0/24");
   await page.getByTestId("ai-send").click();
   await expect(page.getByTestId("ai-answer")).toContainText("254 hôtes");

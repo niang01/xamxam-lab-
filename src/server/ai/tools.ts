@@ -1,5 +1,5 @@
 /**
- * AI TOOL EXECUTION ENGINE — registre des outils de XAM-XAM AI CORE.
+ * AI TOOL EXECUTION ENGINE — registre des outils d'Aláji IA.
  * Chaque outil : schéma d'entrée (zod → JSON Schema), effet (read / compute / write / physical) qui fixe le niveau
  * d'autonomie requis, et exécution déterministe. L'IA ne calcule rien elle-même et ne commande aucun équipement :
  * l'outil physique ne fait que PROPOSER (confirmation humaine dans le Remote Control Center).
@@ -19,6 +19,8 @@ import { audit } from "../audit";
 import { automationSpec } from "@/lib/automation";
 import { MARKET_CATEGORIES } from "@/lib/market";
 import type { ToolEffect } from "@/lib/autonomy";
+import { projectReportMarkdown } from "./analysis";
+import { projectReportData } from "../projects";
 
 export interface ToolCtx { user: User; projectId: string | null; conversationId: string }
 
@@ -142,7 +144,7 @@ export const TOOLS = {
     run: async (i, c) => {
       const pid = await writableProject(i.project_id ?? c.projectId, c.user);
       const s = (await sql<{ id: string }>("INSERT INTO schematics(project_id, owner_id, lab, title, graph) VALUES ($1,$2,'electronics',$3,$4) RETURNING id", [pid, c.user.id, i.title, JSON.stringify(i.graph)]))[0];
-      await sql("INSERT INTO schematic_versions(schematic_id, version, graph, message, created_by) VALUES ($1,1,$2,'Proposé par XAM-XAM AI',$3)", [s.id, JSON.stringify(i.graph), c.user.id]);
+      await sql("INSERT INTO schematic_versions(schematic_id, version, graph, message, created_by) VALUES ($1,1,$2,'Proposé par Aláji IA',$3)", [s.id, JSON.stringify(i.graph), c.user.id]);
       return { schematic_id: s.id, url: `/lab/electronics?schema=${s.id}` };
     },
   }),
@@ -168,6 +170,23 @@ export const TOOLS = {
   recall: tool({
     description: "Relit la mémoire du projet (décisions et informations affirmées par l'utilisateur).", effect: "read", schema: z.object({ project_id: z.string().uuid().nullable().optional() }),
     run: async (i, c) => sql("SELECT content, created_at FROM ai_memory WHERE user_id=$1 AND ($2::uuid IS NULL OR project_id=$2) ORDER BY created_at DESC LIMIT 50", [c.user.id, i.project_id ?? c.projectId]),
+  }),
+  generate_project_report: tool({
+    description: "Génère le rapport technique Markdown d'un projet à partir de ses seules données enregistrées (sections, composants, budget, calculs, simulations, mesures, tâches). Ne rédige aucun contenu inventé.",
+    effect: "read", schema: z.object({ project_id: z.string().uuid() }),
+    run: async (i, c) => {
+      if (!(await projectRole(i.project_id, c.user))) throw new Error("Projet introuvable");
+      return { project_id: i.project_id, markdown: projectReportMarkdown(await projectReportData(i.project_id)), url: `/projects/${i.project_id}` };
+    },
+  }),
+  project_progress: tool({
+    description: "Suivi des projets de l'utilisateur : tâches terminées / restantes, dernières activités (calculs, simulations).", effect: "read", schema: z.object({}),
+    run: async (_i, c) => sql(`SELECT p.id, p.title, p.level,
+        (SELECT COUNT(*)::int FROM project_tasks t WHERE t.project_id=p.id) AS tasks,
+        (SELECT COUNT(*)::int FROM project_tasks t WHERE t.project_id=p.id AND t.status='done') AS done,
+        (SELECT MAX(created_at) FROM calc_runs r WHERE r.project_id=p.id) AS last_calc,
+        (SELECT MAX(created_at) FROM simulations s WHERE s.project_id=p.id) AS last_sim
+      FROM projects p WHERE p.owner_id=$1 OR EXISTS (SELECT 1 FROM project_members m WHERE m.project_id=p.id AND m.user_id=$1) ORDER BY p.updated_at DESC LIMIT 30`, [c.user.id]),
   }),
   propose_device_command: tool({
     description: "PROPOSE une commande d'équipement (jamais exécutée par l'IA). Une personne habilitée la confirme dans le Remote Control Center ; l'appareil applique ses limites ; « exécutée » seulement sur accusé.",

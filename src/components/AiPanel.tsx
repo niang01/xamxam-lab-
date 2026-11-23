@@ -1,7 +1,7 @@
 "use client";
 /**
- * Panneau contextuel droit « XAM-XAM AI » : conversation courte accessible depuis toutes les rubriques.
- * Il passe par la même route et la même gouvernance que XAM-XAM AI CORE (agents, niveaux d'autonomie, approbations) ;
+ * Panneau contextuel droit « Aláji IA » : conversation courte accessible depuis toutes les rubriques.
+ * Il passe par la même route et la même gouvernance qu'Aláji IA (agents, niveaux d'autonomie, approbations) ;
  * la rubrique ouverte est indiquée à l'IA comme contexte, sans rien lui faire exécuter de plus.
  */
 import Link from "next/link";

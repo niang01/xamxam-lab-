@@ -1,7 +1,10 @@
 /**
- * XAM-XAM AI CORE — moteur de raisonnement, orchestrateur d'agents, moteur d'exécution d'outils et gouvernance.
- *  - Mode « llm » : Claude (clé côté serveur), boucle d'outils ; mode « rules » : moteur de règles déterministe,
- *    TOUJOURS signalé comme tel (pas une IA générative).
+ * Aláji IA — cerveau central de XAM-XAM LAB : analyse de la demande, orchestrateur d'agents, moteur d'exécution
+ * d'outils, vérification et gouvernance.
+ *  - Mode « llm » : fournisseur configurable (Anthropic ou compatible OpenAI, voir providers.ts), boucle d'outils ;
+ *  - mode « rules » (sans clé) : moteur de règles déterministe, TOUJOURS signalé comme tel (pas une IA générative).
+ *  - Dans les deux modes : analyse déterministe de la demande (disciplines, type de projet, intentions) et contrôle
+ *    des résultats par l'agent vérificateur, inscrit dans le journal ai_steps.
  *  - Chaque appel d'outil passe par la gouvernance (coupe-circuit, agent activé, liste blanche, niveau d'autonomie)
  *    et est inscrit dans ai_steps ; le compte rendu des opérations est construit à partir de ce journal.
  */
@@ -14,15 +17,18 @@ import { getSetting } from "../settings";
 import { audit } from "../audit";
 import { decide, effectiveLevel, EFFECT_LEVEL } from "@/lib/autonomy";
 import { AGENTS, ownerOf, selectAgents, toolsFor, type AgentDef } from "./agents";
+import { CALCS, CALC_KINDS } from "../calc";
 import { TOOLS, toolDef, toolJsonSchema, type ToolCtx, type ToolName } from "./tools";
+import { analyseRequest, DISCIPLINE_LINKS, INTENT_LABEL, PROJECT_TYPE_LABEL, verificationText, verifySteps, type RequestAnalysis } from "./analysis";
+import { openAiCompatibleLoop, providerConfig } from "./providers";
 
 export interface Step { id: string; agent_key: string; tool: string; status: string; error: string | null; required_level: number; output?: unknown }
-export interface CoreAnswer { conversationId: string; mode: "llm" | "rules"; model: string | null; answer: string; agents: string[]; steps: Step[]; warning?: string; level: number }
+export interface CoreAnswer { conversationId: string; mode: "llm" | "rules"; model: string | null; answer: string; agents: string[]; steps: Step[]; warning?: string; level: number; analysis?: RequestAnalysis; verification?: { ok: boolean; checked: number; issues: string[] } }
 
 const SUPPORTED_FALLBACK = new Set(["claude-opus-5-5", "claude-opus-5", "claude-fable-5-2", "claude-fable-5-1", "claude-sonnet-5-5"]);
 const fallbackParams = (model: string) => (SUPPORTED_FALLBACK.has(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {});
 
-export const SYSTEM_PROMPT = `Tu es XAM-XAM AI CORE, le cerveau central de XAM-XAM LAB, plateforme internationale d'ingénierie, de simulation, de formation et d'innovation née au Sénégal.
+export const SYSTEM_PROMPT = `Tu es Aláji IA, le cerveau central de XAM-XAM LAB, plateforme internationale d'ingénierie, de simulation, de formation et d'innovation née au Sénégal.
 Tu coordonnes des agents spécialisés (listés ci-dessous) et tu utilises UNIQUEMENT les outils fournis.
 
 Règles impératives :
@@ -119,7 +125,17 @@ export async function approveStep(stepId: string, user: User, approve: boolean) 
 }
 
 export function aiStatus() {
-  return env.anthropicKey ? { mode: "llm" as const, model: env.aiModel } : { mode: "rules" as const, model: null, reason: "Aucune clé ANTHROPIC_API_KEY sur le serveur : le moteur de règles déterministe répond à la place (ce n'est pas une IA générative)." };
+  const c = providerConfig();
+  return c.kind !== "none" ? { mode: "llm" as const, provider: c.kind, model: c.model } : { mode: "rules" as const, provider: "none" as const, model: null, reason: c.reason };
+}
+
+/** Contrôle des résultats par l'agent vérificateur, inscrit au journal. */
+async function recordVerification(steps: Step[], ctx: { user: User; conversationId: string }) {
+  const v = verifySteps(steps);
+  if (!v.checked) return v;
+  await sql("INSERT INTO ai_steps(conversation_id, user_id, agent_key, tool, input, required_level, status, output, duration_ms) VALUES ($1,$2,'verifier','verify_results',$3,1,'done',$4,0)",
+    [ctx.conversationId, ctx.user.id, JSON.stringify({ steps: steps.length }), JSON.stringify(v)]);
+  return v;
 }
 
 export async function askCore(question: string, opts: { user: User; conversationId?: string | null; projectId?: string | null; lang?: string; agents?: string[]; fetchImpl?: typeof fetch }): Promise<CoreAnswer> {
@@ -134,25 +150,47 @@ export async function askCore(question: string, opts: { user: User; conversation
   await sql("INSERT INTO ai_messages(conversation_id, role, content, lang) VALUES ($1,'user',$2,$3)", [conversationId, question, lang]);
   const ctx = { user, projectId, conversationId, agents, allowed, level };
   const gov = await governanceState();
+  const analysis = analyseRequest(question);
   const finish = async (r: Omit<CoreAnswer, "conversationId" | "agents" | "level">) => {
+    const verification = await recordVerification(r.steps, { user, conversationId });
+    r = { ...r, answer: r.answer + verificationText(verification), analysis, verification };
     await sql("INSERT INTO ai_messages(conversation_id, role, content, mode, model, agents, lang) VALUES ($1,'assistant',$2,$3,$4,$5,$6)", [conversationId, r.answer, r.mode, r.model, JSON.stringify(agents.map((a) => a.key)), lang]);
-    return { ...r, conversationId, agents: agents.map((a) => a.key), level };
+    return { ...r, steps: r.steps.map(({ output: _o, ...x }) => { void _o; return x; }), conversationId, agents: agents.map((a) => a.key), level };
   };
   if (!gov.aiEnabled) return finish({ mode: "rules", model: null, answer: "L'IA est suspendue (arrêt global activé dans le AI Command Center). Aucune opération n'a été exécutée.", steps: [] });
 
   const status = aiStatus();
-  if (status.mode === "rules") return finish(await rulesCore(question, ctx));
+  if (status.mode === "rules") return finish(await rulesCore(question, ctx, analysis));
   const used = (await sqlOne<{ n: number }>("SELECT COUNT(*)::int n FROM ai_messages WHERE role='assistant' AND mode='llm' AND created_at > now() - interval '24 hours'"))?.n ?? 0;
   if (used >= env.aiDailyLimit) {
-    const r = await rulesCore(question, ctx);
+    const r = await rulesCore(question, ctx, analysis);
     return finish({ ...r, warning: `Plafond quotidien d'appels IA atteint (${env.aiDailyLimit}) : réponse du moteur de règles.` });
   }
 
   const steps: Step[] = [];
+  const roster = agents.map((a) => `- ${a.name} (${a.key}) : ${a.domain} Outils : ${a.tools.join(", ") || "aucun"}. Limites : ${a.limits} Vérification : ${a.verify}`).join("\n");
+  const analysisLine = `Analyse préalable (déterministe) : disciplines = ${analysis.disciplines.map((x) => x.key).join(", ") || "non déterminées"} ; type de projet = ${analysis.projectType ?? "non précisé"} ; intentions = ${analysis.intents.join(", ") || "non déterminées"}.`;
+  const system = `${SYSTEM_PROMPT}\n\n${analysisLine}\n\nAgents mobilisés pour cette demande :\n${roster}\n\nNiveau d'autonomie effectif : ${level}/5 (les actions au-delà sont mises en attente d'approbation humaine).${projectId ? `\nProjet courant : ${projectId}.` : ""}\n\n${await languageInstruction(lang)}`;
+  if (status.provider === "openai_compatible") {
+    try {
+      const answer = await openAiCompatibleLoop({
+        system, history: history.filter((h, i) => i > 0 || h.role === "user"), question, fetchImpl: opts.fetchImpl,
+        tools: allowed.map((n) => ({ name: n, description: TOOLS[n].description, parameters: toolJsonSchema(n) })),
+        runTool: async (name, input) => {
+          const s = await executeStep(name, input, ctx);
+          steps.push(s);
+          return { content: s.status === "done" ? JSON.stringify(s.output).slice(0, 30000)
+            : s.status === "awaiting_approval" ? `NON EXÉCUTÉ — en attente d'approbation humaine (étape ${s.id}) : ${s.error}` : `NON EXÉCUTÉ — ${s.status} : ${s.error}` };
+        },
+      });
+      return finish({ mode: "llm", model: status.model, answer: answer || "(aucune réponse textuelle)", steps });
+    } catch (e) {
+      const r = await rulesCore(question, ctx, analysis);
+      return finish({ ...r, steps: [...steps, ...r.steps], warning: `Fournisseur IA indisponible (${e instanceof Error ? e.message : String(e)}) : réponse du mode sans clé.` });
+    }
+  }
   try {
     const client = new Anthropic({ apiKey: env.anthropicKey!, maxRetries: 2, timeout: 180000, ...(opts.fetchImpl ? { fetch: opts.fetchImpl } : {}) });
-    const roster = agents.map((a) => `- ${a.name} (${a.key}) : ${a.domain} Outils : ${a.tools.join(", ") || "aucun"}. Limites : ${a.limits} Vérification : ${a.verify}`).join("\n");
-    const system = `${SYSTEM_PROMPT}\n\nAgents mobilisés pour cette demande :\n${roster}\n\nNiveau d'autonomie effectif : ${level}/5 (les actions au-delà sont mises en attente d'approbation humaine).${projectId ? `\nProjet courant : ${projectId}.` : ""}\n\n${await languageInstruction(lang)}`;
     const msgs: Anthropic.Beta.BetaMessageParam[] = [];
     for (const h of history) { if (!msgs.length && h.role !== "user") continue; msgs.push({ role: h.role, content: h.content }); }
     msgs.push({ role: "user", content: question });
@@ -160,9 +198,9 @@ export async function askCore(question: string, opts: { user: User; conversation
     let answer = "";
     for (let turn = 0; turn < 10; turn++) {
       const res = await client.beta.messages.create({
-        model: env.aiModel, max_tokens: 16000, system, tools, messages: msgs,
+        model: status.model!, max_tokens: 16000, system, tools, messages: msgs,
         output_config: { effort: "medium" },
-        ...fallbackParams(env.aiModel),
+        ...fallbackParams(status.model!),
       });
       if (res.stop_reason === "refusal") { answer = "La demande n'a pas pu être traitée par le fournisseur IA. Reformulez-la."; break; }
       msgs.push({ role: "assistant", content: res.content });
@@ -182,11 +220,11 @@ export async function askCore(question: string, opts: { user: User; conversation
       }
       msgs.push({ role: "user", content: results });
     }
-    return finish({ mode: "llm", model: env.aiModel, answer: answer || "(aucune réponse textuelle)", steps: steps.map(({ output: _o, ...s }) => { void _o; return s; }) });
+    return finish({ mode: "llm", model: status.model, answer: answer || "(aucune réponse textuelle)", steps });
   } catch (e) {
     const msg = e instanceof Anthropic.AuthenticationError ? "clé du fournisseur IA refusée" : e instanceof Anthropic.RateLimitError ? "quota du fournisseur IA atteint" : e instanceof Anthropic.APIError ? `erreur du fournisseur IA (${e.status})` : e instanceof Error ? e.message : String(e);
-    const r = await rulesCore(question, ctx);
-    return finish({ ...r, steps: [...steps, ...r.steps], warning: `Fournisseur IA indisponible (${msg}) : réponse du moteur de règles.` });
+    const r = await rulesCore(question, ctx, analysis);
+    return finish({ ...r, steps: [...steps, ...r.steps], warning: `Fournisseur IA indisponible (${msg}) : réponse du mode sans clé.` });
   }
 }
 
@@ -195,12 +233,44 @@ const fmt = (o: { outputs: Record<string, { value: number; unit: string; label: 
   [...Object.values(o.outputs).map((v) => `- ${v.label} : ${v.value} ${v.unit}`), ...o.missing.map((m) => `- Paramètre manquant : ${m}`), ...o.warnings.map((w) => `- ${w}`)].join("\n");
 const n = (s: string | undefined) => (s == null ? null : Number(s.replace(",", ".")));
 
-async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2]): Promise<Omit<CoreAnswer, "conversationId" | "agents" | "level">> {
-  const head = "**Moteur de règles (pas une IA générative)** — aucune clé de modèle d'IA n'est configurée ; seules des demandes simples sont reconnues.\n\n";
+/** Paramètres « nom=valeur » trouvés dans la question pour un calcul donné (aucune valeur devinée : absent → null). */
+export function extractCalcInput(kind: string, question: string): Record<string, unknown> | null {
+  const def = (CALCS as Record<string, { schema: z.ZodType }>)[kind];
+  const shape = (def?.schema as unknown as { shape?: Record<string, z.ZodType> }).shape;
+  if (!shape) return null;
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(shape)) {
+    const m = question.match(new RegExp(`\\b${key}\\s*[=:]\\s*(-?\\d+(?:[.,]\\d+)?|[a-zA-Z_]+)`, "i"));
+    if (!m) { out[key] = null; continue; }
+    const raw = m[1];
+    out[key] = /^-?\d/.test(raw) ? Number(raw.replace(",", ".")) : raw;
+  }
+  return out;
+}
+
+async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2], analysis: RequestAnalysis): Promise<Omit<CoreAnswer, "conversationId" | "agents" | "level">> {
+  const head = "**Aláji IA — mode sans clé** (moteur de règles déterministe, pas une IA générative : aucun fournisseur d'IA n'est configuré sur le serveur).\n\n";
+  const orient = [
+    "**Analyse de la demande**",
+    `- Disciplines : ${analysis.disciplines.map((d) => d.name).join(", ") || "non déterminées"}`,
+    `- Type de projet : ${analysis.projectType ? PROJECT_TYPE_LABEL[analysis.projectType] : "non précisé"}`,
+    `- Intention : ${analysis.intents.map((i) => INTENT_LABEL[i]).join(", ") || "non déterminée"}`,
+    `- Agents mobilisés : ${ctx.agents.map((a) => a.name).join(", ")}`,
+  ].join("\n");
+  const links = [...new Map(analysis.disciplines.flatMap((d) => DISCIPLINE_LINKS[d.key] ?? []).map((l) => [l.href, l])).values()];
+  const go = links.length ? `\n\n**Où travailler** : ${links.map((l) => `${l.label} (${l.href})`).join(" · ")}` : "";
   const steps: Step[] = [];
-  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components", "search_marketplace"] as ToolName[])] }); steps.push(s); return s; };
-  const out = (answer: string) => ({ mode: "rules" as const, model: null, answer: head + answer, steps: steps.map(({ output: _o, ...s }) => { void _o; return s; }) });
+  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components", "search_marketplace", "project_progress", "generate_project_report"] as ToolName[])] }); steps.push(s); return s; };
+  const out = (answer: string) => ({ mode: "rules" as const, model: null, answer: `${head}${orient}\n\n${answer}${go}`, steps });
   const qn = question.toLowerCase();
+
+  // Calcul explicitement nommé : « calcul pump flowM3h=5 headM=30 … »
+  const named = CALC_KINDS.find((k) => new RegExp(`\\b${k}\\b`, "i").test(question));
+  if (named && named !== "subnet" && named !== "vlsm") {
+    const input = extractCalcInput(named, question)!;
+    const s = await call("run_calculation", { kind: named, input });
+    return out(s.status === "done" ? `Calcul **${named}** (${CALCS[named].description}) :\n${fmt((s.output as { result: Parameters<typeof fmt>[0] }).result)}` : `Calcul non exécuté : ${s.error}`);
+  }
 
   const cidr = question.match(/\b(\d{1,3}(?:\.\d{1,3}){3}\/\d{1,2})\b/);
   if (cidr) { const s = await call("run_calculation", { kind: "subnet", input: { cidr: cidr[1] } }); return out(s.status === "done" ? `Calcul du sous-réseau ${cidr[1]} :\n${fmt((s.output as { result: Parameters<typeof fmt>[0] }).result)}` : `Calcul non exécuté : ${s.error}`); }
@@ -216,15 +286,30 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
     const v = g.parameters.ALLSKY_SFC_SW_DWN.values.map((x) => x.value);
     return out(`Irradiation globale horizontale moyenne (NASA POWER, **donnée modélisée régionale**, ${g.period}) en kWh/m²/j, de janvier à décembre :\n${v.join(" · ")}\n\nRésolution : ${g.resolution}. Pour la production, ouvrez le Solar Energy Lab (puissance crête et ratio de performance à fournir).`);
   }
-  if (/appareil|device|capteur|sensor/i.test(qn)) {
+
+  // Rapport d'un projet existant (titre cité dans la demande)
+  if (analysis.intents.includes("rapport")) {
+    const ps = await call("list_projects", {});
+    const list = (ps.output as { id: string; title: string }[] | undefined) ?? [];
+    const target = list.find((p) => qn.includes(p.title.toLowerCase())) ?? (ctx.projectId ? list.find((p) => p.id === ctx.projectId) : undefined) ?? (list.length === 1 ? list[0] : undefined);
+    if (!target) return out(list.length ? `Pour quel projet ? Citez son titre : ${list.map((p) => `« ${p.title} »`).join(", ")}.` : "Aucun projet : créez-en un (Projets → Nouveau projet, ou à partir d'un modèle), puis demandez son rapport.");
+    const r = await call("generate_project_report", { project_id: target.id });
+    return out(r.status === "done" ? `Rapport du projet « ${target.title} » (à partir des données enregistrées ; téléchargeable depuis la page du projet) :\n\n${(r.output as { markdown: string }).markdown}` : `Rapport non généré : ${r.error}`);
+  }
+  if (analysis.intents.includes("suivi")) {
+    const s = await call("project_progress", {});
+    const ps = (s.output as { title: string; tasks: number; done: number; last_calc: string | null; last_sim: string | null }[]) ?? [];
+    return out(ps.length ? `**Suivi des projets**\n${ps.map((p) => `- ${p.title} : ${p.done}/${p.tasks} tâche(s) terminée(s)${p.last_calc ? ` · dernier calcul ${new Date(p.last_calc).toLocaleDateString("fr-FR")}` : ""}${p.last_sim ? ` · dernière simulation ${new Date(p.last_sim).toLocaleDateString("fr-FR")}` : ""}`).join("\n")}` : "Aucun projet à suivre.");
+  }
+  if (/appareil|device|capteur|sensor/i.test(qn) && !analysis.intents.includes("composants")) {
     const s = await call("list_devices", {});
     const ds = (s.output as { name: string; environment: string; last_seen: string | null; latest: { metric: string; value: number; unit: string | null; ts: string; quality: string }[] | null }[]) ?? [];
     return out(ds.length ? ds.map((d) => `- ${d.name} (${d.environment}) — dernière communication : ${d.last_seen ? new Date(d.last_seen).toLocaleString("fr-FR") : "jamais"}${(d.latest ?? []).map((l) => `\n  · ${l.metric} = ${l.value} ${l.unit ?? ""} (${new Date(l.ts).toLocaleString("fr-FR")}${l.quality === "simulated" ? ", SIMULÉE" : ""})`).join("")}`).join("\n") : "Aucun appareil enregistré. Ajoutez-en un dans IoT Gateway.");
   }
-  if (/projet|project/i.test(qn)) {
+  if (/mes projets|my projects|liste des projets/i.test(qn)) {
     const s = await call("list_projects", {});
     const ps = (s.output as { title: string; kind: string }[]) ?? [];
-    return out(ps.length ? ps.map((p) => `- ${p.title} (${p.kind})`).join("\n") : "Aucun projet. Créez-en un dans Project & Research Studio.");
+    return out(ps.length ? ps.map((p) => `- ${p.title} (${p.kind})`).join("\n") : "Aucun projet. Créez-en un dans Projets (des modèles complets sont proposés).");
   }
   const market = question.match(/(?:marketplace|annonces?|acheter|à vendre|for sale|buy)\s*:?\s*(?:un |une |des |le |la |les |a |an |the )?([\p{L}\d -]{2,40})?/iu);
   if (market) {
@@ -233,13 +318,20 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
     const ls = ((s.output as { listings: { title: string; price_xof: number | null; location: string | null; seller: string; link: string }[] } | undefined)?.listings) ?? [];
     return out(ls.length ? `Annonces de XAM-XAM MARKETPLACE${query ? ` pour « ${query} »` : ""} (caractéristiques déclarées par les vendeurs ; aucun paiement via la plateforme) :\n${ls.map((l) => `- ${l.title} — ${l.price_xof === null ? "prix sur demande" : `${l.price_xof} FCFA`}${l.location ? ` · ${l.location}` : ""} · ${l.seller} (${l.link})`).join("\n")}` : `Aucune annonce publiée${query ? ` pour « ${query} »` : ""} dans XAM-XAM MARKETPLACE.`);
   }
-  const comp = question.match(/(?:composant|component|explique[- ]moi|explain)\s*:?\s*(?:le |la |l'|the )?([\p{L}\d -]{3,40})/iu);
+  const comp = question.match(/(?:composant|component|explique[- ]moi|explique|explain|qu'est-ce qu'une?|c'est quoi une?)\s*:?\s*(?:le |la |l'|un |une |the )?([\p{L}\d -]{3,40})/iu);
   if (comp) {
-    const s = await call("search_components", { query: comp[1].trim().split(/\s+/)[0] });
+    const word = comp[1].trim().split(/\s+/)[0];
+    const s = await call("search_components", { query: word });
     const cs = (s.output as { name: string; description: string; function: string | null; precautions: string | null }[]) ?? [];
-    return out(cs.length ? cs.slice(0, 3).map((c) => `**${c.name}** — ${c.description}${c.function ? `\nFonction : ${c.function}` : ""}${c.precautions ? `\nPrécautions : ${c.precautions}` : ""}`).join("\n\n") : "Aucun composant correspondant dans la bibliothèque.");
+    return out(cs.length ? cs.slice(0, 3).map((c) => `**${c.name}** — ${c.description}${c.function ? `\nFonction : ${c.function}` : ""}${c.precautions ? `\nPrécautions : ${c.precautions}` : ""}`).join("\n\n") : `Aucun composant « ${word} » dans la bibliothèque.`);
   }
-  return out(`Demandes reconnues sans IA générative :\n- sous-réseau : « 192.168.1.0/24 »\n- loi d'Ohm : « U=12 R=470 »\n- irradiation solaire : « irradiation solaire 14.69, -17.44 »\n- « mes appareils », « mes projets », « explique le composant condensateur »\n- marketplace : « annonces relais », « acheter capteur »\n\nTous les laboratoires restent utilisables directement, sans IA. Pour la compréhension libre (wolof, français, anglais) et l'orchestration complète des agents, l'administrateur doit configurer ANTHROPIC_API_KEY sur le serveur.`);
+  const calcHints = analysis.disciplines.flatMap((d) => CALC_KINDS.filter((k) => CALCS[k].lab === d.key || (d.key === "robotics" && CALCS[k].lab === "mechanical"))).slice(0, 8);
+  return out([
+    analysis.projectType ? `Pour un ${PROJECT_TYPE_LABEL[analysis.projectType].toLowerCase()}, créez le projet à partir d'un **modèle** (Projets → Nouveau à partir d'un modèle) : cahier des charges, objectifs, méthodologie, architecture, composants, budget, tests et rapport sont structurés d'avance.` : "",
+    calcHints.length ? `Calculs disponibles pour ces disciplines (écrivez par exemple « calcul ${calcHints[0]} » suivi des paramètres nom=valeur) :\n${calcHints.map((k) => `- ${k} : ${CALCS[k].description}`).join("\n")}` : "",
+    "Demandes comprises sans IA générative : « 192.168.1.0/24 », « U=12 R=470 », « calcul pump flowM3h=5 headM=30 pumpEff=0.6 motorEff=0.85 dailyVolumeM3=20 », « irradiation solaire 14.69, -17.44 », « rapport du projet <titre> », « suivi de mes projets », « mes appareils », « explique le condensateur », « annonces relais ».",
+    "Pour la compréhension libre (wolof, français, anglais) et la rédaction, l'administrateur peut configurer un fournisseur d'IA (AI_PROVIDER — Anthropic ou tout service compatible OpenAI, y compris des offres gratuites ou un serveur local).",
+  ].filter(Boolean).join("\n\n"));
 }
 
 export { AGENTS };

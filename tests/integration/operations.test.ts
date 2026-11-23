@@ -134,11 +134,12 @@ describe("Automation Studio", () => {
   });
 });
 
-describe("XAM-XAM AI CORE", () => {
+describe("Aláji IA (cœur)", () => {
   it("moteur de règles signalé ; calcul via outil journalisé", async () => {
     const r = await call(chat.POST as never, "POST", "/x", { session: pupil, body: { question: "Calcule 192.168.1.0/26", lang: "fr" } });
     expect(r.json.mode).toBe("rules");
-    expect(String(r.json.answer)).toMatch(/Moteur de règles/);
+    expect(String(r.json.answer)).toMatch(/Aláji IA — mode sans clé/);
+    expect(String(r.json.answer)).toMatch(/Vérification \(agent vérificateur\)/);
     expect(String(r.json.answer)).toMatch(/62 hôtes/);
     expect((r.json.steps as { tool: string; status: string }[])[0]).toMatchObject({ tool: "run_calculation", status: "done" });
   });

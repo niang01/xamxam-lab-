@@ -15,7 +15,7 @@ export const MESSAGES = {
 
   // ===== Navigation (26 rubriques + Automation Studio) =====
   "nav.dashboard": e("Tableau de bord", "Dashboard"),
-  "nav.ai": e("XAM-XAM AI CORE", "XAM-XAM AI CORE"),
+  "nav.ai": e("Aláji IA", "Aláji IA"),
   "nav.command": e("AI Command Center", "AI Command Center"),
   "nav.automation": e("Automation Studio", "Automation Studio"),
   "nav.lab": e("Engineering Lab", "Engineering Lab"),
@@ -205,7 +205,7 @@ export const MESSAGES = {
   "c.references": e("Références", "References"),
   "c.warnings": e("Avertissements", "Warnings"),
   "c.results": e("Résultats", "Results"),
-  "c.askAi": e("Demander à XAM-XAM AI", "Ask XAM-XAM AI"),
+  "c.askAi": e("Demander à Aláji IA", "Ask Aláji IA"),
   "c.public": e("Public", "Public"),
   "c.private": e("Privé", "Private"),
   "c.members": e("Membres", "Members"),
@@ -351,10 +351,10 @@ export const MESSAGES = {
   "status.pendingCmd": e("{n} commande(s) à confirmer", "{n} command(s) to confirm"),
   "status.approvals": e("{n} action(s) IA à approuver", "{n} AI action(s) to approve"),
   "status.checkedAt": e("Vérifié à {t}", "Checked at {t}"),
-  "panel.title": e("XAM-XAM AI", "XAM-XAM AI"),
-  "panel.open": e("Ouvrir le panneau XAM-XAM AI", "Open the XAM-XAM AI panel"),
+  "panel.title": e("Aláji IA", "Aláji IA"),
+  "panel.open": e("Ouvrir le panneau Aláji IA", "Open the Aláji IA panel"),
   "panel.context": e("Rubrique", "Section"),
-  "panel.full": e("Ouvrir AI CORE", "Open AI CORE"),
+  "panel.full": e("Ouvrir Aláji IA", "Open Aláji IA"),
   "panel.empty": e("Posez une question sur la rubrique ouverte : calcul, explication, simulation, projet. Les actions qui modifient des données restent soumises à votre approbation.", "Ask about the open section: calculation, explanation, simulation, project. Actions that change data still require your approval."),
   "theme.dark": e("Sombre", "Dark"),
   "theme.light": e("Clair", "Light"),
@@ -851,9 +851,14 @@ export const MESSAGES = {
   "cmdst.cancelled": e("Annulée", "Cancelled"),
   "cmdst.refused": e("Refusée", "Refused"),
 
-  // ===== XAM-XAM AI CORE =====
+  // ===== Aláji IA =====
   "ai.subtitle": e("Cerveau central : comprend la demande, mobilise les agents spécialisés, appelle les outils autorisés (calculs, simulations, données, appareils) et rend compte de ce qui a réellement été exécuté.", "Central brain: understands the request, mobilises specialised agents, calls authorised tools (calculations, simulations, data, devices) and reports what was actually executed."),
-  "ai.rules": e("Moteur de règles (pas une IA générative)", "Rule engine (not generative AI)"),
+  "ai.rules": e("Mode sans clé (moteur de règles, pas une IA générative)", "Keyless mode (rule engine, not generative AI)"),
+  "ai.history": e("Historique des conversations", "Conversation history"),
+  "ai.analysis": e("Analyse", "Analysis"),
+  "ai.verified": e("Vérifié", "Verified"),
+  "ai.issues": e("{n} point(s) à vérifier", "{n} point(s) to check"),
+  "ai.activity": e("{n} exécution(s)", "{n} run(s)"),
   "ai.killed": e("IA suspendue : arrêt global activé dans le AI Command Center.", "AI suspended: global stop enabled in the AI Command Center."),
   "ai.level": e("Niveau d'autonomie effectif : {n}/5", "Effective autonomy level: {n}/5"),
   "ai.pending": e("Actions de l'IA en attente de votre approbation", "AI actions awaiting your approval"),
@@ -881,7 +886,7 @@ export const MESSAGES = {
 
   // ===== AI Command Center =====
   "cc.subtitle": e("Centre de contrôle (administrateurs) : agents, opérations de l'IA, simulations, équipements, automatisations, sessions de télépilotage, permissions, ressources et journal d'audit chaîné.", "Control centre (administrators): agents, AI operations, simulations, equipment, automations, remote sessions, permissions, resources and chained audit log."),
-  "cc.sw.ai_enabled": e("XAM-XAM AI (toutes opérations)", "XAM-XAM AI (all operations)"),
+  "cc.sw.ai_enabled": e("Aláji IA (toutes opérations)", "Aláji IA (all operations)"),
   "cc.sw.automations_enabled": e("Automatisations", "Automations"),
   "cc.sw.devices_enabled": e("Commandes d'équipements", "Device commands"),
   "cc.on": e("En service", "Running"),

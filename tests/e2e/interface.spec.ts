@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ALERT, signup } from "./helpers";
 
-test("identité : logo, thème sombre par défaut puis clair mémorisé, barre d'état réelle, panneau XAM-XAM AI", async ({ page }) => {
+test("identité : logo, thème sombre par défaut puis clair mémorisé, barre d'état réelle, panneau Aláji IA", async ({ page }) => {
   await signup(page, `interface-${Date.now()}@e2e.local`);
   await page.click("button[data-lang=fr]");
 
@@ -31,14 +31,14 @@ test("identité : logo, thème sombre par défaut puis clair mémorisé, barre d
   await expect(page.locator("[data-testid=status-devices]")).toContainText("0 vus / 0");
   await expect(page.locator("[data-testid=status-network]")).toContainText("En ligne");
 
-  // Panneau XAM-XAM AI depuis un laboratoire : même route et même gouvernance qu'AI CORE
+  // Panneau Aláji IA depuis un laboratoire : même route et même gouvernance que la page Aláji IA
   await page.goto("/lab/electrical");
   await page.click("[data-testid=ai-panel-toggle]");
   await expect(page.locator("[data-testid=ai-panel]")).toContainText("Electrical Lab");
   await page.fill("[data-testid=ai-panel] textarea", "Courant pour 12 V et 6 ohms");
   await page.click("[data-testid=ai-panel-send]");
   const thread = page.locator("[data-testid=ai-panel-thread]");
-  await expect(thread).toContainText("Moteur de règles", { timeout: 20_000 });
+  await expect(thread).toContainText("sans clé", { timeout: 20_000 });
   await expect(thread).toContainText("2");
   await expect(page.locator(ALERT)).toHaveCount(0);
 });

@@ -5,12 +5,13 @@ import { useApp } from "@/components/providers";
 import { ProjectPicker } from "@/components/ProjectPicker";
 import { Btn, Card, ErrorBox, Page, Pill, Textarea } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
-import { post } from "@/lib/client/api";
+import { api, post } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Step = { id: string; agent_key: string; tool: string; status: string; error: string | null; required_level: number };
-type Answer = { conversationId: string; mode: "llm" | "rules"; model: string | null; answer: string; agents: string[]; steps: Step[]; warning?: string; level: number };
-type Status = { mode: "llm" | "rules"; model: string | null; reason?: string; aiEnabled: boolean; level: number; agents: { key: string; name: string; domain: string; tools: string[]; limits: string; enabled: boolean }[] };
+type Answer = { conversationId: string; mode: "llm" | "rules"; model: string | null; answer: string; agents: string[]; steps: Step[]; warning?: string; level: number; verification?: { ok: boolean; checked: number; issues: string[] } };
+type Conv = { id: string; title: string; created_at: string };
+type Status = { mode: "llm" | "rules"; model: string | null; reason?: string; aiEnabled: boolean; level: number; agents: { key: string; name: string; domain: string; tools: string[]; limits: string; enabled: boolean; runs: number }[] };
 type Pending = { id: string; agent_key: string; tool: string; input: unknown; error: string; created_at: string };
 type Turn = { role: "user" | "assistant"; text: string; meta?: Answer };
 
@@ -30,6 +31,14 @@ export default function AiCore() {
   const [pid, setPid] = useState("");
   const { data: st } = useData<Status>(`/api/ai/status${pid ? `?project=${pid}` : ""}`);
   const { data: pend, reload: reloadPend } = useData<{ items: Pending[] }>("/api/ai/steps");
+  const { data: convs, reload: reloadConvs } = useData<{ items: Conv[] }>("/api/ai/conversations");
+  async function openConv(id: string) {
+    try {
+      const c = await api<{ messages: { role: "user" | "assistant"; content: string; mode: "llm" | "rules" | null; model: string | null; agents: string[] | null }[] }>(`/api/ai/conversations/${id}`);
+      setConv(id);
+      setTurns(c.messages.map((m) => m.role === "user" ? { role: "user", text: m.content } : { role: "assistant", text: m.content, meta: { conversationId: id, mode: m.mode ?? "rules", model: m.model, answer: m.content, agents: m.agents ?? [], steps: [], level: 0 } }));
+    } catch (e) { setErr(e); }
+  }
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conv, setConv] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -57,7 +66,7 @@ export default function AiCore() {
       const r = await post<Answer>("/api/ai/chat", { question: qn, conversation_id: conv, project_id: pid || null, lang, agents: chosen.length ? chosen : undefined });
       setConv(r.conversationId);
       setTurns((x) => [...x, { role: "assistant", text: r.answer, meta: r }]);
-      reloadPend();
+      reloadPend(); reloadConvs();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   }
 
@@ -103,8 +112,15 @@ export default function AiCore() {
         <p className="mb-2 text-xs text-[var(--fg-3)]">{t("ai.agentsHint")}</p>
         <div className="flex flex-wrap gap-1.5">{st?.agents.filter((a) => a.key !== "verifier").map((a) => (
           <button key={a.key} title={`${a.domain} — ${a.limits}`} disabled={!a.enabled} onClick={() => setChosen((c) => (c.includes(a.key) ? c.filter((x) => x !== a.key) : [...c, a.key]))}
-            className={`rounded-full border px-2.5 py-1 text-xs ${chosen.includes(a.key) ? "border-[var(--cyan)] bg-[color-mix(in_srgb,var(--cyan)_20%,transparent)]" : "border-[var(--line)]"} ${a.enabled ? "" : "line-through opacity-50"}`}>{a.name.replace("AI ", "")}</button>))}</div>
+            className={`rounded-full border px-2.5 py-1 text-xs ${chosen.includes(a.key) ? "border-[var(--cyan)] bg-[color-mix(in_srgb,var(--cyan)_20%,transparent)]" : "border-[var(--line)]"} ${a.enabled ? "" : "line-through opacity-50"}`}>{a.name.replace("AI ", "")}{a.runs > 0 ? ` · ${a.runs}` : ""}</button>))}</div>
       </Card>
+      {!!convs?.items.length && (
+        <Card title={t("ai.history")} testId="ai-history">
+          <ul className="max-h-40 space-y-1 overflow-y-auto text-sm">{convs.items.map((c) => (
+            <li key={c.id}><button className={`text-left hover:underline ${conv === c.id ? "text-[var(--cyan)]" : ""}`} onClick={() => openConv(c.id)}>{new Date(c.created_at).toLocaleDateString()} — {c.title}</button></li>
+          ))}</ul>
+        </Card>
+      )}
       <Card>
         <div className="max-h-[55vh] space-y-4 overflow-y-auto" data-testid="ai-thread">
           {!turns.length && <p className="text-sm text-[var(--fg-3)]">{t("ai.empty")}</p>}
@@ -115,6 +131,7 @@ export default function AiCore() {
                   <div className="flex flex-wrap items-center gap-1 text-xs">
                     <Pill tone={x.meta?.mode === "llm" ? "ok" : "warn"}>{x.meta?.mode === "llm" ? `IA · ${x.meta.model}` : t("ai.rules")}</Pill>
                     {x.meta?.agents.map((a) => <Pill key={a} tone="info">{a}</Pill>)}
+                    {x.meta?.verification && x.meta.verification.checked > 0 && <Pill tone={x.meta.verification.ok ? "ok" : "warn"}>{x.meta.verification.ok ? t("ai.verified") : t("ai.issues", { n: x.meta.verification.issues.length })}</Pill>}
                     <button className="underline" onClick={() => speak(x.text)}>{t("ai.listen")}</button>
                   </div>
                   {x.meta?.warning && <p className="text-xs text-[var(--warn)]">{x.meta.warning}</p>}
