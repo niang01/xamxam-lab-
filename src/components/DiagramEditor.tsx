@@ -113,13 +113,13 @@ export function DiagramEditor() {
         <ErrorBox error={err} />
       </Card>
       <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-        <Card title={t("nav.components")}>
+        <Card title={t("nav.components")} className="order-2 lg:order-1">
           <Select aria-label={t("comp.discipline")} name="palette-discipline" value={disc} onChange={(e) => setDisc(e.target.value)} className="mb-2"><option value="">{t("comp.allDisciplines")}</option>{Object.entries(DISCIPLINE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
           <Input aria-label={t("c.search")} placeholder={t("c.search")} value={q} onChange={(e) => setQ(e.target.value)} className="mb-2" />
-          <ul className="max-h-[50vh] space-y-1 overflow-y-auto text-sm" data-testid="palette">{lib?.items.slice(0, 120).map((c) => (
+          <ul className="max-h-56 space-y-1 overflow-y-auto text-sm lg:max-h-[50vh]" data-testid="palette">{lib?.items.slice(0, 120).map((c) => (
             <li key={c.id}><button className="w-full rounded px-2 py-1 text-left hover:bg-[var(--panel-2)]" data-palette={c.name} onClick={() => addComponent(c)}>＋ {c.name} <span className="text-xs text-[var(--fg-3)]">{c.discipline ? DISCIPLINE_LABEL[c.discipline as Discipline] : c.category}</span></button></li>))}</ul>
         </Card>
-        <div className="space-y-3">
+        <div className="order-1 space-y-3 lg:order-2">
           <Card>
             <div className="mb-2 flex flex-wrap items-center gap-1 text-xs">
               <Btn kind="ghost" onClick={() => zoom(0.8)} aria-label="zoom +">＋</Btn><Btn kind="ghost" onClick={() => zoom(1.25)} aria-label="zoom −">−</Btn>
