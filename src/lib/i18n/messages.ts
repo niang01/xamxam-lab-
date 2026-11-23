@@ -338,6 +338,7 @@ export const MESSAGES = {
   "drone.err.noProfile": e("Renseigner d'abord le profil constructeur du drone.", "Fill in the drone's manufacturer profile first."),
   "drone.err.noHome": e("Point de départ inconnu : le saisir ou attendre la télémétrie GPS.", "Unknown home point: enter it or wait for GPS telemetry."),
   "drone.err.weather": e("Prévision météo indisponible : aucune valeur n'est affichée à la place.", "Weather forecast unavailable: no value is shown instead."),
+  "err.serverConfig": e("Le serveur n'est pas encore entièrement configuré (secret de session manquant). Réessayez plus tard ou prévenez l'administrateur.", "The server is not fully configured yet (session secret missing). Try again later or tell the administrator."),
   "theme.label": e("Thème d'affichage", "Display theme"),
   "status.label": e("État des services", "Service status"),
   "status.online": e("En ligne", "Online"),

@@ -4,12 +4,14 @@ import { sqlOne } from "@/server/db";
 import { verifyPassword } from "@/server/security/crypto";
 import { openSession } from "@/server/auth";
 import { audit } from "@/server/audit";
+import { env } from "@/server/env";
 import { createChallenge, isMfaEnabled } from "@/server/mfa";
 
 const schema = z.object({ email: z.string().trim().toLowerCase().max(200), password: z.string().max(200) });
 
 export const POST = endpoint(async (req) => {
   throttle(req, "login", 20, 5 * 60000);
+  if (!env.sessionSecret) throw new ApiFailure(503, "SESSION_SECRET n'est pas configuré sur le serveur : connexion impossible pour le moment", "err.serverConfig");
   const b = await readInput(req, schema);
   const u = await sqlOne<{ id: string; password_hash: string; status: string; session_version: number }>("SELECT id, password_hash, status, session_version FROM users WHERE email=$1", [b.email]);
   if (!u || u.status !== "active" || !verifyPassword(b.password, u.password_hash)) throw new ApiFailure(401, "Identifiants incorrects", "err.credentials");

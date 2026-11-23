@@ -64,3 +64,18 @@ describe("Sécurité de l'API", () => {
     expect(JSON.stringify(me.json)).not.toMatch(/password|xxs1/);
   });
 });
+
+describe("Configuration incomplète", () => {
+  it("sans SESSION_SECRET en production : inscription refusée AVANT toute création de compte", async () => {
+    const { sql } = await import("@/server/db");
+    const saved = { s: process.env.SESSION_SECRET, n: process.env.NODE_ENV };
+    delete process.env.SESSION_SECRET; (process.env as Record<string, string>).NODE_ENV = "production";
+    try {
+      const reg = (await import(path.join(API, "auth/register/route.ts"))).POST as never;
+      const r = await call(reg, "POST", "/api/auth/register", { body: { email: "orphelin@test.local", password: "motdepasse-123", display_name: "Orphelin", profile_kind: "engineer", locale: "fr" }, headers: { "x-forwarded-for": "203.0.113.77" } });
+      expect(r.status).toBe(503);
+      expect(r.json.key).toBe("err.serverConfig");
+      expect((await sql("SELECT 1 FROM users WHERE email='orphelin@test.local'")).length).toBe(0);
+    } finally { process.env.SESSION_SECRET = saved.s; (process.env as Record<string, string>).NODE_ENV = saved.n!; }
+  });
+});

@@ -18,6 +18,8 @@ const schema = z.object({
 
 export const POST = endpoint(async (req) => {
   throttle(req, "register", 20, 10 * 60000);
+  // Vérifier la configuration AVANT toute écriture : sans secret de session, aucun compte n'est créé.
+  if (!env.sessionSecret) throw new ApiFailure(503, "SESSION_SECRET n'est pas configuré sur le serveur : inscription impossible pour le moment", "err.serverConfig");
   const b = await readInput(req, schema);
   if (await sqlOne("SELECT 1 FROM users WHERE email=$1", [b.email])) throw new ApiFailure(409, "Adresse déjà utilisée", "err.emailTaken");
   // Administrateur : uniquement les adresses déclarées par l'exploitant (XX_ADMIN_EMAILS). Aucune élévation par formulaire.
