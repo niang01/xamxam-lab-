@@ -1,0 +1,15 @@
+Exercice 1 : loi d'Ohm
+Une résistance R = 46 Ω est alimentée sous une tension U = 230 V.
+1) Calculer le courant I absorbé.
+Réponse : I = 5 A
+
+Exercice 2 : moteur triphasé
+Un moteur triphasé absorbe une puissance P = 7,5 kW sous U = 400 V avec cos φ = 0,85 et un rendement η = 0,9.
+1) Déterminer le courant d'emploi.
+Réponse : I = 20 A
+
+Exercice 3 : chute de tension
+Calculer la chute de tension d'un câble en cuivre de longueur L = 50 m, section S = 2,5 mm², parcouru par I = 16 A sous U = 230 V.
+
+Exercice 4
+Dessiner le schéma de commande d'un démarrage direct.

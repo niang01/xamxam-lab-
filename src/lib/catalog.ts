@@ -5,6 +5,7 @@ export interface Rubric { key: string; path: string; group: Group; icon: string 
 export const RUBRICS: Rubric[] = [
   { key: "dashboard", path: "/", group: "core", icon: "◈" },
   { key: "ai", path: "/ai", group: "core", icon: "✦" },
+  { key: "documents", path: "/documents", group: "core", icon: "▧" },
   { key: "command", path: "/command-center", group: "core", icon: "⌘" },
   { key: "automation", path: "/automation", group: "core", icon: "⟳" },
   { key: "lab", path: "/lab", group: "lab", icon: "⬡" },

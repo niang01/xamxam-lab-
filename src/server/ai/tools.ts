@@ -188,6 +188,19 @@ export const TOOLS = {
         (SELECT MAX(created_at) FROM simulations s WHERE s.project_id=p.id) AS last_sim
       FROM projects p WHERE p.owner_id=$1 OR EXISTS (SELECT 1 FROM project_members m WHERE m.project_id=p.id AND m.user_id=$1) ORDER BY p.updated_at DESC LIMIT 30`, [c.user.id]),
   }),
+  list_documents: tool({
+    description: "Liste les documents déposés par l'utilisateur (énoncés, devoirs, fichiers techniques) et analysés.", effect: "read", schema: z.object({}),
+    run: async (_i, c) => sql("SELECT id, filename, kind, pages, ocr, created_at FROM documents WHERE user_id=$1 ORDER BY created_at DESC LIMIT 30", [c.user.id]),
+  }),
+  get_document_report: tool({
+    description: "Rapport d'analyse d'un document déposé : exercices, données extraites, calculs, contrôles, réponses corrigées, points à valider, et texte extrait (tronqué).", effect: "read",
+    schema: z.object({ document_id: z.string().uuid() }),
+    run: async (i, c) => {
+      const d = await sqlOne<{ filename: string; report: unknown; extracted_text: string }>("SELECT filename, report, extracted_text FROM documents WHERE id=$1 AND user_id=$2", [i.document_id, c.user.id]);
+      if (!d) throw new Error("Document introuvable");
+      return { filename: d.filename, report: d.report, text: d.extracted_text.slice(0, 12000) };
+    },
+  }),
   propose_device_command: tool({
     description: "PROPOSE une commande d'équipement (jamais exécutée par l'IA). Une personne habilitée la confirme dans le Remote Control Center ; l'appareil applique ses limites ; « exécutée » seulement sur accusé.",
     effect: "physical", schema: z.object({ device_id: z.string().uuid(), action: z.string().regex(/^[a-z0-9_]{1,30}$/), duration_s: z.number().int().positive().nullable(), reason: z.string().max(300) }),
