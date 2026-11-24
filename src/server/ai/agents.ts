@@ -7,7 +7,7 @@ import type { ToolName } from "./tools";
 
 export interface AgentDef { key: string; name: string; domain: string; tools: ToolName[]; limits: string; verify: string; keywords: RegExp }
 
-const COMMON: ToolName[] = ["list_projects", "get_project", "recall", "remember", "list_calculations", "create_project", "add_project_task", "project_progress", "generate_project_report", "list_documents", "get_document_report"];
+const COMMON: ToolName[] = ["list_projects", "get_project", "recall", "remember", "list_calculations", "create_project", "add_project_task", "project_progress", "generate_project_report", "list_documents", "get_document_report", "generate_schematic"];
 
 export const AGENTS: AgentDef[] = [
   { key: "electrical", name: "AI Electrical Engineer", domain: "Conception et analyse électrotechnique (mono/triphasé, protections, câbles, moteurs).", tools: ["run_calculation", "simulate_circuit", "save_schematic", "search_components"], limits: "Ne valide pas la conformité réglementaire d'une installation : intervention d'un professionnel habilité requise. Coefficients normatifs uniquement depuis les tableaux saisis.", verify: "Unités, protections présentes, paramètres manquants signalés.", keywords: /électri|electri|câble|cable|disjonct|contact|triphas|monophas|chute de tension|voltage drop|moteur|motor|puissance|power|section|courant|current|tension|voltage|ohm|résistance|resistance|watt|ampère|ampere/i },

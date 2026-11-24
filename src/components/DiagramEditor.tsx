@@ -37,6 +37,18 @@ export function DiagramEditor() {
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const check = useMemo(() => checkDiagram(d), [d]);
+  type Gen = { kind: string; title: string; discipline: string; params: { key: string; label: string; unit: string; type: string; default: number | string }[] };
+  const [showGen, setShowGen] = useState(false);
+  const { data: gens } = useData<{ items: Gen[] }>(showGen ? "/api/schematic-generators" : null);
+  const [gk, setGk] = useState(""); const [gp, setGp] = useState<Record<string, string>>({});
+  const [gres, setGres] = useState<{ checks: { ok: boolean; text: string }[]; description: string[]; warnings: string[] } | null>(null);
+  async function generate(kind: string, params: Record<string, string | number>) {
+    setErr(null);
+    try {
+      const r = await post<{ diagram: Diagram; title: string; checks: { ok: boolean; text: string }[]; description: string[]; warnings: string[] }>("/api/schematic-generators", { kind, params });
+      setD(r.diagram); setTitle(r.title); setId(null); setSel(null); setGres(r); setView({ x: -500, y: -320, w: 1600, h: 1100 }); setMsg("");
+    } catch (e) { setErr(e); }
+  }
   const selected = d.blocks.find((b) => b.id === sel) ?? null;
 
   const addComponent = useCallback((c: Comp) => {
@@ -51,7 +63,9 @@ export function DiagramEditor() {
   // Ajout depuis la bibliothèque (?ajout=<id>) ou ouverture (?schema=<id>)
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const add = sp.get("ajout"), open = sp.get("schema");
+    const add = sp.get("ajout"), open = sp.get("schema"), gen = sp.get("generer");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- paramètres lus dans l'URL après le montage
+    if (gen) { setShowGen(true); if (gen !== "1") { setGk(gen); let p: Record<string, string | number> = {}; try { p = JSON.parse(sp.get("p") ?? "{}"); } catch { p = {}; } void generate(gen, p); } }
     if (open) void openDiagram(open);
     else if (add) api<{ items: Comp[] }>(`/api/components?q=`).then((r) => { const c = r.items.find((x) => x.id === add); if (c) addComponent(c); }).catch(setErr);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,6 +125,14 @@ export function DiagramEditor() {
           {msg && <Pill tone="ok">{msg}</Pill>}
         </div>
         <ErrorBox error={err} />
+      </Card>
+      <Card title={t("gen.title")} testId="generator" actions={<Btn kind="ghost" onClick={() => setShowGen((x) => !x)} data-testid="gen-toggle">{showGen ? t("c.close") : t("gen.open")}</Btn>}>
+        {showGen ? (<div className="space-y-2">
+          <Select name="gen-kind" aria-label={t("gen.kind")} value={gk} onChange={(e) => { setGk(e.target.value); setGp({}); }}><option value="">{t("gen.kind")}…</option>{gens?.items.map((g) => <option key={g.kind} value={g.kind}>{g.title}</option>)}</Select>
+          {gk && <div className="grid gap-2 md:grid-cols-3">{gens?.items.find((g) => g.kind === gk)?.params.map((p) => <Field key={p.key} label={`${p.label}${p.unit ? ` (${p.unit})` : ""}`}><Input name={`gen-${p.key}`} value={gp[p.key] ?? String(p.default)} onChange={(e) => setGp({ ...gp, [p.key]: e.target.value })} /></Field>)}</div>}
+          <Btn disabled={!gk} onClick={() => generate(gk, gp)} data-testid="gen-run">{t("gen.run")}</Btn>
+          {gres && <div className="rounded-lg bg-[var(--bg-2)] p-2 text-xs" data-testid="gen-result">{gres.description.map((x) => <p key={x}>{x}</p>)}<ul className="mt-1 space-y-0.5">{gres.checks.map((c) => <li key={c.text} className={c.ok ? "text-[var(--ok)]" : "text-[var(--danger)]"}>{c.ok ? "✓" : "✗"} {c.text}</li>)}{gres.warnings.map((w) => <li key={w} className="text-[var(--warn)]">⚠ {w}</li>)}</ul><p className="mt-1 text-[var(--fg-3)]">{t("gen.validate")}</p></div>}
+        </div>) : <p className="text-xs text-[var(--fg-3)]">{t("gen.info")}</p>}
       </Card>
       <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
         <Card title={t("nav.components")} className="order-2 lg:order-1">

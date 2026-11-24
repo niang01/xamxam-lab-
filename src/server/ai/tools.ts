@@ -20,6 +20,7 @@ import { automationSpec } from "@/lib/automation";
 import { MARKET_CATEGORIES } from "@/lib/market";
 import type { ToolEffect } from "@/lib/autonomy";
 import { projectReportMarkdown } from "./analysis";
+import { GENERATORS, generatorByKind, resolveParams } from "@/lib/schematics-gen";
 import { projectReportData } from "../projects";
 
 export interface ToolCtx { user: User; projectId: string | null; conversationId: string }
@@ -199,6 +200,18 @@ export const TOOLS = {
       const d = await sqlOne<{ filename: string; report: unknown; extracted_text: string }>("SELECT filename, report, extracted_text FROM documents WHERE id=$1 AND user_id=$2", [i.document_id, c.user.id]);
       if (!d) throw new Error("Document introuvable");
       return { filename: d.filename, report: d.report, text: d.extracted_text.slice(0, 12000) };
+    },
+  }),
+  generate_schematic: tool({
+    description: `Génère un schéma technique paramétré et vérifié (logique des circuits contrôlée sur le graphe). Types : ${GENERATORS.map((g) => `${g.kind} (${g.title}; paramètres : ${g.params.map((p) => `${p.key} ${p.unit}`.trim()).join(", ") || "aucun"})`).join(" | ")}. Retourne le lien d'ouverture dans l'éditeur 2D et les contrôles.`,
+    effect: "compute", schema: z.object({ kind: z.string().max(40), params: z.record(z.string(), z.union([z.number(), z.string()])).default({}) }),
+    run: async (i) => {
+      const g = generatorByKind(i.kind);
+      if (!g) throw new Error(`Type de schéma inconnu : ${i.kind}`);
+      const { values, errors } = resolveParams(g, i.params);
+      if (errors.length) throw new Error(errors.join(" ; "));
+      const r = g.build(values);
+      return { title: r.title, description: r.description, checks: r.checks, warnings: r.warnings, blocks: r.diagram.blocks.length, wires: r.diagram.wires.length, url: `/schemas?generer=${g.kind}&p=${encodeURIComponent(JSON.stringify(values))}` };
     },
   }),
   propose_device_command: tool({

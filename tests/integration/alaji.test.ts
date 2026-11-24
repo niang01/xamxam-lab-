@@ -114,3 +114,20 @@ describe("Aláji IA — fournisseur compatible OpenAI (fetch explicite)", () => 
     } finally { for (const k of ["AI_PROVIDER", "AI_BASE_URL", "AI_MODEL", "AI_API_KEY"]) delete process.env[k]; }
   });
 });
+
+describe("Aláji IA — schémas techniques", () => {
+  it("demande de schéma → générateur exécuté, contrôles de logique, lien vers l'éditeur", async () => {
+    const r = await ask("Génère le schéma de démarrage direct d'un moteur de 11 kW");
+    const a = String(r.json.answer);
+    expect(a).toMatch(/Démarrage direct — moteur 11 kW/);
+    expect(a).toMatch(/\/schemas\?generer=demarrage_direct&p=/);
+    expect(a).toMatch(/✓ Le contact F1 \(95-96\) du relais thermique est en série avec la bobine/);
+    expect(a).toMatch(/21\.\d\d A \(calcul\)/);
+  });
+  it("API : génération paramétrée, paramètres hors bornes refusés", async () => {
+    const gen = await import("@/app/api/schematic-generators/route");
+    const ok = await call(gen.POST as never, "POST", "/x", { session: s, body: { kind: "unifilaire_pv", params: { strings: 3 } } });
+    expect(ok.status).toBe(200); expect((ok.json.diagram as { blocks: unknown[] }).blocks.length).toBe(9);
+    expect((await call(gen.POST as never, "POST", "/x", { session: s, body: { kind: "unifilaire_pv", params: { strings: 99 } } })).status).toBe(400);
+  });
+});

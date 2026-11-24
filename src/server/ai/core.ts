@@ -18,6 +18,7 @@ import { audit } from "../audit";
 import { decide, effectiveLevel, EFFECT_LEVEL } from "@/lib/autonomy";
 import { AGENTS, ownerOf, selectAgents, toolsFor, type AgentDef } from "./agents";
 import { CALCS, CALC_KINDS } from "../calc";
+import { guessGenerator } from "@/lib/schematics-gen";
 import { TOOLS, toolDef, toolJsonSchema, type ToolCtx, type ToolName } from "./tools";
 import { analyseRequest, DISCIPLINE_LINKS, INTENT_LABEL, PROJECT_TYPE_LABEL, verificationText, verifySteps, type RequestAnalysis } from "./analysis";
 import { openAiCompatibleLoop, providerConfig } from "./providers";
@@ -260,9 +261,19 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
   const links = [...new Map(analysis.disciplines.flatMap((d) => DISCIPLINE_LINKS[d.key] ?? []).map((l) => [l.href, l])).values()];
   const go = links.length ? `\n\n**Où travailler** : ${links.map((l) => `${l.label} (${l.href})`).join(" · ")}` : "";
   const steps: Step[] = [];
-  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components", "search_marketplace", "project_progress", "generate_project_report"] as ToolName[])] }); steps.push(s); return s; };
+  const call = async (tool: string, input: unknown) => { const s = await executeStep(tool, input, { ...ctx, allowed: [...new Set([...ctx.allowed, "run_calculation", "get_solar_climatology", "list_devices", "list_projects", "search_components", "search_marketplace", "project_progress", "generate_project_report", "generate_schematic"] as ToolName[])] }); steps.push(s); return s; };
   const out = (answer: string) => ({ mode: "rules" as const, model: null, answer: `${head}${orient}\n\n${answer}${go}`, steps });
   const qn = question.toLowerCase();
+
+  // Schéma technique demandé : générateur paramétré, ouvert dans l'éditeur 2D.
+  const schemaKind = /sch[ée]ma|plan|diagram|dessine|câblage|cablage|unifilaire|architecture/i.test(question) ? guessGenerator(question) : null;
+  if (schemaKind) {
+    const pk = question.match(/(\d+(?:[.,]\d+)?)\s*kW/i)?.[1];
+    const s = await call("generate_schematic", { kind: schemaKind, params: pk ? { pkW: Number(pk.replace(",", ".")) } : {} });
+    if (s.status !== "done") return out(`Schéma non généré : ${s.error}`);
+    const g = s.output as { title: string; description: string[]; checks: { ok: boolean; text: string }[]; warnings: string[]; url: string };
+    return out([`**${g.title}** — ouvrir dans l'éditeur 2D : ${g.url}`, ...g.description, "**Contrôles de logique**", ...g.checks.map((c) => `- ${c.ok ? "✓" : "✗"} ${c.text}`), ...g.warnings.map((w) => `- ⚠ ${w}`), "Schéma généré à partir d'un modèle paramétré : à relire et valider avant toute réalisation."].join("\n"));
+  }
 
   // Calcul explicitement nommé : « calcul pump flowM3h=5 headM=30 … »
   const named = CALC_KINDS.find((k) => new RegExp(`\\b${k}\\b`, "i").test(question));
