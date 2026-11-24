@@ -17,6 +17,9 @@ const schema = z.object({
   autonomy_level: z.number().int().min(1).max(5).optional(),
   organization: z.string().trim().max(120).nullable().optional(),
   job_title: z.string().trim().max(120).nullable().optional(),
+  full_name: z.string().trim().max(120).nullable().optional(),
+  specialty: z.string().trim().max(120).nullable().optional(),
+  professional_summary: z.string().trim().max(3000).nullable().optional(),
   profile_kind: z.enum(SELF_SERVICE_PROFILES as [string, ...string[]]).optional(),
   onboarded: z.literal(true).optional(),
   password: z.object({ current: z.string(), next: z.string().min(10).max(200) }).optional(),
@@ -26,7 +29,7 @@ export const PATCH = endpoint(async (req) => {
   const u = await mustBeSignedIn(req);
   const b = await readInput(req, schema);
   const sets: string[] = []; const vals: unknown[] = [];
-  for (const k of ["display_name", "locale", "fallback_locale", "country", "bio", "public_profile", "autonomy_level", "organization", "job_title"] as const) {
+  for (const k of ["display_name", "locale", "fallback_locale", "country", "bio", "public_profile", "autonomy_level", "organization", "job_title", "full_name", "specialty", "professional_summary"] as const) {
     if (b[k] !== undefined) { vals.push(b[k]); sets.push(`${k}=$${vals.length}`); }
   }
   // Un administrateur garde son profil « administrator » ; les autres choisissent parmi les profils libres.

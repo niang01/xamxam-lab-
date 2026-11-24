@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input } from "@/components/ui";
 import { post } from "@/lib/client/api";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function Login() {
   const { t, refreshMe } = useApp();
@@ -52,7 +53,7 @@ export default function Login() {
       <Card className="mt-6" title={t("auth.login")}>
         <form onSubmit={submit} className="space-y-3">
           <Field label={t("auth.email")}><Input name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-          <Field label={t("auth.password")}><Input name="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+          <Field label={t("auth.password")}><PasswordInput name="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
           <ErrorBox error={err} />
           <Btn type="submit" disabled={busy} className="w-full">{t("auth.login")}</Btn>
         </form>

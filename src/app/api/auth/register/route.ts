@@ -14,6 +14,8 @@ const schema = z.object({
   password: z.string().min(10, "Le mot de passe doit contenir au moins 10 caractères").max(200),
   display_name: z.string().trim().min(2, "Le nom affiché doit contenir au moins 2 caractères").max(80),
   profile_kind: z.enum(SELF_SERVICE_PROFILES as [string, ...string[]]),
+  full_name: z.string().trim().max(120).nullable().optional(),
+  bio: z.string().trim().max(2000).nullable().optional(), // « Présentation de moi »
   locale: z.enum(["wo", "fr", "en"]).default("wo"),
   fallback_locale: z.enum(["fr", "en"]).default("fr"),
 });
@@ -28,8 +30,8 @@ export const POST = endpoint(async (req) => {
   // Administrateur : uniquement les adresses déclarées par l'exploitant (XX_ADMIN_EMAILS). Aucune élévation par formulaire.
   const isAdmin = env.adminEmails.includes(b.email);
   const u = (await sql<{ id: string; session_version: number }>(
-    `INSERT INTO users(email, password_hash, display_name, profile_kind, is_admin, locale, fallback_locale, last_login_at) VALUES ($1,$2,$3,$4,$5,$6,$7, now()) RETURNING id, session_version`,
-    [b.email, hashPassword(b.password), b.display_name, isAdmin ? "administrator" : b.profile_kind, isAdmin, b.locale, b.fallback_locale]))[0];
+    `INSERT INTO users(email, password_hash, display_name, profile_kind, is_admin, locale, fallback_locale, last_login_at, full_name, bio) VALUES ($1,$2,$3,$4,$5,$6,$7, now(), $8, $9) RETURNING id, session_version`,
+    [b.email, hashPassword(b.password), b.display_name, isAdmin ? "administrator" : b.profile_kind, isAdmin, b.locale, b.fallback_locale, b.full_name || null, b.bio || null]))[0];
   await ensureTrial(u.id);
   await audit(u.id, "human", "account.create", { kind: "user", id: u.id }, { profile: b.profile_kind, admin: isAdmin });
   const verification = await sendVerification(u.id, b.email, req);

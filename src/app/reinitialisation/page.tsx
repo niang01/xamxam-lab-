@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/providers";
-import { Btn, Card, ErrorBox, Field, Input } from "@/components/ui";
+import { Btn, Card, ErrorBox, Field } from "@/components/ui";
+import { PasswordInput, PasswordMatch } from "@/components/PasswordInput";
 import { post } from "@/lib/client/api";
 
 export default function Reset() {
@@ -27,8 +28,8 @@ export default function Reset() {
         {done ? <p className="text-sm" data-testid="reset-done">{t("pw.resetDone")} <Link className="text-[var(--cyan)] underline" href="/connexion">{t("auth.login")}</Link></p>
           : !token ? <p className="text-sm">{t("err.tokenInvalid")}</p> : (
           <form onSubmit={submit} className="space-y-3">
-            <Field label={t("set.newPw")} hint={t("auth.passwordHint")}><Input name="password" type="password" minLength={10} required autoComplete="new-password" value={pw.a} onChange={(e) => setPw({ ...pw, a: e.target.value })} /></Field>
-            <Field label={t("pw.confirm")}><Input name="password2" type="password" minLength={10} required autoComplete="new-password" value={pw.b} onChange={(e) => setPw({ ...pw, b: e.target.value })} /></Field>
+            <Field label={t("set.newPw")} hint={t("auth.passwordHint")}><PasswordInput name="password" minLength={10} maxLength={200} required autoComplete="new-password" strength value={pw.a} onChange={(e) => setPw({ ...pw, a: e.target.value })} /></Field>
+            <Field label={t("pw.confirm")}><PasswordInput name="password2" minLength={10} maxLength={200} required autoComplete="new-password" value={pw.b} onChange={(e) => setPw({ ...pw, b: e.target.value })} /><PasswordMatch a={pw.a} b={pw.b} /></Field>
             <ErrorBox error={err} />
             <Btn type="submit" disabled={busy} className="w-full">{t("pw.resetBtn")}</Btn>
           </form>

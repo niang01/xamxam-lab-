@@ -2,6 +2,9 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
+## Campagne du 24/11/2026 (profil, mots de passe)
+✅ 165/165 tests unitaires et d'intégration (dont `password.test.ts`, `profil.test.ts` : champs du profil, mot de passe absent des réponses, des journaux et de la base), ✅ 15/15 parcours dont `mot-de-passe.spec.ts` exécuté sur ordinateur **et** Pixel 7 (œil sur inscription, confirmation, connexion, changement, réinitialisation ; robustesse ; concordance ; profil affiché et modifié ; aucune page plus large que l'écran).
+
 ## Campagne du 23/11/2026 (comptes, licences, Aláji IA, espaces 2D/3D/4D, bibliothèque, projets)
 | Contrôle | Résultat |
 |---|---|

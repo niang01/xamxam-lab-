@@ -75,7 +75,7 @@ export function readCookie(req: Request, name: string): string | null {
 export interface User {
   id: string; email: string; display_name: string; profile_kind: string; is_admin: boolean; locale: string; fallback_locale: string;
   autonomy_level: number; public_profile: boolean; country: string | null; bio: string | null; skills: string[]; clearances: string[];
-  organization: string | null; job_title: string | null; onboarded_at: string | null; email_verified_at: string | null; created_at: string;
+  organization: string | null; job_title: string | null; full_name: string | null; specialty: string | null; professional_summary: string | null; onboarded_at: string | null; email_verified_at: string | null; created_at: string;
 }
 
 /** Utilisateur de la session, ou null (jeton absent, invalide, expiré, compte désactivé ou session révoquée). */
@@ -85,7 +85,7 @@ export async function sessionUser(req: Request): Promise<User | null> {
   if (!token) return null;
   const row = await sqlOne<User & { status: string; session_version: number }>(
     `SELECT u.id, u.email, u.display_name, u.profile_kind, u.is_admin, u.locale, u.fallback_locale, u.autonomy_level, u.public_profile,
-            u.country, u.bio, u.skills, u.status, u.session_version, u.organization, u.job_title, u.onboarded_at, u.email_verified_at, u.created_at,
+            u.country, u.bio, u.skills, u.status, u.session_version, u.organization, u.job_title, u.full_name, u.specialty, u.professional_summary, u.onboarded_at, u.email_verified_at, u.created_at,
             COALESCE((SELECT json_agg(c.kind) FROM clearances c WHERE c.user_id = u.id AND (c.valid_until IS NULL OR c.valid_until >= CURRENT_DATE)), '[]') AS clearances
        FROM users u WHERE u.id = $1`, [token.sub]);
   if (!row || row.status !== "active" || row.session_version !== token.ver) return null;

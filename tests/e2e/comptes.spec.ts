@@ -17,6 +17,7 @@ test("comptes : profil, déconnexion, mot de passe oublié, lien de réinitialis
   await page.click("button[type=submit]");
   // Validation du navigateur (minLength) : aucune requête ; on corrige
   await page.fill("input[name=password]", "motdepasse-e2e-1");
+  await page.fill("input[name=password2]", "motdepasse-e2e-1");
   await page.click("button[type=submit]");
   await expect(page.locator("[data-testid=onboarding]")).toBeVisible({ timeout: 30_000 });
   await page.fill("input[name=organization]", "Lycée technique");

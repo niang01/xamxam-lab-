@@ -8,8 +8,8 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 161/161 (19 fichiers) |
-| Parcours de bout en bout (Playwright) | ✅ 13/13 (ordinateur + Pixel 7) |
+| Tests unitaires + intégration | ✅ 165/165 (21 fichiers) |
+| Parcours de bout en bout (Playwright) | ✅ 15/15 (ordinateur + Pixel 7) |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
 
@@ -22,6 +22,10 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 6. **Projets** : 10 modèles × 6 niveaux, dossier complet, composants et budget, rapport et présentation (.md).
 7. **Guides intégrés** (/guide) : première connexion, tableau de bord, Aláji IA, 2D, 3D/4D, bibliothèques, projets IoT, disciplines, licence, administrateur.
 Audit détaillé : docs/AUDIT_DISCIPLINES.md.
+
+## Réalisé le 24/11 — profil et mots de passe
+- Profil professionnel : nom complet, fonction, spécialité, organisation, pays, « Présentation de moi » (dès l'inscription), présentation professionnelle ; carte « Mon profil » (affichage + modification) dans Paramètres ; migration 0010.
+- Œil d'affichage sur tous les champs de mot de passe (inscription, confirmation, connexion, changement, réinitialisation, double authentification) : affichage temporaire (re-masqué au 2e appui, après 30 s, à l'envoi du formulaire ou en quittant la page) ; indicateur de robustesse et de concordance. Mots de passe jamais en clair (scrypt), absents des réponses, journaux et base — test automatique.
 
 ## Action de l'exploitant
 - Se connecter avec l'adresse déclarée dans `XX_ADMIN_EMAILS` (Render) : le compte devient administrateur principal.

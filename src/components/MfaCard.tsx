@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useApp } from "./providers";
 import { Btn, Card, ErrorBox, Field, Input, Pill } from "./ui";
+import { PasswordInput } from "./PasswordInput";
 import { useData } from "@/lib/client/hooks";
 import { post } from "@/lib/client/api";
 
@@ -54,7 +55,7 @@ export function MfaCard() {
 
       {data.enabled && (
         <div className="flex flex-wrap items-end gap-2">
-          <Field label={t("set.currentPw")}><Input type="password" name="mfa-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+          <Field label={t("set.currentPw")}><PasswordInput name="mfa-password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
           <Field label={t("mfa.codeOrRecovery")}><Input name="mfa-confirm" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} /></Field>
           <Btn kind="ghost" onClick={() => run(async () => { const r = await post<{ recovery_codes: string[] }>("/api/me/mfa", { action: "recovery", password, code }); setCodes(r.recovery_codes); setCode(""); setPassword(""); })}>{t("mfa.regenerate")}</Btn>
           <Btn kind="danger" data-testid="mfa-disable" onClick={() => run(async () => { await post("/api/me/mfa", { action: "disable", password, code }); setCode(""); setPassword(""); })}>{t("mfa.disable")}</Btn>
