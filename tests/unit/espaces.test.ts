@@ -8,7 +8,7 @@ import { TEMPLATES, LEVELS, instantiate } from "@/lib/project-templates";
 const block = (id: string, label: string, pins: string[], x = 0, params: Record<string, string> = {}) => ({ id, label, name: label, symbol: "X", pins, x, y: 0, rot: 0 as const, params, component_id: null });
 
 describe("Bibliothèque et modèles", () => {
-  it("12 disciplines couvertes, aucun doublon, paramètres sans valeur inventée", () => {
+  it("23 disciplines couvertes, aucun doublon, paramètres sans valeur inventée", () => {
     expect(new Set(LIBRARY.map((c) => c.discipline))).toEqual(new Set(Object.keys(DISCIPLINE_LABEL)));
     expect(LIBRARY.length).toBeGreaterThanOrEqual(120);
     expect(new Set(LIBRARY.map((c) => c.name)).size).toBe(LIBRARY.length);

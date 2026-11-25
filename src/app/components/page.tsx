@@ -10,8 +10,8 @@ type Comp = { id: string; category: string; name: string; symbol_kind: string | 
 
 export default function Components() {
   const { t, me } = useApp();
-  const [text, setText] = useState(""); const [cat, setCat] = useState(""); const [disc, setDisc] = useState("");
-  const { data, reload } = useData<{ items: Comp[]; categories: { category: string; n: number }[]; disciplines: { discipline: string; n: number }[] }>(`/api/components?q=${encodeURIComponent(text)}${cat ? `&category=${encodeURIComponent(cat)}` : ""}${disc ? `&discipline=${disc}` : ""}`);
+  const [text, setText] = useState(""); const [cat, setCat] = useState(""); const [disc, setDisc] = useState(""); const [fil, setFil] = useState("");
+  const { data, reload } = useData<{ items: Comp[]; categories: { category: string; n: number }[]; disciplines: { discipline: string; n: number }[]; filieres: { key: string; label: string }[] }>(`/api/components?q=${encodeURIComponent(text)}${cat ? `&category=${encodeURIComponent(cat)}` : ""}${disc ? `&discipline=${disc}` : ""}${fil ? `&filiere=${fil}` : ""}`);
   const [open, setOpen] = useState<string | null>(null);
   const [add, setAdd] = useState(false);
   const [f, setF] = useState({ category: "", name: "", description: "", function: "", manufacturer: "", mpn: "", datasheet_url: "", specs: "", pins: "", precautions: "" });
@@ -41,6 +41,7 @@ export default function Components() {
       )}
       <Card>
         <div className="mb-3 flex flex-wrap gap-2">
+          <Select value={fil} onChange={(e) => setFil(e.target.value)} className="!w-auto" aria-label={t("comp.filiere")} name="filiere"><option value="">{t("comp.allFilieres")}</option>{data?.filieres.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</Select>
           <Select value={disc} onChange={(e) => setDisc(e.target.value)} className="!w-auto" aria-label={t("comp.discipline")} name="discipline"><option value="">{t("comp.allDisciplines")}</option>{data?.disciplines.map((d) => <option key={d.discipline} value={d.discipline}>{DISCIPLINE_LABEL[d.discipline as Discipline] ?? d.discipline} ({d.n})</option>)}</Select>
           <Input placeholder={t("c.search")} value={text} onChange={(e) => setText(e.target.value)} className="!w-64" aria-label={t("c.search")} />
           <Select value={cat} onChange={(e) => setCat(e.target.value)} className="!w-auto" aria-label={t("comp.category")}><option value="">{t("c.all")}</option>{data?.categories.map((c) => <option key={c.category} value={c.category}>{c.category} ({c.n})</option>)}</Select>

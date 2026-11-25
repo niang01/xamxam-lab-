@@ -16,7 +16,8 @@
     "agent": "node services/local-agent.mjs",
     "db:backup": "tsx scripts/backup.mts",
     "db:restore": "tsx scripts/restore.mts",
-    "docs:api": "node scripts/gen-api-doc.mjs"
+    "docs:api": "node scripts/gen-api-doc.mjs",
+    "bank:compile": "node scripts/compiler-banque.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.9.0",

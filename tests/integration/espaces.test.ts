@@ -19,8 +19,8 @@ describe("Bibliothèque en base", () => {
   it("composants par discipline avec paramètres ; anciens noms renommés sans doublon", async () => {
     const r = await call(components.GET as never, "GET", "/api/components?q=", { session: s });
     const items = r.json.items as { name: string; discipline: string | null; params: unknown[] }[];
-    expect(items.length).toBeGreaterThanOrEqual(120);
-    expect((r.json.disciplines as unknown[]).length).toBe(12);
+    expect(items.length).toBeGreaterThanOrEqual(185);
+    expect((r.json.disciplines as unknown[]).length).toBe(23);
     expect(items.filter((c) => c.name === "Diode").length).toBe(1);
     expect(items.some((c) => c.name === "Diode (modèle générique)")).toBe(false);
     expect(items.find((c) => c.name === "Module photovoltaïque")!.params.length).toBeGreaterThan(3);

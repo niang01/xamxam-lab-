@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, readInput, endpoint, mustBeSignedIn } from "@/server/api";
 import { sql } from "@/server/db";
 import { audit } from "@/server/audit";
+import { DISCIPLINE_LABEL, FILIERES, type Discipline } from "@/lib/library";
 
 export const GET = endpoint(async (req) => {
   await mustBeSignedIn(req);
@@ -9,11 +10,12 @@ export const GET = endpoint(async (req) => {
   const text = (sp.get("q") ?? "").trim();
   const cat = sp.get("category");
   const disc = sp.get("discipline");
-  const rows = await sql(`SELECT * FROM components WHERE ($1='' OR name ILIKE '%'||$1||'%' OR description ILIKE '%'||$1||'%' OR COALESCE(mpn,'') ILIKE '%'||$1||'%' OR COALESCE(manufacturer,'') ILIKE '%'||$1||'%')
-    AND ($2::text IS NULL OR category=$2) AND ($3::text IS NULL OR discipline=$3) ORDER BY discipline NULLS LAST, category, status DESC, name LIMIT 500`, [text, cat, disc]);
+  const fil = FILIERES.find((f) => f.key === sp.get("filiere"));
+  const rows = await sql(`SELECT * FROM components WHERE ($1='' OR name ILIKE '%'||$1||'%' OR description ILIKE '%'||$1||'%' OR COALESCE(mpn,'') ILIKE '%'||$1||'%' OR COALESCE(manufacturer,'') ILIKE '%'||$1||'%' OR COALESCE(function,'') ILIKE '%'||$1||'%')
+    AND ($2::text IS NULL OR category=$2) AND ($3::text IS NULL OR discipline=$3) AND ($4::text[] IS NULL OR discipline = ANY($4)) ORDER BY discipline NULLS LAST, category, status DESC, name LIMIT 500`, [text, cat, disc, fil ? fil.disciplines : null]);
   const cats = await sql<{ category: string; n: number }>("SELECT category, COUNT(*)::int n FROM components GROUP BY category ORDER BY category");
   const disciplines = await sql<{ discipline: string; n: number }>("SELECT discipline, COUNT(*)::int n FROM components WHERE discipline IS NOT NULL GROUP BY discipline ORDER BY discipline");
-  return ok({ items: rows, categories: cats, disciplines });
+  return ok({ items: rows, categories: cats, disciplines, filieres: FILIERES.map((f) => ({ key: f.key, label: f.label })) });
 });
 
 /** Ajout d'un composant réel : référence et fiche technique obligatoires ; statut « à vérifier » jusqu'à vérification. */
@@ -23,7 +25,7 @@ export const POST = endpoint(async (req) => {
     category: z.string().trim().min(2).max(60), name: z.string().trim().min(2).max(120), description: z.string().trim().min(5).max(2000),
     function: z.string().trim().max(1000).nullable().optional(), manufacturer: z.string().trim().min(1).max(120), mpn: z.string().trim().min(1).max(120),
     datasheet_url: z.string().url().max(500).refine((s) => s.startsWith("https://"), "Lien https requis"),
-    discipline: z.enum(["electrique", "electronique", "solaire", "hydraulique", "iot", "cartes", "automatisme", "froid", "reseau", "mecanique", "drone", "genie_civil"]).nullable().optional(),
+    discipline: z.enum(Object.keys(DISCIPLINE_LABEL) as [Discipline, ...Discipline[]]).nullable().optional(),
     specs: z.record(z.string().max(60), z.string().max(120)).default({}), pins: z.array(z.string().max(40)).max(200).default([]), precautions: z.string().max(2000).nullable().optional(),
   }));
   const r = (await sql<{ id: string }>(`INSERT INTO components(category, name, description, function, manufacturer, mpn, datasheet_url, specs, pins, precautions, status, source, created_by, discipline)

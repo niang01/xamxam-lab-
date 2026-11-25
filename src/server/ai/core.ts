@@ -19,6 +19,7 @@ import { decide, effectiveLevel, EFFECT_LEVEL } from "@/lib/autonomy";
 import { AGENTS, ownerOf, selectAgents, toolsFor, type AgentDef } from "./agents";
 import { CALCS, CALC_KINDS } from "../calc";
 import { guessGenerator } from "@/lib/schematics-gen";
+import { TEMPLATES as EX_TEMPLATES } from "@/lib/exercises";
 import { TOOLS, toolDef, toolJsonSchema, type ToolCtx, type ToolName } from "./tools";
 import { analyseRequest, DISCIPLINE_LINKS, INTENT_LABEL, PROJECT_TYPE_LABEL, verificationText, verifySteps, type RequestAnalysis } from "./analysis";
 import { openAiCompatibleLoop, providerConfig } from "./providers";
@@ -273,6 +274,15 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
     if (s.status !== "done") return out(`Schéma non généré : ${s.error}`);
     const g = s.output as { title: string; description: string[]; checks: { ok: boolean; text: string }[]; warnings: string[]; url: string };
     return out([`**${g.title}** — ouvrir dans l'éditeur 2D : ${g.url}`, ...g.description, "**Contrôles de logique**", ...g.checks.map((c) => `- ${c.ok ? "✓" : "✗"} ${c.text}`), ...g.warnings.map((w) => `- ⚠ ${w}`), "Schéma généré à partir d'un modèle paramétré : à relire et valider avant toute réalisation."].join("\n"));
+  }
+
+  // Entraînement : exercices similaires de la banque (corrigés calculés par la plateforme).
+  if (/exercices? (similaire|d'entra[iî]nement|sur)|entra[iî]ne[- ]moi|m'entra[iî]ner|practice/i.test(question)) {
+    const words = qn.split(/[^a-zà-ÿ0-9]+/).filter((w) => w.length > 3);
+    const scored = EX_TEMPLATES.map((t) => ({ t, s: words.filter((w) => `${t.title} ${t.method}`.toLowerCase().includes(w)).length })).sort((a, b) => b.s - a.s);
+    const best = scored.filter((x) => x.s > 0).slice(0, 4).map((x) => x.t);
+    const list = best.length ? best : EX_TEMPLATES.slice(0, 4);
+    return out(`**Exercices d'entraînement** (énoncés originaux, corrigés calculés par la plateforme) :\n${list.map((t) => `- ${t.title} — /exercices (modèle « ${t.key} »)`).join("\n")}\n\nÉpreuve notée sur 20 : /exercices → « Générer une épreuve ».`);
   }
 
   // Calcul explicitement nommé : « calcul pump flowM3h=5 headM=30 … »

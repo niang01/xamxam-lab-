@@ -10,13 +10,41 @@ export interface LibItem {
   discipline: Discipline; category: string; name: string; symbol: string; description: string; fn: string;
   pins: string[]; params: LibParam[]; precautions: string | null; doc: string;
 }
-export type Discipline = "electrique" | "electronique" | "solaire" | "hydraulique" | "iot" | "cartes" | "automatisme" | "froid" | "reseau" | "mecanique" | "drone" | "genie_civil";
+export type Discipline = "electrique" | "electronique" | "solaire" | "hydraulique" | "iot" | "cartes" | "automatisme" | "froid" | "reseau" | "mecanique" | "drone" | "genie_civil"
+  | "puissance" | "informatique" | "logiciel" | "telecom" | "ia_robotique" | "plomberie" | "environnement" | "domotique" | "sante" | "instrumentation" | "agriculture";
 
 export const DISCIPLINE_LABEL: Record<Discipline, string> = {
   electrique: "Électrique et électrotechnique", electronique: "Électronique", solaire: "Énergie solaire et stockage", hydraulique: "Pompes et hydraulique",
   iot: "Capteurs et actionneurs IoT", cartes: "Cartes et modules", automatisme: "Moteurs, variateurs et automatismes", froid: "Froid et climatisation",
   reseau: "Informatique et réseaux", mecanique: "Mécanique et robotique", drone: "Drones et systèmes embarqués", genie_civil: "Génie civil",
+  puissance: "Électronique de puissance", informatique: "Informatique et maintenance", logiciel: "Développement web et mobile", telecom: "Télécommunications",
+  ia_robotique: "Intelligence artificielle et robotique", plomberie: "Plomberie et installations sanitaires", environnement: "Environnement et climat",
+  domotique: "Domotique et bâtiment intelligent", sante: "Technologies de santé (pédagogique)", instrumentation: "Instrumentation et contrôle-commande", agriculture: "Agriculture intelligente",
 };
+
+/** Les 20 filières de formation et les disciplines de la bibliothèque qui les alimentent. */
+export const FILIERES: { key: string; label: string; disciplines: Discipline[] }[] = [
+  { key: "elec_batiment", label: "Électricité domestique, bâtiment et industrielle", disciplines: ["electrique"] },
+  { key: "electrotechnique", label: "Électrotechnique et automatisme industriel", disciplines: ["electrique", "automatisme"] },
+  { key: "enr", label: "Énergies renouvelables et photovoltaïque", disciplines: ["solaire"] },
+  { key: "electronique", label: "Électronique analogique et numérique", disciplines: ["electronique", "cartes"] },
+  { key: "puissance", label: "Électronique de puissance", disciplines: ["puissance"] },
+  { key: "informatique", label: "Informatique et maintenance informatique", disciplines: ["informatique"] },
+  { key: "logiciel", label: "Développement web et mobile", disciplines: ["logiciel"] },
+  { key: "reseaux", label: "Réseaux informatiques et télécommunications", disciplines: ["reseau", "telecom"] },
+  { key: "iot", label: "Internet des objets (IoT)", disciplines: ["iot", "cartes"] },
+  { key: "ia_robotique", label: "Intelligence artificielle et robotique", disciplines: ["ia_robotique", "mecanique"] },
+  { key: "mecanique", label: "Mécanique générale et industrielle", disciplines: ["mecanique"] },
+  { key: "genie_civil", label: "Génie civil et bâtiment", disciplines: ["genie_civil"] },
+  { key: "froid", label: "Froid, climatisation et réfrigération", disciplines: ["froid"] },
+  { key: "plomberie", label: "Plomberie et installations hydrauliques", disciplines: ["plomberie", "hydraulique"] },
+  { key: "agriculture", label: "Agriculture intelligente et systèmes connectés", disciplines: ["agriculture", "hydraulique", "iot"] },
+  { key: "environnement", label: "Environnement et technologies climatiques", disciplines: ["environnement"] },
+  { key: "drones", label: "Drones et systèmes embarqués", disciplines: ["drone", "cartes"] },
+  { key: "domotique", label: "Domotique et bâtiments intelligents", disciplines: ["domotique", "iot"] },
+  { key: "sante", label: "Équipements médicaux et technologies de santé", disciplines: ["sante"] },
+  { key: "instrumentation", label: "Automatisation, instrumentation et contrôle-commande", disciplines: ["instrumentation", "automatisme"] },
+];
 
 const P = (key: string, label: string, unit: string): LibParam => ({ key, label, unit });
 const POWER = [P("u_n", "Tension nominale", "V"), P("i_n", "Courant nominal", "A"), P("p_n", "Puissance nominale", "W")];
@@ -175,6 +203,83 @@ export const LIBRARY: LibItem[] = [
   I("genie_civil", "réseaux", "Regard de visite", "RG", "Ouvrage d'accès aux réseaux enterrés.", "Assainissement, adduction.", ["entrée", "sortie"], [P("dim", "Dimensions intérieures", "cm")], null, ""),
   I("genie_civil", "réseaux", "Fosse septique", "FS", "Prétraitement des eaux usées domestiques.", "Assainissement autonome.", ["entrée", "sortie"], [P("v", "Volume utile", "m³")], "Dimensionnement selon le nombre d'usagers et la réglementation.", ""),
 ];
+
+LIBRARY.push(
+  // ---------------- Électronique de puissance
+  I("puissance", "redresseur", "Pont de diodes (redresseur)", "V", "Quatre diodes assurant le redressement double alternance.", "Convertir l'alternatif en continu.", ["~1", "~2", "+", "−"], [P("if", "Courant direct moyen", "A"), P("vrrm", "Tension inverse répétitive", "V")], "Dissipation thermique : radiateur selon le courant.", "Tension moyenne en double alternance : Umoy = 2·Umax/π (sans filtrage)."),
+  I("puissance", "interrupteur", "Thyristor", "V", "Interrupteur commandé à l'amorçage par la gâchette, bloqué au passage par zéro du courant.", "Redresseurs commandés, gradateurs.", ["A", "K", "G"], [P("it", "Courant efficace", "A"), P("vdrm", "Tension de blocage", "V"), P("igt", "Courant de gâchette", "mA")], "Protection contre les dv/dt (circuit RC).", ""),
+  I("puissance", "interrupteur", "Triac", "V", "Interrupteur bidirectionnel commandé, pour l'alternatif.", "Gradateurs, variateurs de lumière, commande de résistances.", ["A1", "A2", "G"], [P("it", "Courant efficace", "A"), P("vdrm", "Tension de blocage", "V")], "Charge inductive : snubber recommandé.", ""),
+  I("puissance", "interrupteur", "IGBT", "V", "Transistor bipolaire à grille isolée pour la commutation de puissance.", "Onduleurs, variateurs, hacheurs.", ["G", "C", "E"], [P("ic", "Courant collecteur", "A"), P("vces", "Tension C-E", "V")], "Driver de grille et protection contre les surtensions.", ""),
+  I("puissance", "convertisseur", "Hacheur (convertisseur DC-DC)", "U", "Convertisseur continu-continu à découpage (abaisseur, élévateur).", "Régulation de tension, commande de moteurs à courant continu.", ["IN+", "IN−", "OUT+", "OUT−"], [P("vin", "Tension d'entrée", "V"), P("vout", "Tension de sortie", "V"), P("fsw", "Fréquence de découpage", "Hz")], null, "Hacheur abaisseur idéal en conduction continue : Vout = α·Vin."),
+  I("puissance", "convertisseur", "Gradateur", "U", "Réglage de la puissance d'une charge alternative par angle de phase.", "Chauffage, éclairage.", ["L", "N", "charge"], [P("p_n", "Puissance", "W")], "Harmoniques : vérifier la compatibilité électromagnétique.", ""),
+  I("puissance", "composant", "Radiateur (dissipateur thermique)", "HS", "Évacue la chaleur d'un semi-conducteur.", "Refroidissement.", [], [P("rth", "Résistance thermique", "K/W")], null, "Tj = Ta + P·(Rth j-c + Rth c-r + Rth r-a)."),
+  I("puissance", "composant", "Inductance de lissage", "L", "Bobine limitant l'ondulation du courant.", "Hacheurs, redresseurs.", ["1", "2"], [P("l", "Inductance", "H"), P("i", "Courant", "A")], null, ""),
+  // ---------------- Informatique et maintenance
+  I("informatique", "matériel", "Carte mère", "PC", "Circuit principal d'un ordinateur reliant processeur, mémoire et périphériques.", "Assemblage et maintenance de PC.", ["ATX 24 broches", "CPU 8 broches", "SATA", "PCIe", "USB"], [P("socket", "Support du processeur", ""), P("ram", "Type de mémoire", "")], "Décharge électrostatique : bracelet antistatique.", ""),
+  I("informatique", "matériel", "Processeur (CPU)", "CPU", "Unité de calcul de l'ordinateur.", "Traitement.", [], [P("cores", "Nombre de cœurs", ""), P("tdp", "Puissance thermique", "W")], "Pâte thermique et ventirad adaptés.", ""),
+  I("informatique", "matériel", "Barrette de mémoire vive (RAM)", "RAM", "Mémoire de travail volatile.", "Performances du système.", [], [P("size", "Capacité", "Go"), P("type", "Type (DDR4, DDR5)", "")], null, ""),
+  I("informatique", "matériel", "Disque SSD", "SSD", "Stockage à mémoire flash.", "Système et données.", ["SATA ou M.2"], [P("size", "Capacité", "Go")], "Sauvegarder avant toute intervention.", ""),
+  I("informatique", "matériel", "Alimentation de PC", "PSU", "Convertit le secteur en tensions continues 12 V, 5 V, 3,3 V.", "Alimentation des composants.", ["secteur", "ATX 24", "CPU 8", "PCIe", "SATA"], [P("p_n", "Puissance", "W")], "Ne jamais ouvrir : condensateurs chargés.", ""),
+  I("informatique", "outillage", "Multimètre", "MES", "Appareil de mesure de tension, courant, résistance, continuité.", "Diagnostic.", ["COM", "VΩ", "A"], [P("cat", "Catégorie de mesure (CAT)", "")], "Choisir le calibre et la catégorie adaptés avant la mesure.", ""),
+  I("informatique", "logiciel", "Système d'exploitation (Linux, Windows)", "OS", "Logiciel de base gérant le matériel et les applications.", "Installation, maintenance.", [], [], null, ""),
+  // ---------------- Développement web et mobile (ressources logicielles)
+  I("logiciel", "serveur", "Serveur web / API (Node.js, Python…)", "API", "Programme qui répond aux requêtes HTTP et expose des services.", "Applications web, back-end IoT.", ["HTTP", "base de données"], [P("port", "Port d'écoute", "")], "HTTPS obligatoire en production ; secrets hors du code source.", "Exemple d'architecture : générateur « Architecture logicielle IoT »."),
+  I("logiciel", "données", "Base de données relationnelle (PostgreSQL)", "DB", "Stockage structuré interrogé en SQL.", "Persistance des données.", ["SQL"], [], "Requêtes paramétrées contre les injections SQL ; sauvegardes.", ""),
+  I("logiciel", "communication", "Courtier MQTT", "MQTT", "Serveur de messages publier/s'abonner pour l'IoT.", "Télémétrie, commandes.", ["TCP 1883", "TLS 8883"], [], "TLS et authentification par appareil en production.", "Passerelle MQTT intégrée à XAM-XAM LAB (profil iot)."),
+  I("logiciel", "interface", "Application web progressive (PWA)", "UI", "Application web installable, utilisable hors ligne en partie.", "Interfaces mobiles sans magasin d'applications.", ["HTTPS"], [], null, ""),
+  I("logiciel", "interface", "Application mobile (Android / iOS)", "APP", "Application installée sur téléphone.", "Supervision mobile.", ["API"], [], null, ""),
+  // ---------------- Télécommunications
+  I("telecom", "radio", "Antenne", "ANT", "Convertit le signal électrique en onde radio et inversement.", "Liaisons radio, Wi-Fi, LoRa, GSM.", ["connecteur"], [P("band", "Bande de fréquence", "MHz"), P("gain", "Gain", "dBi")], "Respecter les puissances et bandes autorisées (ARTP).", "Bilan de liaison : Pr = Pe + Ge + Gr − pertes."),
+  I("telecom", "câblage", "Câble coaxial", "W", "Ligne de transmission blindée.", "Antennes, vidéo.", ["1", "2"], [P("z", "Impédance caractéristique", "Ω"), P("loss", "Affaiblissement", "dB/100 m")], null, ""),
+  I("telecom", "équipement", "Modem / routeur 4G", "RT", "Accès Internet par réseau cellulaire.", "Sites isolés.", ["SIM", "LAN"], [], null, ""),
+  I("telecom", "équipement", "Répartiteur optique (ODF)", "ODF", "Point de raccordement et de brassage des fibres.", "Réseaux fibre.", ["entrées", "sorties"], [P("ports", "Nombre de ports", "")], null, ""),
+  I("telecom", "équipement", "Liaison radio point à point", "PTP", "Pont radio entre deux sites.", "Interconnexion de bâtiments.", ["LAN", "antenne"], [P("band", "Bande", "GHz"), P("range", "Portée", "km")], "Dégagement de la zone de Fresnel.", ""),
+  // ---------------- IA et robotique
+  I("ia_robotique", "vision", "Caméra pour vision embarquée", "CAM", "Capteur d'image pour traitement par ordinateur ou carte embarquée.", "Reconnaissance d'objets, inspection, suivi.", ["CSI ou USB"], [P("res", "Résolution", "pixels")], "Données personnelles : informer et limiter les prises de vue.", ""),
+  I("ia_robotique", "calcul", "Carte de calcul pour IA embarquée", "SBC", "Ordinateur monocarte doté d'un accélérateur pour réseaux de neurones.", "Inférence locale (vision, voix).", ["alimentation", "USB", "CSI", "GPIO"], [P("tops", "Puissance de calcul annoncée", "TOPS")], "Dissipation thermique.", ""),
+  I("ia_robotique", "capteur", "Télémètre laser (LiDAR)", "LID", "Mesure de distance par temps de vol d'un faisceau laser.", "Cartographie, évitement d'obstacles.", ["VCC", "GND", "TX", "RX"], [P("range", "Portée", "m")], "Classe laser à respecter.", ""),
+  I("ia_robotique", "capteur", "Centrale inertielle (IMU)", "IMU", "Accéléromètre et gyroscope (et parfois magnétomètre).", "Orientation, équilibrage.", ["VCC", "GND", "SDA", "SCL"], [P("axes", "Nombre d'axes", "")], null, ""),
+  I("ia_robotique", "robot", "Châssis de robot mobile", "ROB", "Plateforme à roues motorisées.", "Robotique mobile.", [], [P("wheels", "Nombre de roues", ""), P("mass", "Masse", "kg")], null, ""),
+  // ---------------- Plomberie
+  I("plomberie", "réseau", "Tube multicouche / PER", "TU", "Tube de distribution d'eau sanitaire.", "Alimentation des points d'eau.", ["1", "2"], [P("dn", "Diamètre", "mm"), P("pn", "Pression nominale", "bar")], null, ""),
+  I("plomberie", "appareil", "Réducteur de pression", "RP", "Limite la pression du réseau en aval.", "Protection de l'installation.", ["entrée", "sortie"], [P("p_out", "Pression de sortie réglée", "bar")], null, ""),
+  I("plomberie", "appareil", "Compteur d'eau", "CE", "Mesure du volume consommé.", "Facturation, suivi.", ["entrée", "sortie"], [P("dn", "Diamètre", "mm"), P("pulse", "Sortie impulsions", "L/imp")], null, ""),
+  I("plomberie", "appareil", "Chauffe-eau (électrique ou solaire)", "CHE", "Production d'eau chaude sanitaire.", "Eau chaude.", ["eau froide", "eau chaude", "L", "N", "PE"], [P("v", "Volume", "L"), P("p_n", "Puissance", "W")], "Groupe de sécurité obligatoire.", ""),
+  I("plomberie", "appareil", "Robinet / mitigeur", "RB", "Organe de puisage.", "Point d'eau.", ["eau froide", "eau chaude"], [], null, ""),
+  I("plomberie", "évacuation", "Siphon et évacuation PVC", "EV", "Évacuation des eaux usées avec garde d'eau.", "Assainissement intérieur.", ["entrée", "sortie"], [P("dn", "Diamètre", "mm"), P("slope", "Pente", "%")], null, ""),
+  // ---------------- Environnement et climat
+  I("environnement", "capteur", "Pluviomètre à augets", "PLU", "Chaque basculement d'auget correspond à une hauteur de pluie.", "Météo, agriculture.", ["COM", "NO"], [P("k", "Hauteur par basculement", "mm")], "Étalonner ou reprendre la valeur du fabricant.", ""),
+  I("environnement", "capteur", "Anémomètre", "ANM", "Mesure de la vitesse du vent.", "Météo, éolien, drones.", ["VCC", "GND", "OUT"], [P("k", "Facteur de conversion", "m/s par Hz")], null, ""),
+  I("environnement", "capteur", "Girouette", "GIR", "Mesure de la direction du vent.", "Météo.", ["VCC", "GND", "OUT"], [], null, ""),
+  I("environnement", "capteur", "Capteur de particules fines (PM2,5 / PM10)", "PM", "Mesure optique de la concentration en particules.", "Qualité de l'air.", ["VCC", "GND", "TX", "RX"], [P("range", "Étendue", "µg/m³")], "Mesure indicative, non réglementaire.", ""),
+  I("environnement", "capteur", "Capteur de CO2 (NDIR)", "CO2", "Mesure du dioxyde de carbone par absorption infrarouge.", "Qualité de l'air intérieur.", ["VCC", "GND", "TX", "RX"], [P("range", "Étendue", "ppm")], null, ""),
+  I("environnement", "capteur", "Capteur de rayonnement solaire (pyranomètre)", "PYR", "Mesure de l'éclairement énergétique.", "Météo, photovoltaïque.", ["+", "−"], [P("k", "Sensibilité", "µV par W/m²")], null, "Comparaison avec NASA POWER (donnée modélisée) dans Earth & Space."),
+  // ---------------- Domotique
+  I("domotique", "commande", "Interrupteur connecté", "SW", "Interrupteur commandable à distance.", "Éclairage connecté.", ["L", "N", "L'"], [P("i_max", "Courant maximal", "A")], "Installation par une personne habilitée.", ""),
+  I("domotique", "commande", "Prise connectée", "XS", "Prise commandable avec mesure de consommation éventuelle.", "Pilotage d'appareils.", ["L", "N", "PE"], [P("i_max", "Courant maximal", "A")], null, ""),
+  I("domotique", "sécurité", "Serrure connectée", "LCK", "Serrure motorisée commandée à distance.", "Contrôle d'accès.", ["alimentation", "commande"], [], "Prévoir une ouverture mécanique de secours.", ""),
+  I("domotique", "confort", "Thermostat connecté", "TH", "Régulation de température programmable.", "Chauffage, climatisation.", ["alimentation", "relais"], [], null, ""),
+  I("domotique", "passerelle", "Box domotique", "GW", "Passerelle reliant les équipements (Zigbee, Wi-Fi…).", "Centralisation.", ["LAN", "radio"], [], null, ""),
+  I("domotique", "capteur", "Contact d'ouverture de porte", "DC", "Capteur magnétique d'ouverture.", "Alarme, automatisation.", ["COM", "NO"], [], null, ""),
+  // ---------------- Santé (pédagogique)
+  I("sante", "capteur", "Capteur de fréquence cardiaque optique (pédagogique)", "HR", "Capteur photopléthysmographique pour l'apprentissage du traitement de signal.", "Travaux pratiques en électronique biomédicale.", ["VCC", "GND", "SIG"], [], "Usage pédagogique uniquement : ce n'est pas un dispositif médical ; ne pas l'utiliser pour un diagnostic.", ""),
+  I("sante", "capteur", "Thermomètre infrarouge sans contact (module)", "TIR", "Mesure de température de surface par rayonnement infrarouge.", "Surveillance de température.", ["VCC", "GND", "SDA", "SCL"], [P("acc", "Précision", "°C")], "Module électronique non certifié pour l'usage médical.", ""),
+  I("sante", "équipement", "Réfrigérateur de conservation de produits de santé", "RF", "Enceinte réfrigérée dédiée aux produits thermosensibles.", "Chaîne du froid.", ["L", "N", "PE"], [P("t_min", "Température minimale", "°C"), P("t_max", "Température maximale", "°C")], "Suivre les procédures réglementaires de l'établissement.", "Simulation d'une coupure : Studio 4D (chambre froide)."),
+  I("sante", "capteur", "Module ECG (pédagogique)", "ECG", "Amplificateur d'instrumentation pour l'acquisition d'un signal cardiaque à but pédagogique.", "Travaux pratiques d'électronique biomédicale.", ["VCC", "GND", "OUT", "électrodes"], [], "Usage pédagogique uniquement, alimentation par pile isolée ; jamais relié au secteur ni utilisé pour un diagnostic.", ""),
+  // ---------------- Instrumentation et contrôle-commande
+  I("instrumentation", "transmetteur", "Transmetteur 4-20 mA", "TT", "Convertit une mesure en courant normalisé 4–20 mA.", "Transmission industrielle robuste.", ["+", "−"], [P("range", "Étendue de mesure", ""), P("loop", "Tension de boucle", "V")], null, "Mesure = étendue × (I − 4 mA) / 16 mA."),
+  I("instrumentation", "capteur", "Sonde Pt100", "TE", "Résistance de platine dont la valeur varie avec la température.", "Mesure de température industrielle.", ["1", "2", "3"], [P("class", "Classe de précision", "")], "Montage 3 fils pour compenser les câbles.", ""),
+  I("instrumentation", "capteur", "Thermocouple", "TE", "Couple de métaux produisant une tension fonction de la température.", "Hautes températures.", ["+", "−"], [P("type", "Type (K, J…)", "")], "Compensation de soudure froide.", ""),
+  I("instrumentation", "capteur", "Débitmètre électromagnétique", "FT", "Mesure du débit d'un liquide conducteur.", "Process industriels, eau.", ["+", "−", "signal"], [P("dn", "Diamètre", "mm"), P("range", "Étendue", "m³/h")], null, ""),
+  I("instrumentation", "régulation", "Régulateur PID", "TIC", "Calcule la commande à partir de l'écart entre consigne et mesure.", "Régulation de température, pression, niveau.", ["entrée mesure", "sortie commande", "alimentation"], [P("kp", "Gain proportionnel", ""), P("ti", "Temps intégral", "s"), P("td", "Temps dérivé", "s")], null, ""),
+  I("instrumentation", "actionneur", "Vanne de régulation", "FV", "Vanne à ouverture proportionnelle.", "Réglage de débit.", ["entrée", "sortie", "commande 4-20 mA"], [P("kv", "Coefficient de débit Kv", "m³/h")], null, ""),
+  // ---------------- Agriculture intelligente
+  I("agriculture", "capteur", "Tensiomètre de sol", "TS", "Mesure la succion de l'eau dans le sol.", "Pilotage de l'irrigation.", ["sortie"], [P("range", "Étendue", "kPa")], "Installation à la profondeur des racines.", ""),
+  I("agriculture", "équipement", "Serre agricole", "SER", "Abri cultivé à climat contrôlé.", "Production maraîchère.", [], [P("area", "Surface", "m²")], null, ""),
+  I("agriculture", "équipement", "Brumisateur", "BR", "Diffusion d'eau en fines gouttes.", "Refroidissement et humidification des serres.", ["entrée", "commande"], [P("q", "Débit", "L/h")], null, ""),
+  I("agriculture", "capteur", "Capteur de température du sol", "TS", "Sonde enterrée de température.", "Suivi agronomique.", ["VCC", "GND", "DATA"], [], null, ""),
+  I("agriculture", "équipement", "Station météo agricole", "MET", "Ensemble de capteurs (température, humidité, pluie, vent, rayonnement).", "Évapotranspiration, alertes.", ["alimentation", "données"], [], null, "Données modélisées de comparaison : NASA POWER (Earth & Space)."),
+);
 
 export const libraryByDiscipline = () => {
   const out = new Map<Discipline, LibItem[]>();
