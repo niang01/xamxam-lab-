@@ -46,12 +46,21 @@ const RENAMED: Record<string, string> = {
 };
 const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);
 
+/** Chargement de la bibliothèque générique. Une erreur ici ne doit jamais rendre la plateforme indisponible. */
 export async function seed(db: Db) {
+  try { await seedLibrary(db); }
+  catch (e) { console.error("[xamxam] bibliothèque non mise à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
+}
+
+async function seedLibrary(db: Db) {
   // La bibliothèque n'est réécrite que si son contenu a changé (empreinte conservée en base).
   const fingerprint = createHash("sha256").update(JSON.stringify(LIBRARY)).digest("hex");
   const done = (await db.query<{ value: string }>("SELECT value FROM server_keys WHERE name='library_version'")).rows[0]?.value;
   if (done === fingerprint) return;
+  const generic = async (name: string) => (await db.query<{ id: string; category: string }>("SELECT id, category FROM components WHERE name=$1 AND mpn='generic' ORDER BY created_at", [name])).rows;
+  // Ancienne liste (avant src/lib/library.ts) : insérée seulement si aucun composant générique de ce nom (ou de son nouveau nom) n'existe.
   for (const [category, name, symbol, description, fn, pins, precautions] of GENERIC_COMPONENTS) {
+    if ((await generic(name)).length || (RENAMED[name] && (await generic(RENAMED[name])).length) || LIBRARY.some((c) => c.name === name)) continue;
     await db.query(
       `INSERT INTO components(category, name, symbol_kind, description, function, pins, precautions, status, source, mpn)
        VALUES ($1,$2,$3,$4,$5,$6,$7,'generic','Composant générique XAM-XAM LAB (aucune caractéristique de fabricant)','generic')
@@ -61,6 +70,16 @@ export async function seed(db: Db) {
     await db.query("UPDATE components SET name=$2 WHERE name=$1 AND mpn='generic' AND NOT EXISTS (SELECT 1 FROM components WHERE name=$2 AND mpn='generic')", [from, to]);
   }
   for (const c of LIBRARY) {
+    // Doublons hérités (même nom, catégories différentes) : fusion sur une seule ligne, références reportées.
+    const rows = await generic(c.name);
+    if (rows.length > 1) {
+      const keep = rows.find((r) => r.category === c.category) ?? rows[0];
+      for (const r of rows) if (r.id !== keep.id) {
+        await db.query("UPDATE project_components SET component_id=$2 WHERE component_id=$1", [r.id, keep.id]);
+        await db.query("UPDATE market_listings SET component_id=$2 WHERE component_id=$1", [r.id, keep.id]);
+        await db.query("DELETE FROM components WHERE id=$1", [r.id]);
+      }
+    }
     const values = [c.category, c.name, SIMULABLE.has(c.symbol) ? c.symbol : null, c.description, c.fn, JSON.stringify(c.pins), c.precautions, c.discipline, JSON.stringify(c.params), c.symbol, c.doc || null];
     const updated = await db.query(
       `UPDATE components SET category=$1, symbol_kind=COALESCE(symbol_kind, $3), description=$4, function=$5, pins=$6, precautions=$7, discipline=$8, params=$9, symbol2d=$10, doc=$11
