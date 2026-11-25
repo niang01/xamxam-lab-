@@ -53,7 +53,7 @@ export const readingsSchema = z.object({ readings: z.array(z.object({ metric: z.
 export const courseSchema = z.object({
   title: z.string().trim().min(3).max(160), domain: z.string().trim().min(2).max(60), level: z.enum(["pupil", "student", "professional"]), lang: z.enum(["wo", "fr", "en"]),
   summary: z.string().trim().max(2000).nullable().optional(),
-  lessons: z.array(z.object({ title: z.string().trim().min(1).max(160), body: z.string().max(20000) })).max(50),
+  lessons: z.array(z.object({ title: z.string().trim().min(1).max(160), body: z.string().max(20000), module: z.string().trim().max(120).nullable().optional() })).max(50),
   quiz: z.array(z.object({ q: z.string().trim().min(3).max(500), choices: z.array(z.string().trim().min(1).max(200)).min(2).max(6), answer: z.number().int().min(0) })).max(50)
     .refine((qs) => qs.every((x) => x.answer < x.choices.length), "Bonne réponse hors des choix"),
   pass_mark: z.number().int().min(1).max(100).default(70),

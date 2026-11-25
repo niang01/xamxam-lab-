@@ -5,9 +5,11 @@ import { useT } from "@/components/providers";
 import { Btn, Card, ErrorBox, Page, Pill } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
 import { post } from "@/lib/client/api";
+import { CourseResources } from "@/components/fad/CourseResources";
+import { CourseAssignments } from "@/components/fad/CourseAssignments";
 
 type Course = {
-  id: string; title: string; summary: string | null; lang: string; lessons: { title: string; body: string }[]; quiz: { q: string; choices: string[]; answer?: number }[]; pass_mark: number; lab_link: string | null;
+  id: string; title: string; summary: string | null; lang: string; lessons: { title: string; body: string; module?: string | null }[]; quiz: { q: string; choices: string[]; answer?: number }[]; pass_mark: number; lab_link: string | null;
   is_author: boolean; enrollment: { lessons_done: number[]; best_score: number | null; attempts: number } | null; certificate: { id: string; score: number } | null;
 };
 type Result = { score: number; pass_mark: number; passed: boolean; correct: boolean[]; certificate: { id: string } | null };
@@ -30,7 +32,7 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
       {c.certificate && <Card><p className="text-sm">🎓 {t("acad.certified", { s: c.certificate.score })} <Link className="text-[var(--cyan)] underline" href={`/p/certificat/${c.certificate.id}`}>{t("acad.viewCert")}</Link></p></Card>}
       <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
         <Card title={t("acad.lessons")}>
-          <ol className="space-y-1 text-sm">{c.lessons.map((l, i) => <li key={i}><button className={`w-full rounded px-2 py-1 text-left ${open === i ? "bg-[var(--panel-2)]" : ""}`} onClick={() => setOpen(i)}>{done.has(i) ? "✓ " : ""}{i + 1}. {l.title}</button></li>)}</ol>
+          <ol className="space-y-1 text-sm">{c.lessons.map((l, i) => <li key={i}>{l.module && l.module !== c.lessons[i - 1]?.module && <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--fg-3)]">{l.module}</p>}<button className={`w-full rounded px-2 py-1 text-left ${open === i ? "bg-[var(--panel-2)]" : ""}`} onClick={() => setOpen(i)}>{done.has(i) ? "✓ " : ""}{i + 1}. {l.title}</button></li>)}</ol>
         </Card>
         <Card title={c.lessons[open]?.title}>
           <div className="whitespace-pre-wrap text-sm leading-relaxed">{c.lessons[open]?.body}</div>
@@ -53,6 +55,8 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
           </div>
         </Card>
       )}
+      <CourseResources courseId={id} author={c.is_author} canSee={c.is_author || !!c.enrollment} />
+      <CourseAssignments courseId={id} canSee={c.is_author || !!c.enrollment} />
       {c.is_author && (
         <Card title={t("acad.results")}>
           {!results?.items.length ? <p className="text-sm text-[var(--fg-3)]">{t("c.none")}</p> : <table className="w-full text-left text-sm"><thead className="text-xs text-[var(--fg-3)]"><tr><th>{t("c.name")}</th><th>{t("acad.lessons")}</th><th>{t("acad.best")}</th><th>{t("acad.attempts")}</th></tr></thead><tbody>{results.items.map((r, i) => <tr key={i} className="border-t border-[var(--line)]"><td>{r.display_name}</td><td>{r.lessons_done.length}/{c.lessons.length}</td><td>{r.best_score ?? "—"}</td><td>{r.attempts}</td></tr>)}</tbody></table>}
