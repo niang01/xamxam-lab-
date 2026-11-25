@@ -66,7 +66,7 @@ export default function Bank() {
           <Select aria-label="IoT" name="bank-iot" value={f.iot} onChange={(e) => setF({ ...f, iot: e.target.value })}><option value="">{t("bank.allTypes")}</option><option value="1">IoT</option><option value="0">{t("bank.nonIot")}</option></Select>
           <Select aria-label={t("bank.saved")} name="bank-fav" value={f.favoris} onChange={(e) => setF({ ...f, favoris: e.target.value })}><option value="">{t("bank.all")}</option><option value="1">★ {t("bank.myFavorites")}</option></Select>
         </div>
-        <p className="mb-2 text-xs text-[var(--fg-3)]" data-testid="bank-count">{t("bank.count", { n: data?.items.length ?? 0 })}</p>
+        <p className="mb-2 text-xs text-[var(--fg-3)]" data-testid="bank-count">{data ? t("bank.count", { n: data.items.length }) : t("c.loading")}</p>
         <ul className="divide-y divide-[var(--line)] text-sm">{data?.items.slice(0, 300).map((p) => (
           <li key={p.id} className="py-2"><button className="w-full text-left" onClick={() => load(p.id)} data-bank={p.id}>
             <span className="font-medium text-[var(--cyan)]">{p.favorite ? "★ " : ""}{p.title}</span>
