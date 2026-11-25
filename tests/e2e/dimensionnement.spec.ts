@@ -7,7 +7,7 @@ test("dimensionnement : photovoltaïque et pompage (calcul, enregistrement, expo
   await signup(page, `dim-${Date.now()}@e2e.local`);
   await page.click("button[data-lang=fr]");
   await page.goto("/dimensionnement");
-  await expect(page.locator("[data-software]")).toHaveCount(3);
+  await expect(page.locator("[data-software]")).toHaveCount(7);
 
   // Photovoltaïque : champ vide → données manquantes ; exemple → résultats
   await page.click("[data-software=photovoltaique]");

@@ -192,3 +192,75 @@ describe("Pompage", () => {
     expect(r.bom.some((b) => b.name === "Contrôleur de pompe solaire")).toBe(true);
   });
 });
+
+import { DRYING } from "@/lib/studies/drying";
+import { BIOMASS } from "@/lib/studies/biomass";
+import { COMPOST } from "@/lib/studies/compost";
+import { SOLAR_THERMAL } from "@/lib/studies/solar-thermal";
+import { adiabaticTo, enthalpy, humidityRatio, relHumidity, LHV_CH4 } from "@/lib/studies/thermo";
+
+const line = (r: { steps: { title: string; lines: { label: string; value: number | string }[] }[] }, step: string, label: string) => r.steps.find((s) => s.title.startsWith(step))!.lines.find((l) => l.label.startsWith(label))!.value;
+
+describe("Psychrométrie", () => {
+  it("humidité absolue, évolution adiabatique à enthalpie constante jusqu'à φ visé", () => {
+    const w = humidityRatio(30, 0.6);
+    expect(w).toBeCloseTo(0.0161, 3);
+    const out = adiabaticTo(60, w, 0.7)!;
+    expect(enthalpy(out.t, out.w)).toBeCloseTo(enthalpy(60, w), 3);
+    expect(relHumidity(out.t, out.w)).toBeCloseTo(0.7, 4);
+    expect(adiabaticTo(25, humidityRatio(25, 0.95), 0.5)).toBeNull();
+  });
+});
+
+describe("Séchage solaire", () => {
+  it("bilan de masse et besoin thermique recalculés", () => {
+    const r = DRYING.run(DRYING.example, {});
+    expect(r.ok).toBe(true);
+    expect(line(r, "1.", "Eau à évaporer")).toBeCloseTo((100 * (0.85 - 0.12)) / 0.88, 2);
+    const mAir = line(r, "2.", "Masse d'air sec") as number, dw = (line(r, "2.", "Eau absorbée") as number) / 1000;
+    expect(mAir * dw).toBeCloseTo(82.955, 0);
+    expect(line(r, "4.", "Nombre de claies")).toBe(Math.ceil(100 / 8 / 1));
+    expect(r.bom.some((b) => b.name === "Capteur solaire à air")).toBe(true);
+  });
+  it("teneur finale ≥ initiale refusée ; air trop humide signalé", () => {
+    expect(DRYING.run({ ...DRYING.example, xf: 90 }, {}).missing.join()).toContain("teneur en eau finale");
+    expect(DRYING.run({ ...DRYING.example, t_max: 31, rh_amb: 95, rh_out: 50 }, {}).warnings.join()).toContain("ne peut pas absorber");
+  });
+});
+
+describe("Biomasse et biogaz", () => {
+  it("matière volatile, biogaz, digesteur (max TSH / charge organique), énergie", () => {
+    const r = BIOMASS.run(BIOMASS.example, {});
+    expect(r.ok).toBe(true);
+    expect(line(r, "1.", "Biogaz")).toBeCloseTo(500 * 0.12 * 0.8 * 0.3 + 200 * 0.15 * 0.85 * 0.6, 3);
+    expect(line(r, "2.", "Volume utile retenu")).toBeCloseTo(Math.max(0.9 * 40, (48 + 25.5) / 3), 3);
+    const ch4 = 14.4 * 0.6 + 15.3 * 0.58;
+    expect(line(r, "3.", "Énergie primaire")).toBeCloseTo((ch4 * LHV_CH4) / 3.6, 1);
+  });
+  it("potentiel biogaz absent : signalé, aucune production inventée", () => {
+    const r = BIOMASS.run({ ...BIOMASS.example, feeds: [{ name: "X", mass: 100, ms: 10, mv: 80, bmp: null, ch4: 60 }] }, {});
+    expect(r.missing.join()).toContain("potentiel biogaz"); expect(r.steps).toEqual([]);
+  });
+});
+
+describe("Compostage", () => {
+  it("C/N recalculé et ajustement exact au C/N visé", () => {
+    const r = COMPOST.run(COMPOST.example, {});
+    const dry = (m: number, w: number) => m * (1 - w);
+    const c = dry(2000, 0.75) * 0.4 + dry(400, 0.12) * 0.46 + dry(800, 0.6) * 0.44, n = dry(2000, 0.75) * 0.024 + dry(400, 0.12) * 0.006 + dry(800, 0.6) * 0.02;
+    expect(line(r, "1.", "Rapport C/N")).toBeCloseTo(c / n, 2);
+    expect(line(r, "2.", "C/N obtenu")).toBeCloseTo(25, 6);
+    expect(r.warnings.join()).toContain("supérieure");
+  });
+});
+
+describe("Solaire thermique", () => {
+  it("besoin, rendement du capteur, couverture plafonnée à 100 %", () => {
+    const r = SOLAR_THERMAL.run(SOLAR_THERMAL.example, {});
+    expect(r.ok).toBe(true);
+    expect(line(r, "2.", "Besoin du mois")).toBeCloseTo((200 * 4186 * (50 - 23)) / 3.6e6, 3);
+    for (const l of r.steps.find((s) => s.title.startsWith("3."))!.lines.slice(0, 12)) expect(l.value as number).toBeLessThanOrEqual(100);
+    const bad = SOLAR_THERMAL.run({ ...SOLAR_THERMAL.example, eta0: 0.2, a1: 30 }, {});
+    expect(bad.warnings.join()).toContain("Rendement nul");
+  });
+});

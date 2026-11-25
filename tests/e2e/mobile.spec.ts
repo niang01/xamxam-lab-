@@ -7,7 +7,7 @@ test("téléphone : menu, aucune page plus large que l'écran", async ({ page })
   await page.getByRole("button", { name: "Menu" }).click();
   await expect(page.locator("[data-nav=solar]")).toBeVisible();
   // Pages des logiciels de dimensionnement (formulaires larges : tableaux de lignes, 12 mois).
-  const extra = ["/dimensionnement/installation-electrique", "/dimensionnement/photovoltaique", "/dimensionnement/pompage"].map((path) => ({ path }));
+  const extra = ["installation-electrique", "photovoltaique", "pompage", "solaire-thermique", "sechage-solaire", "biomasse-biogaz", "compostage"].map((k) => `/dimensionnement/${k}`).map((path) => ({ path }));
   for (const r of [...RUBRICS, ...extra]) {
     await page.goto(r.path);
     await expect(page.locator("h1").first()).toBeVisible();
