@@ -6,6 +6,7 @@ import { useData } from "@/lib/client/hooks";
 import { api, patch, post } from "@/lib/client/api";
 import { UsersAdmin } from "@/components/admin/UsersAdmin";
 import { LicencesAdmin } from "@/components/admin/LicencesAdmin";
+import { ShopAdmin } from "@/components/admin/ShopAdmin";
 
 type Draft = { key: string; text: string; status: string };
 
@@ -14,7 +15,7 @@ export default function Admin() {
   const isAdmin = !!me?.is_admin;
   const canValidate = isAdmin || !!me?.clearances.includes("validateur_traduction_wo");
   const { data: drafts, reload: reloadDrafts } = useData<{ items: Draft[] }>(canValidate ? "/api/i18n/entries" : null);
-  const [tab, setTab] = useState<"users" | "licences" | "other">("users");
+  const [tab, setTab] = useState<"users" | "licences" | "shop" | "other">("users");
   const [imp, setImp] = useState({ format: "csv", mode: "validated", content: "" });
   const [res, setRes] = useState<{ imported: number; rejected: string[] } | null>(null);
   const [edit, setEdit] = useState<Record<string, string>>({});
@@ -32,11 +33,12 @@ export default function Admin() {
       )}
       {isAdmin && (
         <div role="tablist" className="flex flex-wrap gap-2">
-          {(["users", "licences", "other"] as const).map((k) => <Btn key={k} kind={tab === k ? "primary" : "ghost"} role="tab" aria-selected={tab === k} data-testid={`admin-tab-${k}`} onClick={() => setTab(k)}>{t(`adm.tab.${k}`)}</Btn>)}
+          {(["users", "licences", "shop", "other"] as const).map((k) => <Btn key={k} kind={tab === k ? "primary" : "ghost"} role="tab" aria-selected={tab === k} data-testid={`admin-tab-${k}`} onClick={() => setTab(k)}>{t(`adm.tab.${k}`)}</Btn>)}
         </div>
       )}
       {isAdmin && tab === "users" && <UsersAdmin />}
       {isAdmin && tab === "licences" && <LicencesAdmin />}
+      {isAdmin && tab === "shop" && <ShopAdmin />}
       {isAdmin && tab === "other" && (
         <Card title={t("adm.i18n")}>
           <p className="mb-2 text-sm text-[var(--fg-2)]">{t("adm.i18nInfo")}</p>

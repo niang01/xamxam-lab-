@@ -46,7 +46,7 @@ export function ProjectBom({ id, items, canEdit, onChange }: { id: string; items
           <Btn kind="ghost" disabled={!n.name.trim()} onClick={() => run(async () => { await post(`/api/projects/${id}/components`, { items: [{ name: n.name, qty: num(n.qty) ?? 1, unit_price: num(n.price) }] }); setN({ name: "", qty: "1", price: "" }); })}>{t("c.add")}</Btn>
         </div>
       )}
-      <p className="mt-2 text-xs text-[var(--fg-3)]">{t("proj.bomInfo")}</p>
+      <p className="mt-2 text-xs text-[var(--fg-3)]">{t("proj.bomInfo")} <a className="underline" href={`/boutique?projet=${id}`} data-testid="bom-shop">{t("shop.projectOffers")}</a></p>
     </Card>
   );
 }
