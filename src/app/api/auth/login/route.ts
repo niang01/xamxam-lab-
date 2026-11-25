@@ -42,6 +42,6 @@ export const POST = endpoint(async (req) => {
   await sql("UPDATE users SET last_login_at=now() WHERE id=$1", [u.id]);
   await audit(u.id, "human", "account.login", { kind: "user", id: u.id });
   const res = ok({ ok: true });
-  await openSession(res, u.id, u.session_version);
+  await openSession(res, u.id, u.session_version, req);
   return res;
 });

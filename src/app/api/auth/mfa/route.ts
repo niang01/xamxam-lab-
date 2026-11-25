@@ -29,6 +29,6 @@ export const POST = endpoint(async (req) => {
   await audit(user.id, "human", "account.login", { kind: "user", id: user.id }, { second_factor: how });
   if (how === "recovery") await notify(user.id, "security", "Code de secours utilisé", "Un code de secours a servi à vous connecter. Régénérez vos codes si ce n'était pas vous.", "/settings");
   const res = ok({ ok: true, second_factor: how });
-  await openSession(res, user.id, user.session_version);
+  await openSession(res, user.id, user.session_version, req);
   return res;
 });

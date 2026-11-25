@@ -8,8 +8,8 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 165/165 (21 fichiers) |
-| Parcours de bout en bout (Playwright) | ✅ 15/15 (ordinateur + Pixel 7) |
+| Tests unitaires + intégration | ✅ 218/218 (31 fichiers, 25/11) |
+| Parcours de bout en bout (Playwright) | ✅ 17/17 (ordinateur + Pixel 7) |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
 
@@ -27,14 +27,27 @@ Audit détaillé : docs/AUDIT_DISCIPLINES.md.
 - Profil professionnel : nom complet, fonction, spécialité, organisation, pays, « Présentation de moi » (dès l'inscription), présentation professionnelle ; carte « Mon profil » (affichage + modification) dans Paramètres ; migration 0010.
 - Œil d'affichage sur tous les champs de mot de passe (inscription, confirmation, connexion, changement, réinitialisation, double authentification) : affichage temporaire (re-masqué au 2e appui, après 30 s, à l'envoi du formulaire ou en quittant la page) ; indicateur de robustesse et de concordance. Mots de passe jamais en clair (scrypt), absents des réponses, journaux et base — test automatique.
 
+## Réalisé le 25/11 — audit exhaustif (tableau : docs/TABLEAU_DE_CONTROLE.md)
+- Documents traités par Aláji IA (/documents) : extraction (PDF, Word, Excel, PowerPoint, OCR, DXF, STL), exercices résolus et corrigés, exports PDF, Word, Excel et Markdown.
+- 9 générateurs de schémas (éditeur 2D et Aláji IA).
+- Bibliothèque : 190 composants, 23 disciplines, 20 filières.
+- Banque de 190 projets, dont 100 IoT, avec 11 programmes compilés.
+- 19 modèles d'exercices et épreuves.
+- Boutique : 15 rayons, panier, commandes, stock, vendeurs, administration ; paiement hors plateforme.
+- FAD : ressources, devoirs, notes, progression.
+- Licences : appareils autorisés (migration 0016), suspension et réactivation protégées par l'étiquette d'intégrité.
+- 6 guides ajoutés.
+- Incident de production du 25/11 (≈06:33–06:49 UTC) corrigé dans le commit 27a28f1.
+
 ## Action de l'exploitant
 - Se connecter avec l'adresse déclarée dans `XX_ADMIN_EMAILS` (Render) : le compte devient administrateur principal.
 - Facultatif : fournisseur de courriel (XX_MAIL_*) et d'IA (AI_PROVIDER…) — voir docs/GUIDE_INSTALLATION.md.
 - Proposer la révocation de la clé d'API Render après le déploiement (lecture seule utilisée).
 
 ## Non disponible / non validé (affiché comme tel)
-CAO volumique, éléments finis, dynamique des solides, émulation réseau, calcul réglementaire de structures, paiement en ligne, IA générative sans fournisseur configuré, drones : armement / décollage non validés sur SITL (aucun drone réel pilotable), Sentinel-2 / NDVI (lecture des bandes vérifiée, non intégrée).
+CAO volumique, éléments finis, dynamique des solides, émulation réseau, calcul réglementaire de structures, paiement en ligne, livraison par transporteur, circuits imprimés, extraction d'images des documents, IA générative sans fournisseur configuré, drones : armement / décollage non validés sur SITL (aucun drone réel pilotable), Sentinel-2 / NDVI (lecture des bandes vérifiée, non intégrée).
 
 ## Prochaine tâche exacte
-1. Vérifier en production les nouvelles pages après déploiement (schémas, studio, modèles, licence, admin) sur téléphone.
-2. Sentinel-2 (recherche STAC + NDVI) ; validation SITL des drones.
+1. Vérifier en production les appareils et la suspension après déploiement.
+2. Lots suivants : étendre la banque de projets (190, objectif : plusieurs centaines) et les modèles d'exercices, puis ajouter des cours FAD rédigés ou fournis par des formateurs.
+3. Sentinel-2 (recherche STAC et NDVI) ; validation des drones sur simulateur SITL.

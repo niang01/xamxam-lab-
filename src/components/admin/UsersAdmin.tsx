@@ -46,6 +46,7 @@ export function UsersAdmin() {
               <Btn kind="ghost" data-testid="reset-link-btn" onClick={() => run(async () => { const r = await act(u.id, { action: "reset_link" }); setLink({ email: u.email, link: r.link! }); })}>{t("adm.resetLink")}</Btn>
               {!u.email_verified_at && <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "verify_email" }))}>{t("adm.markVerified")}</Btn>}
               {u.locked_until && <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "unlock" }))}>{t("adm.unlock")}</Btn>}
+              <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "reset_devices" }))}>{t("adm.resetDevices")}</Btn>
               <Btn kind="ghost" onClick={() => run(() => act(u.id, { action: "extend_trial", days: 30 }))}>{t("adm.extendTrial")}</Btn>
               {u.id !== me?.id && <Btn kind="danger" data-testid="delete-account" onClick={() => { const c = prompt(t("adm.deleteConfirm", { email: u.email })); if (c !== null) void run(() => act(u.id, { action: "delete_account", confirm_email: c })); }}>{t("adm.deleteAccount")}</Btn>}
             </div>

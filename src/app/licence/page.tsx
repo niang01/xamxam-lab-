@@ -3,14 +3,15 @@ import { useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
-import { post } from "@/lib/client/api";
+import { del, post } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type L = {
   state: "admin" | "trial" | "licensed" | "expired" | "tampered"; allowed: boolean; trial_days: number;
   trial: { started_at: string; ends_at: string; days_left: number } | null;
-  licence: { plan_name: string; key_hint: string; expires_at: string; organization: string | null; days_left: number } | null;
+  licence: { plan_name: string; key_hint: string; expires_at: string; organization: string | null; days_left: number; max_devices?: number | null } | null;
   history: { action: string; created_at: string; key_hint: string | null }[];
+  devices: { id: string; label: string | null; first_seen: string; last_seen: string }[]; this_device: string | null;
 };
 const d = (s: string) => new Date(s).toLocaleDateString();
 
@@ -38,6 +39,13 @@ export default function Licence() {
         <ErrorBox error={err} />
         <p className="mt-2 text-xs text-[var(--fg-3)]">{t("lic.buyInfo")}</p>
       </Card>
+      {data && (
+        <Card title={t("lic.devices")} testId="my-devices">
+          <p className="mb-2 text-xs text-[var(--fg-3)]">{data.licence?.max_devices ? t("lic.devicesMax", { n: data.licence.max_devices }) : t("lic.devicesNoLimit")}</p>
+          <ul className="space-y-1 text-sm">{data.devices.map((d) => <li key={d.id} className="flex flex-wrap items-center justify-between gap-2"><span>{d.label ?? "—"} <span className="text-xs text-[var(--fg-3)]">· {new Date(d.last_seen).toLocaleString()}{d.id === data.this_device ? ` · ${t("lic.thisDevice")}` : ""}</span></span>
+            <button className="text-xs underline" onClick={async () => { try { await del(`/api/licence?device=${d.id}`); reload(); } catch (e) { setErr(e); } }}>{t("lic.removeDevice")}</button></li>)}</ul>
+        </Card>
+      )}
       {!!data?.history.length && (
         <Card title={t("lic.history")}>
           <ul className="text-sm">{data.history.map((h, i) => <li key={i}>{new Date(h.created_at).toLocaleString()} — {h.action}{h.key_hint ? ` (…${h.key_hint})` : ""}</li>)}</ul>

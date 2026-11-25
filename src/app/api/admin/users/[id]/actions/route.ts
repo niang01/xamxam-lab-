@@ -6,11 +6,13 @@ import { issueToken } from "@/server/accounts";
 import { appUrl } from "@/server/mail";
 import { extendTrial, forgetEntitlements } from "@/server/licensing";
 import { PROFILES } from "@/lib/profiles";
+import { forgetDevices } from "@/server/devices";
 
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("reset_link") }),
   z.object({ action: z.literal("verify_email") }),
   z.object({ action: z.literal("unlock") }),
+  z.object({ action: z.literal("reset_devices") }),
   z.object({ action: z.literal("extend_trial"), days: z.number().int().min(1).max(365) }),
   z.object({ action: z.literal("set_profile"), profile_kind: z.enum(PROFILES as unknown as [string, ...string[]]) }),
   z.object({ action: z.literal("set_admin"), is_admin: z.boolean() }),
@@ -33,6 +35,7 @@ export const POST = endpoint(async (req, ctx: { params: Promise<Record<string, s
       break;
     }
     case "verify_email": await sql("UPDATE users SET email_verified_at=COALESCE(email_verified_at, now()) WHERE id=$1", [id]); break;
+    case "reset_devices": await sql("UPDATE user_devices SET revoked_at=now() WHERE user_id=$1 AND revoked_at IS NULL", [id]); forgetDevices(); break;
     case "unlock": await sql("UPDATE users SET failed_logins=0, locked_until=NULL WHERE id=$1", [id]); break;
     case "extend_trial": await extendTrial(id, b.days, a.id); break;
     case "set_profile": await sql("UPDATE users SET profile_kind=$2, updated_at=now() WHERE id=$1", [id, b.profile_kind]); break;

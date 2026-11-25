@@ -7,14 +7,14 @@ import { useData } from "@/lib/client/hooks";
 import { post } from "@/lib/client/api";
 
 type Plan = { id: string; code: string; name: string; description: string | null; duration_days: number; seats: number; price_xof: number | null; active: boolean };
-type Lic = { id: string; key_hint: string; organization: string | null; seats: number; duration_days: number; status: string; activated_at: string | null; expires_at: string | null; note: string | null; plan_name: string; holders: { user_id: string; email: string }[] };
+type Lic = { id: string; max_devices: number | null; key_hint: string; organization: string | null; seats: number; duration_days: number; status: string; activated_at: string | null; expires_at: string | null; note: string | null; plan_name: string; holders: { user_id: string; email: string }[] };
 type Ev = { id: number; action: string; created_at: string; key_hint: string | null; user_email: string | null; actor_email: string | null };
 const d = (s: string | null) => (s ? new Date(s).toLocaleDateString() : "—");
 
 export function LicencesAdmin() {
   const { t } = useApp();
   const { data, reload } = useData<{ plans: Plan[]; licences: Lic[]; events: Ev[] }>("/api/admin/licences");
-  const [plan, setPlan] = useState({ code: "", name: "", duration_days: "365", seats: "1", price_xof: "", description: "" });
+  const [plan, setPlan] = useState({ code: "", name: "", duration_days: "365", seats: "1", price_xof: "", description: "", max_devices: "" });
   const [iss, setIss] = useState({ plan_id: "", count: "1", organization: "", seats: "", note: "", assign_email: "" });
   const [keys, setKeys] = useState<string[]>([]);
   const [row, setRow] = useState<Record<string, { email: string; days: string }>>({});
@@ -36,8 +36,9 @@ export function LicencesAdmin() {
           <Field label={t("lic.seats")}><Input name="plan-seats" type="number" value={plan.seats} onChange={(e) => setPlan({ ...plan, seats: e.target.value })} /></Field>
           <Field label={t("lic.price")}><Input name="plan-price" type="number" value={plan.price_xof} onChange={(e) => setPlan({ ...plan, price_xof: e.target.value })} /></Field>
           <Field label={t("lic.description")}><Input value={plan.description} onChange={(e) => setPlan({ ...plan, description: e.target.value })} /></Field>
+          <Field label={t("lic.maxDevices")}><Input name="plan-devices" type="number" value={plan.max_devices} onChange={(e) => setPlan({ ...plan, max_devices: e.target.value })} /></Field>
         </div>
-        <Btn className="mt-2" data-testid="plan-create" onClick={() => run({ action: "create_plan", code: plan.code, name: plan.name, duration_days: Number(plan.duration_days), seats: Number(plan.seats), price_xof: n(plan.price_xof), description: plan.description || null })}>{t("lic.createPlan")}</Btn>
+        <Btn className="mt-2" data-testid="plan-create" onClick={() => run({ action: "create_plan", code: plan.code, name: plan.name, duration_days: Number(plan.duration_days), seats: Number(plan.seats), price_xof: n(plan.price_xof), description: plan.description || null, max_devices: n(plan.max_devices) })}>{t("lic.createPlan")}</Btn>
       </Card>
       <Card title={t("lic.issue")}>
         <div className="grid gap-2 md:grid-cols-3">
@@ -57,13 +58,16 @@ export function LicencesAdmin() {
           return (
             <li key={l.id} className="space-y-1 py-2" data-licence={l.key_hint}>
               <div className="flex flex-wrap items-center justify-between gap-2"><span><strong>{l.plan_name}</strong> <span className="font-mono text-xs">…{l.key_hint}</span> <span className="text-xs text-[var(--fg-3)]">{l.organization ?? ""} · {t("lic.seats")} {l.holders.length}/{l.seats} · {t("lic.until")} {d(l.expires_at)}</span></span>
-                <Pill tone={l.status === "active" ? "ok" : l.status === "revoked" ? "danger" : "info"}>{t(`lic.status.${l.status}` as "lic.status.active")}</Pill></div>
+                <Pill tone={l.status === "active" ? "ok" : l.status === "revoked" ? "danger" : l.status === "suspended" ? "warn" : "info"}>{t(`lic.status.${l.status}` as "lic.status.active")}</Pill></div>
               {l.holders.map((h) => <div key={h.user_id} className="flex items-center gap-2 text-xs">{h.email}<button className="underline" onClick={() => run({ action: "deactivate", licence_id: l.id, user_id: h.user_id })}>{t("lic.deactivate")}</button></div>)}
               {l.status !== "revoked" && <div className="flex flex-wrap items-end gap-2">
                 <Input aria-label={t("auth.email")} placeholder={t("auth.email")} value={r.email} onChange={(e) => setRow({ ...row, [l.id]: { ...r, email: e.target.value } })} className="!w-56" />
                 <Btn kind="ghost" onClick={() => run({ action: "assign", licence_id: l.id, email: r.email })}>{t("lic.assign")}</Btn>
                 <Input aria-label={t("lic.days")} type="number" value={r.days} onChange={(e) => setRow({ ...row, [l.id]: { ...r, days: e.target.value } })} className="!w-24" />
                 <Btn kind="ghost" onClick={() => run({ action: "renew", licence_id: l.id, days: Number(r.days) })}>{t("lic.renew")}</Btn>
+                {l.status === "active" && <Btn kind="ghost" data-testid="licence-suspend" onClick={() => run({ action: "suspend", licence_id: l.id, reason: prompt(t("shop.reason")) })}>{t("lic.suspend")}</Btn>}
+                {l.status === "suspended" && <Btn kind="ok" onClick={() => run({ action: "resume", licence_id: l.id })}>{t("lic.resume")}</Btn>}
+                <Input aria-label={t("lic.maxDevices")} type="number" placeholder={t("lic.maxDevices")} defaultValue={l.max_devices ?? ""} className="!w-28" onBlur={(e) => { const v = n(e.target.value); if (v !== l.max_devices) void run({ action: "set_devices", licence_id: l.id, max_devices: v }); }} />
                 <Btn kind="danger" onClick={() => { if (confirm(t("lic.revokeConfirm"))) void run({ action: "revoke", licence_id: l.id, reason: null }); }}>{t("lic.revoke")}</Btn>
               </div>}
             </li>);

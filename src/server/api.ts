@@ -19,6 +19,7 @@ import { ConfigError } from "./security/crypto";
 import { env } from "./env";
 import { getDb, sqlOne } from "./db";
 import { cachedEntitlement, licenceFree } from "./licensing";
+import { checkDevice } from "./devices";
 import { LicenceError } from "./licensing";
 
 /** Échec métier : statut HTTP, message (journal / repli) et clé de message traduisible pour l'interface. */
@@ -103,6 +104,9 @@ export async function mustBeSignedIn(req: Request): Promise<User> {
     if (!e.allowed) throw new ApiFailure(402, e.state === "tampered"
       ? "Incohérence détectée sur votre essai ou votre licence : contactez l'administrateur"
       : "Votre période d'essai est terminée : activez une licence (Paramètres → Licence)", e.state === "tampered" ? "err.licenceTampered" : "err.licence");
+    if (!(await checkDevice(req, user.id, e.state === "licensed" ? e.licence?.max_devices ?? null : null))) {
+      throw new ApiFailure(402, "Nombre maximal d'appareils atteint pour votre licence : retirez un appareil (Licence → Mes appareils) ou contactez l'administrateur", "err.devices");
+    }
   }
   return user;
 }

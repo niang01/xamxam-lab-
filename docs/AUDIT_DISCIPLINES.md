@@ -13,6 +13,8 @@ Méthode : chaque point a été vérifié dans le code et, sauf mention contrair
 
 ## 2. Bibliothèques de composants
 
+**Mise à jour du 25/11/2026** : 190 composants génériques, répartis en 23 disciplines et regroupés dans les 20 filières demandées (filtre « Filière »). Banque de 190 projets reliés à ces composants. Inventaire et états détaillés : [TABLEAU_DE_CONTROLE.md](TABLEAU_DE_CONTROLE.md).
+
 Avant : 27 composants génériques. Après : **127 composants génériques** répartis en **12 disciplines**
 (électrique, électronique, solaire et stockage, pompes et hydraulique, capteurs et actionneurs IoT, cartes et modules,
 moteurs / variateurs / automatismes, froid et climatisation, informatique et réseaux, mécanique et robotique, drones,

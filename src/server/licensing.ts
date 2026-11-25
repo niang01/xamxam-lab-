@@ -74,7 +74,7 @@ export type AccessState = "admin" | "trial" | "licensed" | "expired" | "tampered
 export interface Entitlement {
   state: AccessState; allowed: boolean;
   trial: { started_at: string; ends_at: string; days_left: number; intact: boolean } | null;
-  licence: { id: string; plan: string; plan_name: string; key_hint: string; expires_at: string; organization: string | null; days_left: number } | null;
+  licence: { id: string; plan: string; plan_name: string; key_hint: string; expires_at: string; organization: string | null; days_left: number; max_devices: number | null } | null;
 }
 
 const daysLeft = (end: string) => Math.max(0, Math.ceil((new Date(end).getTime() - Date.now()) / 86400_000));
@@ -98,13 +98,13 @@ export async function entitlement(userId: string, isAdmin: boolean): Promise<Ent
   const trialIntact = !!t && sameTag(t.integrity, trialTag(userId, t.started_at, t.ends_at));
   const trial = t ? { started_at: iso(t.started_at), ends_at: iso(t.ends_at), days_left: daysLeft(t.ends_at), intact: trialIntact } : null;
 
-  const lics = await sql<{ id: string; status: string; seats: number; activated_at: string | null; expires_at: string | null; integrity: string | null; key_hint: string; organization: string | null; code: string; name: string }>(
-    `SELECT l.id, l.status, l.seats, l.activated_at, l.expires_at, l.integrity, l.key_hint, l.organization, p.code, p.name
+  const lics = await sql<{ id: string; status: string; seats: number; activated_at: string | null; expires_at: string | null; integrity: string | null; key_hint: string; organization: string | null; code: string; name: string; max_devices: number | null }>(
+    `SELECT l.id, l.status, l.seats, l.activated_at, l.expires_at, l.integrity, l.key_hint, l.organization, p.code, p.name, COALESCE(l.max_devices, p.max_devices) AS max_devices
        FROM licence_activations a JOIN licences l ON l.id=a.licence_id JOIN licence_plans p ON p.id=l.plan_id
       WHERE a.user_id=$1 AND a.deactivated_at IS NULL AND l.status='active' AND l.expires_at > now()
       ORDER BY l.expires_at DESC`, [userId]);
   const valid = lics.find((l) => sameTag(l.integrity, licenceTag(l)));
-  const licence = valid ? { id: valid.id, plan: valid.code, plan_name: valid.name, key_hint: valid.key_hint, expires_at: iso(valid.expires_at!), organization: valid.organization, days_left: daysLeft(valid.expires_at!) } : null;
+  const licence = valid ? { id: valid.id, plan: valid.code, plan_name: valid.name, key_hint: valid.key_hint, expires_at: iso(valid.expires_at!), organization: valid.organization, days_left: daysLeft(valid.expires_at!), max_devices: valid.max_devices == null ? null : Number(valid.max_devices) } : null;
 
   if (isAdmin) return { state: "admin", allowed: true, trial, licence };
   if (licence) return { state: "licensed", allowed: true, trial, licence };
@@ -138,6 +138,7 @@ async function activate(licenceId: string, userId: string, actorId: string) {
     "SELECT id, status, seats, duration_days, activated_at, expires_at, integrity FROM licences WHERE id=$1 FOR UPDATE", [licenceId]))[0];
   if (!l) throw new LicenceError(404, "Licence introuvable", "lic.err.notFound");
   if (l.status === "revoked") throw new LicenceError(409, "Cette licence a été révoquée", "lic.err.revoked");
+  if (l.status === "suspended") throw new LicenceError(409, "Cette licence est suspendue : contactez l'administrateur", "lic.err.suspended");
   if (l.status === "active" && !sameTag(l.integrity, licenceTag(l))) throw new LicenceError(409, "Licence altérée : contactez l'administrateur", "lic.err.tampered");
   if (l.expires_at && new Date(l.expires_at).getTime() <= Date.now()) throw new LicenceError(409, "Cette licence a expiré", "lic.err.expired");
   if (await sqlOne("SELECT 1 FROM licence_activations WHERE licence_id=$1 AND user_id=$2 AND deactivated_at IS NULL", [licenceId, userId])) throw new LicenceError(409, "Licence déjà active sur ce compte", "lic.err.already");
@@ -198,6 +199,25 @@ export async function renewLicence(licenceId: string, days: number, actorId: str
   }
   forgetEntitlements();
   await logEvent(licenceId, null, actorId, "licence.renew", { days });
+}
+
+/** Suspension réversible (l'intégrité est vérifiée avant, recalculée à la reprise). */
+export async function suspendLicence(licenceId: string, actorId: string, reason: string | null) {
+  const l = await sqlOne<{ id: string; status: string; seats: number; activated_at: string | null; expires_at: string | null; integrity: string | null }>("SELECT id, status, seats, activated_at, expires_at, integrity FROM licences WHERE id=$1", [licenceId]);
+  if (!l || l.status !== "active") throw new LicenceError(409, "Seule une licence active peut être suspendue", "lic.err.notActive");
+  if (!sameTag(l.integrity, licenceTag(l))) throw new LicenceError(409, "Licence altérée : contactez l'administrateur", "lic.err.tampered");
+  // L'étiquette couvre le statut : remettre « active » directement en base est détecté comme une altération.
+  await sql("UPDATE licences SET status='suspended', integrity=$2 WHERE id=$1", [licenceId, licenceTag({ ...l, status: "suspended" })]);
+  forgetEntitlements();
+  await logEvent(licenceId, null, actorId, "licence.suspend", { reason });
+}
+export async function resumeLicence(licenceId: string, actorId: string) {
+  const l = await sqlOne<{ id: string; status: string; seats: number; activated_at: string | null; expires_at: string | null; integrity: string | null }>("SELECT id, status, seats, activated_at, expires_at, integrity FROM licences WHERE id=$1", [licenceId]);
+  if (!l || l.status !== "suspended") throw new LicenceError(409, "Licence non suspendue", "lic.err.notSuspended");
+  if (!sameTag(l.integrity, licenceTag(l))) throw new LicenceError(409, "Licence altérée : contactez l'administrateur", "lic.err.tampered");
+  await sql("UPDATE licences SET status='active', integrity=$2 WHERE id=$1", [licenceId, licenceTag({ ...l, status: "active" })]);
+  forgetEntitlements();
+  await logEvent(licenceId, null, actorId, "licence.resume", {});
 }
 
 /** Routes accessibles sans essai ni licence valide (compte, licence, guides, authentification, administration). */

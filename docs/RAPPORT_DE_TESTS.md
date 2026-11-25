@@ -2,6 +2,18 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
+## Campagne du 25/11/2026 (audit exhaustif : documents, schémas, banque, exercices, boutique, FAD, appareils et suspension)
+| Contrôle | Résultat |
+|---|---|
+| Typage strict, lint | ✅ 0 erreur |
+| Tests unitaires + intégration | ✅ **218/218** (31 fichiers). Nouveaux fichiers :<br>• `documents` (unitaire 9, intégration 4 : unités, exercices, corrigés, exports Word, Excel, PDF et Markdown, OCR d'image et de PDF scanné, cas limites 15 Mo, signature, vide)<br>• `schematics-gen` (4 : logique de démarrage vérifiée par conduction)<br>• `banque` (unitaire 8, intégration 3 : 190 projets, 17 rubriques, codes, favoris, réalisation, exercices, épreuve sur 20)<br>• `boutique` (5 : rôles, stock, mise en rayon, commande, administration)<br>• `fad` (2 : ressources contrôlées, devoirs, retard, notation)<br>• `bibliotheque-maj` (2 : non-régression de la panne du 25/11)<br>• `appareils` (4 : limite d'appareils, retrait, réinitialisation, suspension et réactivation, altération du statut détectée)<br>• `guides` (2 : chaque lien de guide mène à une page existante) |
+| Défauts trouvés par les tests et corrigés | (1) La suspension ne recalculait pas l'étiquette d'intégrité : remettre `status='active'` en base contournait la suspension. Corrigé : l'étiquette couvre le statut suspendu, et la réactivation est refusée si la licence a été altérée. (2) Le cookie d'appareil était émis avant celui de session ; il est maintenant émis après. (3) Les sessions ouvertes avant la mise à jour n'avaient pas d'identifiant d'appareil ; `/api/auth/me` l'attribue désormais. |
+| Build de production | ✅ |
+| Parcours de bout en bout | ✅ **17/17** sur 3 exécutions consécutives. Nouveau parcours `rubriques.spec.ts`, sur ordinateur **et** Pixel 7 : dépôt et analyse d'un document, export Word valide, réalisation d'un projet de la banque, exercice corrigé, commande en boutique confirmée par le vendeur (stock 4 → 3), paiement annoncé hors ligne, FAD, « Mes appareils ». ⚠️ Une exécution antérieure a présenté 1 échec isolé (assertion `toContainText`) qui n'a pas été reproduit ensuite ; il est signalé, pas masqué. |
+| Compilation des programmes de la banque | ✅ 11/11 compilés avec PlatformIO (ESP32-S3) ; une collision de nom (`alarm`) a été révélée par la compilation, puis corrigée. Programmes non essayés sur matériel réel. |
+| Incident de production | Le 25/11, entre ≈06:33 et 06:49 UTC, la mise à jour de la bibliothèque a violé une contrainte d'unicité lors du chargement (doublons hérités). Le service était indisponible pendant cette période. Corrigé dans le commit 27a28f1 (fusion des doublons, chargement isolé), avec un test de non-régression. |
+| Production (commit 27a28f1) | ✅ documents (exports, OCR), schéma, banque de 190 projets, réalisation, exercice, message de paiement de la boutique, FAD, schéma demandé à Aláji IA, aucun débordement sur téléphone, suppression de compte (200). Limite observée : l'OCR n'a pas reconnu une ligne « Réponse » (le texte est corrigeable). |
+
 ## Campagne du 24/11/2026 (profil, mots de passe)
 ✅ 165/165 tests unitaires et d'intégration (dont `password.test.ts`, `profil.test.ts` : champs du profil, mot de passe absent des réponses, des journaux et de la base), ✅ 15/15 parcours dont `mot-de-passe.spec.ts` exécuté sur ordinateur **et** Pixel 7 (œil sur inscription, confirmation, connexion, changement, réinitialisation ; robustesse ; concordance ; profil affiché et modifié ; aucune page plus large que l'écran).
 

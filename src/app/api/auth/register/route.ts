@@ -36,6 +36,6 @@ export const POST = endpoint(async (req) => {
   await audit(u.id, "human", "account.create", { kind: "user", id: u.id }, { profile: b.profile_kind, admin: isAdmin });
   const verification = await sendVerification(u.id, b.email, req);
   const res = ok({ ok: true, admin: isAdmin, verification }, 201);
-  await openSession(res, u.id, u.session_version);
+  await openSession(res, u.id, u.session_version, req);
   return res;
 });

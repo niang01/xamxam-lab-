@@ -1,18 +1,19 @@
-# XAM-XAM LAB — état de réalisation (23/11/2026)
+# XAM-XAM LAB — état de réalisation (25/11/2026)
 
 Synthèse avant mise en production : [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 112 tests unitaires/intégration, 10 parcours de bout en bout, build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 218 tests unitaires et d'intégration, 17 parcours de bout en bout (25/11), build sans avertissement.
 
 ## 1. Terminé et testé
 Audit détaillé par discipline et par espace : [AUDIT_DISCIPLINES.md](AUDIT_DISCIPLINES.md).
 
 | Domaine | Fonctions |
 |---|---|
+| Audit exhaustif (25/11) | Tableau de contrôle ligne par ligne : [TABLEAU_DE_CONTROLE.md](TABLEAU_DE_CONTROLE.md). **Documents** traités par Aláji IA (PDF, Word, Excel, PowerPoint, images et scans par OCR, texte, code, DXF, STL ; calculs vérifiés, corrigés, exports PDF, Word, Excel, Markdown). **9 générateurs de schémas**. **Bibliothèque** de 190 composants (23 disciplines, 20 filières). **Banque** de 190 projets, dont 100 IoT (17 rubriques, 11 programmes compilés). **19 modèles d'exercices** et épreuves sur 20. **Boutique** : 15 rayons, panier, commandes, stock, vendeurs, administration ; paiement hors plateforme. **FAD** : modules, ressources, devoirs, TD, TP et examens, notes, progression. **Licences** : appareils autorisés, suspension et réactivation. 6 guides ajoutés. |
 | Comptes et licences (23/11) | Inscription, configuration du profil, connexion / déconnexion, verrouillage après 5 échecs, mot de passe oublié (fournisseur de courriel configurable, sinon lien généré par l'administrateur), vérification d'adresse, clés serveur générées et conservées en base si l'hébergeur ne les fournit pas, administrateur principal (XX_ADMIN_EMAILS ou code d'initialisation des journaux), **essai gratuit de 90 jours et licences** (catégories, clés 125 bits hachées, postes, attribution, renouvellement, révocation, historique, intégrité HMAC, contrôle serveur), tableau de bord d'administration, guides intégrés |
 | Aláji IA (23/11) | Cerveau central renommé ; fournisseur configurable ; analyse des demandes ; agent vérificateur réel ; rapports et suivi de projets ; historique |
 | Espaces 2D / 3D / 4D (23/11) | Schémas 2D multidisciplines ; maquette 3D paramétrique ; scénarios 4D avec bilans de conservation |
-| Bibliothèque (23/11) | 127 composants génériques, 12 disciplines, paramètres avec unités |
+| Bibliothèque (23/11 → 25/11) | 190 composants génériques, 23 disciplines regroupées en 20 filières, paramètres avec unités |
 | Projets structurés (23/11) | 10 modèles × 6 niveaux, dossier complet, budget, rapport et présentation exportés |
 | Socle | Comptes (15 profils, administrateur par configuration), sessions révocables, projets privés par défaut, membres et rôles, notifications, paramètres, export et suppression des données, journal d'audit chaîné, sauvegarde/restauration, PostgreSQL 16 et PGlite, Docker Compose |
 | Langues | Interface FR/EN complète (catalogue typé), wolof par traductions validées uniquement (import, brouillons, validation), repli signalé, changement de langue sans perte |
