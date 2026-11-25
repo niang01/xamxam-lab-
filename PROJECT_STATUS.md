@@ -8,8 +8,8 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 218/218 (31 fichiers, 25/11) |
-| Parcours de bout en bout (Playwright) | ✅ 17/17 (ordinateur + Pixel 7) |
+| Tests unitaires + intégration | ✅ 244/244 (33 fichiers, 25/11) |
+| Parcours de bout en bout (Playwright) | ✅ 19/19 (ordinateur + Pixel 7) |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
 
@@ -38,6 +38,10 @@ Audit détaillé : docs/AUDIT_DISCIPLINES.md.
 - Licences : appareils autorisés (migration 0016), suspension et réactivation protégées par l'étiquette d'intégrité.
 - 6 guides ajoutés.
 - Incident de production du 25/11 (≈06:33–06:49 UTC) corrigé dans le commit 27a28f1.
+
+## Cahier des charges général (25/11, en cours — par lots)
+- Fait : socle des logiciels de dimensionnement ; Installation électrique ; Photovoltaïque ; Pompage ; bibliothèque 401 composants.
+- À suivre : séchage solaire, biomasse/biogaz, compostage, solaire thermique ; IoT multisectoriel (32 secteurs) ; Marème IA ; Aláji IA contextuel et historique supprimable ; impression de plans (A4–A1, cartouche) et DXF ; tableau de conformité.
 
 ## Action de l'exploitant
 - Se connecter avec l'adresse déclarée dans `XX_ADMIN_EMAILS` (Render) : le compte devient administrateur principal.

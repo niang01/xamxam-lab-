@@ -41,9 +41,14 @@ function failure(status: number, error: string, key?: string, details?: unknown)
   return ok({ error, ...(key ? { key } : {}), ...(details !== undefined ? { details } : {}) }, status);
 }
 
-/** Quota par compartiment et par adresse ; dépassement → 429. */
+/**
+ * Quota par compartiment et par adresse ; dépassement → 429.
+ * XX_RATE_LIMIT_FACTOR (≥ 1, uniquement pour le serveur local des parcours automatisés, qui crée des dizaines de
+ * comptes depuis une seule adresse) multiplie les quotas ; non défini en production (signalé par verifier-config).
+ */
+const RL_FACTOR = (() => { const f = Number(process.env.XX_RATE_LIMIT_FACTOR); return Number.isFinite(f) && f >= 1 && f <= 100 ? f : 1; })();
 export function throttle(req: Request, scope: string, max: number, windowMs = 60_000) {
-  const verdict = rateLimit(`${scope}|${callerAddress(req)}`, max, windowMs);
+  const verdict = rateLimit(`${scope}|${callerAddress(req)}`, Math.round(max * RL_FACTOR), windowMs);
   if (!verdict.ok) throw new ApiFailure(429, `Trop de requêtes — nouvel essai possible dans ${verdict.retryAfterS} s`, "err.rate");
 }
 

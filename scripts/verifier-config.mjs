@@ -54,6 +54,7 @@ export function checkConfig(env) {
   else if (enc.length < 32) errors.push(`XX_ENCRYPTION_KEY trop court (${enc.length} caractères, minimum 32)`);
   else if (enc === v("SESSION_SECRET")) errors.push("XX_ENCRYPTION_KEY doit être différent de SESSION_SECRET");
 
+  if (v("XX_RATE_LIMIT_FACTOR")) errors.push("XX_RATE_LIMIT_FACTOR : réservé aux tests automatisés locaux, à retirer en production (affaiblit la limitation de débit)");
   if (v("INSECURE_COOKIES") === "true") errors.push("INSECURE_COOKIES=true : interdit en production (cookies de session envoyés sans HTTPS)");
   info.push(v("MQTTS_PORT") ? "Passerelle MQTT : TLS configuré (profil « iot »)" : v("MQTT_ALLOW_INSECURE") === "true" ? "Passerelle MQTT : sans TLS (profil « iot », banc d'essai)" : "Passerelle MQTT : non activable tant que TLS n'est pas configuré (profil « iot » facultatif)");
   if (v("MQTT_ALLOW_INSECURE") === "true" && !v("MQTTS_PORT")) warnings.push("MQTT sans TLS autorisé et aucun MQTTS_PORT : réserver à un réseau local de banc d'essai");

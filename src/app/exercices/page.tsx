@@ -58,7 +58,7 @@ export default function Exercises() {
           </div>)}
       </Card>
       <Card title={t("ex.bank")}>
-        <Select name="ex-filiere" aria-label={t("comp.filiere")} value={fil} onChange={(e) => setFil(e.target.value)} className="mb-3 !w-auto"><option value="">{t("comp.allFilieres")}</option>{FILIERES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</Select>
+        <Select name="ex-filiere" aria-label={t("comp.filiere")} value={fil} onChange={(e) => setFil(e.target.value)} className="mb-3 !w-auto max-w-full"><option value="">{t("comp.allFilieres")}</option>{FILIERES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</Select>
         <ul className="divide-y divide-[var(--line)] text-sm">{tpls.map((x) => { const p = prog(x.key); return (
           <li key={x.key} className="flex flex-wrap items-center justify-between gap-2 py-2"><button className="text-left text-[var(--cyan)] hover:underline" onClick={() => open(x.key)} data-template={x.key}>{x.title}</button>
             <span className="flex flex-wrap gap-1 text-xs"><Pill>{fl(x.filiere)}</Pill><Pill tone="info">{t(`ex.level.${x.level}` as "ex.level.debutant")}</Pill>{p && <Pill tone="ok">{p.correct}/{p.tries}</Pill>}</span></li>); })}</ul>

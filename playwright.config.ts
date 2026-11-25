@@ -17,7 +17,7 @@ export default defineConfig({
   use: { baseURL: EXTERNAL ?? `http://localhost:${PORT}`, ignoreHTTPSErrors: process.env.XX_E2E_IGNORE_TLS === "1", trace: "off", launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } },
   projects: [
     { name: "bureau", testIgnore: /mobile\.spec\.ts/, use: { ...devices["Desktop Chrome"], permissions: ["camera", "microphone"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium", args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] } } },
-    { name: "telephone", use: { ...devices["Pixel 7"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } }, testMatch: /(mobile|mot-de-passe|rubriques)\.spec\.ts/ },
+    { name: "telephone", use: { ...devices["Pixel 7"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } }, testMatch: /(mobile|mot-de-passe|rubriques|dimensionnement)\.spec\.ts/ },
   ],
   webServer: EXTERNAL ? undefined : {
     command: `npx next start -p ${PORT}`,
@@ -26,6 +26,6 @@ export default defineConfig({
     stdout: "pipe",
     stderr: "pipe",
     timeout: 120_000,
-    env: { PGLITE_DIR: DB, XX_ADMIN_EMAILS: "admin@e2e.local,admin-comptes@e2e.local", SESSION_SECRET: "e2e-secret-0123456789-abcdef", INSECURE_COOKIES: "true", NODE_ENV: "production" },
+    env: { PGLITE_DIR: DB, XX_ADMIN_EMAILS: "admin@e2e.local,admin-comptes@e2e.local", SESSION_SECRET: "e2e-secret-0123456789-abcdef", INSECURE_COOKIES: "true", XX_RATE_LIMIT_FACTOR: "5", NODE_ENV: "production" },
   },
 });

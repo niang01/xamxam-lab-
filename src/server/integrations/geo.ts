@@ -165,3 +165,27 @@ export async function powerHourlyYear(lat: number, lon: number, year: number, fe
     throw new Error(m);
   }
 }
+
+/** Résultat de recherche de lieu (Open-Meteo Geocoding, service public gratuit sans clé, données GeoNames). */
+export interface Place { name: string; admin1: string | null; country: string | null; country_code: string | null; lat: number; lon: number; elevation: number | null }
+export const GEOCODING_BASE = () => process.env.XX_GEOCODING_URL ?? "https://geocoding-api.open-meteo.com";
+
+/** Autocomplétion des lieux (villes, localités) dès 2 lettres ; aucune position n'est inventée en cas d'échec. */
+export async function searchPlaces(q: string, lang: string, fetchImpl: typeof fetch = outboundFetch): Promise<Place[]> {
+  const url = new URL("/v1/search", GEOCODING_BASE());
+  url.searchParams.set("name", q); url.searchParams.set("count", "10"); url.searchParams.set("language", lang); url.searchParams.set("format", "json");
+  let status: number | null = null;
+  try {
+    const r = await fetchImpl(url.toString(), { signal: AbortSignal.timeout(15000), headers: { Accept: "application/json" } });
+    status = r.status;
+    if (!r.ok) throw new Error(`Service de recherche de lieux indisponible (statut HTTP ${r.status})`);
+    const b = await r.json() as { results?: { name: string; admin1?: string; country?: string; country_code?: string; latitude: number; longitude: number; elevation?: number }[] };
+    const out = (b.results ?? []).filter((x) => Number.isFinite(x.latitude) && Number.isFinite(x.longitude)).map((x) => ({ name: x.name, admin1: x.admin1 ?? null, country: x.country ?? null, country_code: x.country_code ?? null, lat: x.latitude, lon: x.longitude, elevation: x.elevation ?? null }));
+    await logReq("geocoding", url.toString(), true, status, null, out.length);
+    return out;
+  } catch (e) {
+    const m = e instanceof Error ? e.message : String(e);
+    await logReq("geocoding", url.toString(), false, status, m, null);
+    throw new Error(m);
+  }
+}

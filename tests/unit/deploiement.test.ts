@@ -31,6 +31,7 @@ describe("Contrôle de configuration de production", () => {
     expect(checkConfig({ ...GOOD, XX_ADMIN_EMAILS: "" }).errors[0]).toContain("XX_ADMIN_EMAILS manquant");
     expect(checkConfig({ ...GOOD, XX_ADMIN_EMAILS: "admin@lab.sn, pas-une-adresse" }).errors).toContain("XX_ADMIN_EMAILS : adresse invalide « pas-une-adresse »");
     expect(checkConfig({ ...GOOD, INSECURE_COOKIES: "true" }).errors.join(" ")).toContain("INSECURE_COOKIES=true");
+    expect(checkConfig({ ...GOOD, XX_RATE_LIMIT_FACTOR: "5" }).errors.join(" ")).toContain("XX_RATE_LIMIT_FACTOR");
     expect(checkConfig({ ...GOOD, MQTTS_PORT: "8883" }).errors.join(" ")).toContain("MQTT_TLS_CERT");
     expect(checkConfig({ ...GOOD, METEOMATICS_USERNAME: "compte" }).errors.join(" ")).toContain("vont ensemble");
   });

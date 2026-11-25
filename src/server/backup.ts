@@ -14,7 +14,7 @@ import { canonical } from "./audit";
  */
 export const BACKUP_TABLES = [
   "users", "clearances", "projects", "project_members", "project_tasks", "project_messages", "schematics", "schematic_versions",
-  "calc_runs", "normative_tables", "components", "simulations", "ai_agents", "ai_conversations", "ai_messages", "ai_steps", "ai_memory",
+  "calc_runs", "normative_tables", "studies", "components", "simulations", "ai_agents", "ai_conversations", "ai_messages", "ai_steps", "ai_memory",
   "devices", "measurements", "device_commands", "automations", "automation_runs", "rc_sessions", "rc_events", "geo_requests", "geo_observations",
   "courses", "enrollments", "certificates", "eco_items", "eco_links",
   "market_listings", "market_inquiries", "market_messages", "market_favorites", "market_reports",

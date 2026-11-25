@@ -189,6 +189,21 @@ export const GUIDES: Guide[] = [
     limits: ["Les vidéos ne sont pas hébergées : liens externes. La surveillance d'examen à distance n'est pas disponible."],
   },
   {
+    slug: "dimensionnement", title: "Logiciels de dimensionnement (électricité, photovoltaïque, pompage)", audience: "Étudiants, techniciens, ingénieurs",
+    summary: "Réaliser une étude complète : saisie, références réelles de la bibliothèque, calcul, résultats détaillés, nomenclature, schéma, rapport, projet et boutique.",
+    steps: [
+      { title: "Ouvrir un logiciel", body: "Menu → Logiciels de dimensionnement, puis choisissez : Installation électrique, Photovoltaïque ou Pompage.", link: { href: "/dimensionnement", label: "Logiciels de dimensionnement" } },
+      { title: "Saisir ou charger un exemple", body: "« Charger un exemple de cas d'étude » remplit le formulaire avec un cas à remplacer par vos données. Un champ laissé vide n'est jamais remplacé par une valeur supposée : il apparaît dans « Données manquantes » et le calcul qui en dépend n'est pas fait." },
+      { title: "Lieu et ensoleillement (photovoltaïque, pompage solaire)", body: "Tapez les premières lettres d'une ville : choisissez-la dans la liste (latitude et longitude remplies), puis « Charger les données mensuelles NASA POWER » : irradiation et températures des 12 mois (données modélisées à échelle régionale, à confirmer par des mesures si possible)." },
+      { title: "Choisir des équipements réels", body: "Dans chaque section, la liste « référence réelle de la bibliothèque » propose les références enregistrées (fabricant, modèle, fiche technique) : leurs caractéristiques remplissent les champs. Si la liste est vide, ajoutez la référence et sa fiche dans la Bibliothèque de composants.", link: { href: "/components", label: "Bibliothèque" } },
+      { title: "Installation électrique : tableau normatif", body: "Le choix des sections utilise un tableau de courants admissibles saisi par un administrateur depuis la norme appliquée. Sans tableau, la section n'est pas calculée (aucune valeur normative n'est inventée)." },
+      { title: "Calculer et lire les résultats", body: "« Calculer » : synthèse, calculs détaillés avec formules, alertes (non-conformités), nomenclature. Pompage : vitesses, Reynolds, pertes de charge, HMT, point de fonctionnement sur la courbe de votre pompe, NPSH, puissances, câble. Photovoltaïque : irradiation sur le plan incliné, ratio de performance, puissance crête, associations série/parallèle, batteries, onduleur, câbles, protections, production et pertes." },
+      { title: "Enregistrer, exporter, poursuivre", body: "Donnez un titre puis « Enregistrer l'étude » : export PDF, Word, Excel, Markdown ; « Ouvrir le schéma dans l'éditeur 2D » (unifilaire, démarrage moteur, schéma hydraulique) ; « Envoyer la nomenclature vers le projet » ; « Chercher ces équipements dans la boutique » (offres réelles uniquement) ; « Demander à Aláji IA »." },
+    ],
+    example: "Exemple : pompage d'un village (300 habitants, 80 bovins, 20 m³/j de maraîchage) depuis un forage de 35 m, 400 m d'adduction : HMT ≈ 59 m, point de fonctionnement sur la courbe de la pompe, moteur 3 kW, câble et protection, schéma de démarrage direct.",
+    limits: ["Résultats de calcul à faire vérifier par une personne compétente avant réalisation.", "Photovoltaïque : modèle mensuel isotrope (estimation) ; le calcul horaire pvlib du Solar Energy Lab est plus fin.", "Sections : vérification par la chute de tension ; courant admissible et tenue au court-circuit à vérifier selon la norme."],
+  },
+  {
     slug: "licence", title: "Essai gratuit et licence", audience: "Tous",
     summary: "Comprendre l'essai de 90 jours et activer une licence.",
     steps: [

@@ -32,10 +32,10 @@ export default function Shop() {
   const run = async (fn: () => Promise<unknown>, ok = "") => { setErr(null); setMsg(""); try { await fn(); if (ok) setMsg(ok); reloadCart(); reloadCat(); reloadMine(); reloadSales(); reloadVend(); } catch (e) { setErr(e); } };
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const b = sp.get("projet_banque"), p = sp.get("projet"), o = sp.get("onglet");
+    const b = sp.get("projet_banque"), p = sp.get("projet"), st = sp.get("etude"), o = sp.get("onglet");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- onglet demandé dans l'URL
     if (o && ["catalogue", "panier", "commandes", "ventes", "vendeur"].includes(o)) setTab(o as Tab);
-    if (b || p) api<Offer>(`/api/shop/offers?${b ? `bank=${encodeURIComponent(b)}` : `project=${p}`}`).then(setOffers).catch(setErr);
+    if (b || p || st) api<Offer>(`/api/shop/offers?${b ? `bank=${encodeURIComponent(b)}` : p ? `project=${p}` : `study=${st}`}`).then(setOffers).catch(setErr);
   }, []);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- préremplissage du formulaire avec le profil chargé
   useEffect(() => { if (vend?.vendor) setVf({ business_name: vend.vendor.business_name, phone: vend.vendor.phone ?? "", address: vend.vendor.address ?? "", description: vend.vendor.description ?? "" }); }, [vend]);

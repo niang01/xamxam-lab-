@@ -5,6 +5,8 @@
  * Aucune caractéristique de fabricant n'est inventée. Les références réelles s'ajoutent avec leur fiche (statut
  * « à vérifier » jusqu'à vérification par un administrateur).
  */
+import { LIBRARY_PLUS } from "./library-plus";
+
 export interface LibParam { key: string; label: string; unit: string }
 export interface LibItem {
   discipline: Discipline; category: string; name: string; symbol: string; description: string; fn: string;
@@ -51,7 +53,7 @@ const POWER = [P("u_n", "Tension nominale", "V"), P("i_n", "Courant nominal", "A
 const I = (discipline: Discipline, category: string, name: string, symbol: string, description: string, fn: string, pins: string[], params: LibParam[], precautions: string | null, doc: string): LibItem =>
   ({ discipline, category, name, symbol, description, fn, pins, params, precautions, doc });
 
-export const LIBRARY: LibItem[] = [
+const BASE: LibItem[] = [
   // ---------------- Électrique et électrotechnique
   I("electrique", "protection", "Disjoncteur", "QF", "Appareil qui coupe automatiquement le circuit en cas de surcharge ou de court-circuit.", "Protection des canalisations contre les surintensités.", ["1", "2"], [P("in", "Calibre", "A"), P("poles", "Nombre de pôles", ""), P("icu", "Pouvoir de coupure", "kA"), P("curve", "Courbe de déclenchement (B, C, D)", "")], "Calibre choisi d'après le courant d'emploi et la section du câble ; pouvoir de coupure ≥ courant de court-circuit présumé.", "Choisir In ≥ Ib (courant d'emploi) et In ≤ Iz (courant admissible du câble)."),
   I("electrique", "protection", "Interrupteur différentiel", "ID", "Appareil qui coupe le circuit lorsqu'un courant de fuite à la terre dépasse sa sensibilité.", "Protection des personnes contre les contacts indirects.", ["L", "N", "L'", "N'"], [P("in", "Calibre", "A"), P("idn", "Sensibilité", "mA"), P("type", "Type (AC, A, F, B)", "")], "Ne protège pas contre les surintensités : à associer à un disjoncteur.", "Sensibilité 30 mA pour la protection complémentaire des personnes selon la réglementation applicable."),
@@ -204,7 +206,7 @@ export const LIBRARY: LibItem[] = [
   I("genie_civil", "réseaux", "Fosse septique", "FS", "Prétraitement des eaux usées domestiques.", "Assainissement autonome.", ["entrée", "sortie"], [P("v", "Volume utile", "m³")], "Dimensionnement selon le nombre d'usagers et la réglementation.", ""),
 ];
 
-LIBRARY.push(
+BASE.push(
   // ---------------- Électronique de puissance
   I("puissance", "redresseur", "Pont de diodes (redresseur)", "V", "Quatre diodes assurant le redressement double alternance.", "Convertir l'alternatif en continu.", ["~1", "~2", "+", "−"], [P("if", "Courant direct moyen", "A"), P("vrrm", "Tension inverse répétitive", "V")], "Dissipation thermique : radiateur selon le courant.", "Tension moyenne en double alternance : Umoy = 2·Umax/π (sans filtrage)."),
   I("puissance", "interrupteur", "Thyristor", "V", "Interrupteur commandé à l'amorçage par la gâchette, bloqué au passage par zéro du courant.", "Redresseurs commandés, gradateurs.", ["A", "K", "G"], [P("it", "Courant efficace", "A"), P("vdrm", "Tension de blocage", "V"), P("igt", "Courant de gâchette", "mA")], "Protection contre les dv/dt (circuit RC).", ""),
@@ -280,6 +282,9 @@ LIBRARY.push(
   I("agriculture", "capteur", "Capteur de température du sol", "TS", "Sonde enterrée de température.", "Suivi agronomique.", ["VCC", "GND", "DATA"], [], null, ""),
   I("agriculture", "équipement", "Station météo agricole", "MET", "Ensemble de capteurs (température, humidité, pluie, vent, rayonnement).", "Évapotranspiration, alertes.", ["alimentation", "données"], [], null, "Données modélisées de comparaison : NASA POWER (Earth & Space)."),
 );
+
+/** Bibliothèque complète : base + extension du 25/11/2026 (src/lib/library-plus.ts). */
+export const LIBRARY: LibItem[] = [...BASE, ...LIBRARY_PLUS];
 
 export const libraryByDiscipline = () => {
   const out = new Map<Discipline, LibItem[]>();

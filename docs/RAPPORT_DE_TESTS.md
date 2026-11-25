@@ -2,6 +2,14 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
+## Campagne du 25/11/2026 (suite) — logiciels de dimensionnement, bibliothèque étendue
+| Contrôle | Résultat |
+|---|---|
+| Typage strict, lint | ✅ 0 erreur |
+| Tests unitaires + intégration | ✅ **244/244** (33 fichiers). Nouveaux : `etudes` unitaires (21 : socle, installation électrique recalculée à la main, géométrie solaire — H0 de l'exemple 1.10.1 de Duffie & Beckman, Rb comparé à la formule de Klein, symétrie est/ouest —, photovoltaïque, hydraulique — viscosité, pression de vapeur, Colebrook-White comparé à Haaland, point de fonctionnement —, pompage) ; `etudes` intégration (4 : tableau normatif, enregistrement, exports Word/Excel/PDF/Markdown, projet, boutique, accès refusé à un tiers, géocodage avec `fetchImpl` explicite) |
+| Parcours de bout en bout | ✅ **19/19** (ordinateur + Pixel 7), dont `dimensionnement.spec.ts` (photovoltaïque et pompage : données manquantes signalées, exemple, calcul, enregistrement, export Word, schéma 2D). |
+| Défauts trouvés et corrigés | (1) Sur téléphone, les tableaux de saisie élargissaient la page (673 px pour un écran de 412 px) : corrigé (`min-w-0`). Le test « aucune page plus large que l'écran » comparait la page à la fenêtre (qui s'élargit aussi quand le téléphone dézoome) : il compare désormais à la largeur de l'ÉCRAN, ce qui a révélé un débordement de 33 px sur /exercices, corrigé. (2) Échecs intermittents des parcours : limitation de débit (429) atteinte par la suite de tests, qui crée des dizaines de comptes depuis une seule adresse → multiplicateur `XX_RATE_LIMIT_FACTOR` réservé au serveur local des tests (refusé par `verifier-config`) ; saisie avant hydratation dans `comptes.spec.ts` → attente du chargement. |
+
 ## Campagne du 25/11/2026 (audit exhaustif : documents, schémas, banque, exercices, boutique, FAD, appareils et suspension)
 | Contrôle | Résultat |
 |---|---|

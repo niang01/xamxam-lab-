@@ -90,6 +90,46 @@ function dolControl(g: G, y0 = 300) {
 
 export const GENERATORS: Generator[] = [
   {
+    kind: "tableau_unifilaire", title: "Unifilaire d'un tableau électrique (départs dimensionnés)", discipline: "electrique",
+    params: [
+      { key: "circuits", label: "Départs « nom/calibre A/section mm² » séparés par « ; »", unit: "", type: "text", default: "Éclairage/10/1.5;Prises/16/2.5" },
+      { key: "main", label: "Calibre de l'appareil général", unit: "A", type: "number", default: 32, min: 1, max: 4000 },
+      { key: "rcd", label: "Nombre d'interrupteurs différentiels", unit: "", type: "int", default: 1, min: 1, max: 8 },
+      { key: "idn", label: "Sensibilité des différentiels", unit: "mA", type: "number", default: 30, min: 1, max: 3000 },
+    ],
+    build: (p) => {
+      const g = new G();
+      const circuits = String(p.circuits).split(";").map((c) => c.trim()).filter(Boolean).slice(0, 24).map((c) => { const [name, inA, s] = c.split("/"); return { name: (name ?? "").trim() || "Départ", inA: (inA ?? "").trim(), s: (s ?? "").trim() }; });
+      const nR = Math.max(1, Math.min(8, Math.round(num(p, "rcd")), circuits.length || 1));
+      g.add({ id: "SRC", name: "Arrivée réseau (après compteur)", symbol: "AL", label: "Réseau", pins: ["L", "N"], x: -420, y: 0 });
+      g.add({ id: "QG", name: `Appareil général ${p.main} A`, symbol: "QF", label: "Q0", pins: ["L", "N", "L'", "N'"], x: -200, y: 0, params: { in: `${p.main} A` } });
+      g.w("SRC.L", "QG.L"); g.w("SRC.N", "QG.N");
+      const closed: [string, string][] = [["QG.L", "QG.L'"]];
+      for (let r = 1; r <= nR; r++) {
+        g.add({ id: `ID${r}`, name: `Interrupteur différentiel ${p.idn} mA`, symbol: "ID", label: `Q${r}0`, pins: ["L", "N", "L'", "N'"], x: 40, y: (r - 1) * 260, params: { idn: `${p.idn} mA` } });
+        g.w("QG.L'", `ID${r}.L`); g.w("QG.N'", `ID${r}.N`); closed.push([`ID${r}.L`, `ID${r}.L'`]);
+      }
+      circuits.forEach((c, i) => {
+        const r = (i % nR) + 1, id = `C${i + 1}`;
+        g.add({ id: `QF${i + 1}`, name: `Disjoncteur ${c.inA} A — ${c.name}`, symbol: "QF", label: `Q${r}${i + 1}`, pins: ["1", "2"], x: 300, y: i * 110, params: { in: `${c.inA} A` } });
+        g.add({ id, name: `${c.name} (${c.s} mm²)`, symbol: "E", label: id, pins: ["L", "N"], x: 560, y: i * 110, params: { s: `${c.s} mm²` } });
+        g.w(`ID${r}.L'`, `QF${i + 1}.1`); g.w(`QF${i + 1}.2`, `${id}.L`, `${c.s} mm²`); g.w(`ID${r}.N'`, `${id}.N`);
+        closed.push([`QF${i + 1}.1`, `QF${i + 1}.2`]);
+      });
+      const d = g.out("electrique");
+      return {
+        diagram: d, title: `Unifilaire — ${circuits.length} départ(s), ${nR} différentiel(s)`,
+        description: [`Arrivée → appareil général ${p.main} A → ${nR} interrupteur(s) différentiel(s) ${p.idn} mA → ${circuits.length} départ(s).`, "Calibres et sections issus de l'étude « Installation électrique » (Logiciels de dimensionnement)."],
+        checks: [
+          { ok: circuits.every((_, i) => conducts(d, "SRC.L", `C${i + 1}.L`, closed)), text: "Chaque départ est alimenté depuis l'arrivée à travers l'appareil général" },
+          { ok: circuits.every((_, i) => !conducts(d, "SRC.L", `C${i + 1}.L`, closed, [`QF${i + 1}`])), text: "Chaque départ est protégé par son disjoncteur (aucun chemin sans lui)" },
+          { ok: circuits.every((_, i) => !conducts(d, "SRC.L", `C${i + 1}.L`, closed, Array.from({ length: nR }, (_, r) => `ID${r + 1}`))), text: "Chaque départ est placé en aval d'un interrupteur différentiel" },
+        ],
+        warnings: ["Répartition des départs entre différentiels faite dans l'ordre : à adapter aux règles de la norme applicable (nombre de circuits par différentiel, type AC/A/F)."],
+      };
+    },
+  },
+  {
     kind: "demarrage_direct", title: "Démarrage direct d'un moteur triphasé (puissance et commande)", discipline: "electrique", params: MOTOR_PARAMS,
     build: (p) => {
       const g = new G(); dolPower(g); dolControl(g);

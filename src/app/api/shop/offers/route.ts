@@ -3,6 +3,7 @@ import { sql } from "@/server/db";
 import { requireProject } from "@/server/access";
 import { offersFor } from "@/server/shop";
 import { bankById } from "@/lib/bank";
+import { myStudy } from "@/server/studies";
 
 /** Offres de la boutique pour chaque composant d'un projet de la banque (?bank=) ou d'un projet personnel (?project=). */
 export const GET = endpoint(async (req) => {
@@ -11,7 +12,8 @@ export const GET = endpoint(async (req) => {
   let lines: { name: string; qty: number }[];
   if (sp.get("bank")) { const p = bankById(sp.get("bank")!); if (!p) throw new ApiFailure(404, "Projet introuvable", "err.notFound"); lines = p.components.map(([name, qty]) => ({ name, qty })); }
   else if (sp.get("project")) { await requireProject(sp.get("project")!, u, "viewer"); lines = await sql<{ name: string; qty: number }>("SELECT name, qty FROM project_components WHERE project_id=$1", [sp.get("project")]); }
-  else throw new ApiFailure(400, "Paramètre bank ou project requis", "err.invalid");
+  else if (sp.get("study")) { const st = await myStudy(sp.get("study")!, u); lines = st.result.bom.map((b) => ({ name: b.name, qty: b.qty })); }
+  else throw new ApiFailure(400, "Paramètre bank, project ou study requis", "err.invalid");
   const offers = await offersFor(lines.map((l) => l.name));
   return ok({ lines: lines.map((l) => ({ ...l, offers: offers[l.name] ?? [] })) });
 });

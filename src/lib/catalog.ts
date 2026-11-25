@@ -9,6 +9,7 @@ export const RUBRICS: Rubric[] = [
   { key: "command", path: "/command-center", group: "core", icon: "⌘" },
   { key: "automation", path: "/automation", group: "core", icon: "⟳" },
   { key: "lab", path: "/lab", group: "lab", icon: "⬡" },
+  { key: "sizing", path: "/dimensionnement", group: "lab", icon: "∑" },
   { key: "electrical", path: "/lab/electrical", group: "lab", icon: "⚡" },
   { key: "electronics", path: "/lab/electronics", group: "lab", icon: "∿" },
   { key: "solar", path: "/lab/solar", group: "lab", icon: "☀" },

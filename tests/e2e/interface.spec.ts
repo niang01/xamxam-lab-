@@ -34,7 +34,7 @@ test("identité : logo, thème sombre par défaut puis clair mémorisé, barre d
   // Panneau Aláji IA depuis un laboratoire : même route et même gouvernance que la page Aláji IA
   await page.goto("/lab/electrical");
   await page.click("[data-testid=ai-panel-toggle]");
-  await expect(page.locator("[data-testid=ai-panel]")).toContainText("Electrical Lab");
+  await expect(page.locator("[data-testid=ai-panel]")).toContainText("Électricité et Électrotechnique");
   await page.fill("[data-testid=ai-panel] textarea", "Courant pour 12 V et 6 ohms");
   await page.click("[data-testid=ai-panel-send]");
   const thread = page.locator("[data-testid=ai-panel-thread]");

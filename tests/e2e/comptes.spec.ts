@@ -35,7 +35,9 @@ test("comptes : profil, déconnexion, mot de passe oublié, lien de réinitialis
   await page.click("text=Déconnexion");
   await expect(page).toHaveURL(/connexion/);
   await page.click("[data-testid=forgot-link]");
+  await page.waitForLoadState("networkidle"); // champ contrôlé : saisir après l'hydratation (sinon valeur effacée)
   await page.fill("input[name=email]", email);
+  await expect(page.locator("input[name=email]")).toHaveValue(email);
   await page.click("button[type=submit]");
   await expect(page.locator("[data-testid=forgot-nomail]")).toContainText("administrateur");
 
