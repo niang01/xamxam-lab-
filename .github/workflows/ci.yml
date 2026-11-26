@@ -21,8 +21,8 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -r workers/requirements.txt
       - run: npm ci
-      # Laboratoire IoT : chaîne de compilation Arduino (tests de compilation et de simulation réelles).
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-avr binutils-avr avr-libc arduino-core-avr
+      # Outils système de l'image de production : Poppler et Tesseract (documents, OCR), chaîne de compilation Arduino (laboratoire IoT).
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng gcc-avr binutils-avr avr-libc arduino-core-avr
       - run: npm run typecheck
       - run: npm run lint
       - run: XX_PYTHON="$(which python)" npm test
