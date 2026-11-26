@@ -23,6 +23,8 @@ test("espaces : projet depuis un modèle, budget, schéma 2D, scénario 4D, maqu
 
   // Bibliothèque : filtre par discipline et paramètres
   await page.goto("/components");
+  // Bibliothèque illustrée : symboles conventionnels affichés (CEI 60617, ISO 1219, ISA 5.1)
+  await expect(page.locator("svg[data-glyph]").first()).toBeVisible({ timeout: 20_000 });
   await page.selectOption("select[name=discipline]", "hydraulique");
   await page.locator("[data-component='Électrovanne'] button").first().click();
   await expect(page.locator("[data-testid=comp-params]")).toContainText("Tension de bobine");

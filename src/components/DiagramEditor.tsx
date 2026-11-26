@@ -10,7 +10,8 @@ import { Btn, Card, ErrorBox, Field, Input, Pill, Select } from "./ui";
 import { ProjectPicker } from "./ProjectPicker";
 import { useData } from "@/lib/client/hooks";
 import { api, post, put } from "@/lib/client/api";
-import { BLOCK_W, blockHeight, bomOf, checkDiagram, diagramSvg, nextLabel, pinPoint, type Block, type Diagram, dimText, layerOf, layersOf } from "@/lib/diagram";
+import { SymbolIcon } from "./SymbolIcon";
+import { BLOCK_W, blockGlyph, blockHeight, bomOf, checkDiagram, diagramSvg, nextLabel, pinPoint, type Block, type Diagram, dimText, layerOf, layersOf } from "@/lib/diagram";
 import { DISCIPLINE_LABEL, type Discipline } from "@/lib/library";
 
 type Comp = { id: string; name: string; symbol2d: string | null; pins: string[]; params: { key: string; label: string; unit: string }[]; discipline: string | null; category: string };
@@ -158,7 +159,7 @@ export function DiagramEditor() {
           <Select aria-label={t("comp.discipline")} name="palette-discipline" value={disc} onChange={(e) => setDisc(e.target.value)} className="mb-2"><option value="">{t("comp.allDisciplines")}</option>{Object.entries(DISCIPLINE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
           <Input aria-label={t("c.search")} placeholder={t("c.search")} value={q} onChange={(e) => setQ(e.target.value)} className="mb-2" />
           <ul className="max-h-56 space-y-1 overflow-y-auto text-sm lg:max-h-[50vh]" data-testid="palette">{lib?.items.slice(0, 120).map((c) => (
-            <li key={c.id}><button className="w-full rounded px-2 py-1 text-left hover:bg-[var(--panel-2)]" data-palette={c.name} onClick={() => addComponent(c)}>＋ {c.name} <span className="text-xs text-[var(--fg-3)]">{c.discipline ? DISCIPLINE_LABEL[c.discipline as Discipline] : c.category}</span></button></li>))}</ul>
+            <li key={c.id}><button className="w-full rounded px-2 py-1 text-left hover:bg-[var(--panel-2)]" data-palette={c.name} onClick={() => addComponent(c)}><span className="inline-flex items-center gap-2"><SymbolIcon name={c.name} code={c.symbol2d} size={34} /><span>＋ {c.name}</span></span> <span className="text-xs text-[var(--fg-3)]">{c.discipline ? DISCIPLINE_LABEL[c.discipline as Discipline] : c.category}</span></button></li>))}</ul>
         </Card>
         <div className="order-1 space-y-3 lg:order-2">
           <Card>
@@ -189,13 +190,20 @@ export function DiagramEditor() {
               <rect x={view.x} y={view.y} width={view.w} height={view.h} fill="url(#grid)" pointerEvents="none" />
               {d.wires.map((w, i) => { if (hidden.has(w.a.block) || hidden.has(w.b.block)) return null; const a = byId.get(w.a.block), b = byId.get(w.b.block); if (!a || !b) return null; const [x1, y1] = pinPoint(a, w.a.pin), [x2, y2] = pinPoint(b, w.b.pin); const mx = (x1 + x2) / 2;
                 return <polyline key={i} data-wire={i} points={`${x1},${y1} ${mx},${y1} ${mx},${y2} ${x2},${y2}`} fill="none" stroke={selWire === i ? "var(--warn)" : "var(--cyan)"} strokeWidth={selWire === i ? 4 : 2} onPointerDown={(e) => { e.stopPropagation(); setSelWire(i); setSel(null); }} />; })}
-              {d.blocks.map((b) => { if (hidden.has(b.id)) return null; const h = blockHeight(b); return (
-                <g key={b.id} data-block={b.label}>
+              {d.blocks.map((b) => { if (hidden.has(b.id)) return null; const h = blockHeight(b); const gl = blockGlyph(b); return (
+                <g key={b.id} data-block={b.label} data-symbol={gl?.glyph.key ?? ""}>
                   <g transform={`rotate(${b.rot} ${b.x} ${b.y})`} onPointerDown={(e) => { e.stopPropagation(); const [x, y] = toSvgPoint(e); drag.current = { id: b.id, dx: x - b.x, dy: y - b.y }; setSel(b.id); setSelWire(null); }}>
-                    <rect x={b.x - BLOCK_W / 2} y={b.y - h / 2} width={BLOCK_W} height={h} rx={6} fill="var(--panel)" stroke={sel === b.id ? "var(--cyan)" : "var(--fg-2)"} strokeWidth={sel === b.id ? 2.5 : 1.5} />
+                    <rect x={b.x - BLOCK_W / 2} y={b.y - h / 2} width={BLOCK_W} height={h} rx={6} fill="var(--panel)" stroke={sel === b.id ? "var(--cyan)" : gl ? "var(--line)" : "var(--fg-2)"} strokeWidth={sel === b.id ? 2.5 : gl ? 1 : 1.5} />
                   </g>
-                  <text x={b.x} y={b.y - 4} textAnchor="middle" fontSize={12} fontWeight="bold" fill="var(--fg)" pointerEvents="none">{b.label}</text>
-                  <text x={b.x} y={b.y + 12} textAnchor="middle" fontSize={9} fill="var(--fg-3)" pointerEvents="none">{b.name.slice(0, 22)}</text>
+                  {gl ? <>
+                    <title>{`${b.name} — ${gl.glyph.title} (${gl.glyph.norm})`}</title>
+                    {gl.lines.map((l, i) => <polyline key={i} points={l.map(([x, y]) => `${x},${y}`).join(" ")} fill="none" stroke="var(--fg)" strokeWidth={1.3} strokeLinejoin="round" pointerEvents="none" />)}
+                    {gl.texts.map((tx, i) => <text key={`t${i}`} x={tx.x} y={tx.y} fontSize={tx.size} textAnchor="middle" fill="var(--fg)" pointerEvents="none">{tx.s}</text>)}
+                    <text x={b.x} y={b.y + h / 2 - 6} textAnchor="middle" fontSize={11} fontWeight="bold" fill="var(--fg)" pointerEvents="none">{b.label}</text>
+                  </> : <>
+                    <text x={b.x} y={b.y - 4} textAnchor="middle" fontSize={12} fontWeight="bold" fill="var(--fg)" pointerEvents="none">{b.label}</text>
+                    <text x={b.x} y={b.y + 12} textAnchor="middle" fontSize={9} fill="var(--fg-3)" pointerEvents="none">{b.name.slice(0, 22)}</text>
+                  </>}
                   {b.pins.map((p, i) => { const [px, py] = pinPoint(b, i); const on = pending?.block === b.id && pending.pin === i; return (
                     <g key={i} data-pin={`${b.label}.${p}`} onPointerDown={(e) => { e.stopPropagation(); onPinClick(b.id, i); }} style={{ cursor: "crosshair" }}>
                       <circle cx={px} cy={py} r={on ? 7 : 5} fill={on ? "var(--warn)" : "var(--cyan)"} /><text x={px} y={py - 8} textAnchor="middle" fontSize={8} fill="var(--fg-2)" pointerEvents="none">{p}</text>

@@ -36,6 +36,9 @@ test("dimensionnement : photovoltaïque et pompage (calcul, enregistrement, expo
   await page.click("[data-testid=study-diagram]");
   await expect(page).toHaveURL(/\/schemas\?generer=unifilaire_pv/);
   await expect(page.locator("[data-block]").first()).toBeVisible({ timeout: 30_000 });
+  // Symboles conventionnels dans l'éditeur : modules PV, onduleur, batterie
+  await expect(page.locator("[data-symbol=pv]").first()).toBeVisible();
+  await expect(page.locator("[data-symbol=inverter]")).toHaveCount(1);
   // Planche imprimable : enregistrer le schéma, puis PDF A3 avec cartouche et DXF
   await page.fill("input[name=diagram-title]", "Unifilaire PV e2e");
   // Cotation : deux points sur la planche, échelle 10 mm par unité ; calques

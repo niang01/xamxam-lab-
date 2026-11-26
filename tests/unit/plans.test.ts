@@ -25,7 +25,8 @@ describe("Impression des plans", () => {
     const lines = x.split("\n");
     expect(lines.length % 2).toBe(1); // paires code/valeur + fin de fichier
     expect(x).toContain("AC1009"); expect(x).toContain("LIAISONS"); expect(x.trim().endsWith("EOF")).toBe(true);
-    const n = (lines.filter((l, i) => i % 2 === 1 && l === "LINE")).length;
+    // Lignes des calques blocs et liaisons (les symboles conventionnels ont leur propre calque SYMBOLES).
+    const n = lines.filter((l, i) => i % 2 === 1 && l === "LINE" && lines[i + 2] !== "SYMBOLES").length;
     expect(n).toBe(d.blocks.length * 4 + d.wires.length * 3);
     expect(x).not.toMatch(/[^\x00-\x7f]/); // ASCII strict (accents translittérés)
   });

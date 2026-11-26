@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { SymbolIcon } from "@/components/SymbolIcon";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
@@ -50,7 +51,7 @@ export default function Components() {
           {data?.items.map((c) => (
             <li key={c.id} className="py-2 text-sm" data-component={c.name}>
               <button className="flex w-full flex-wrap items-center justify-between gap-2 text-left" onClick={() => setOpen(open === c.id ? null : c.id)}>
-                <span><strong>{c.name}</strong>{c.mpn && c.mpn !== "generic" ? <span className="text-[var(--fg-3)]"> · {c.manufacturer} {c.mpn}</span> : null}</span>
+                <span className="flex items-center gap-2"><SymbolIcon name={c.name} code={c.symbol2d} /><span><strong>{c.name}</strong>{c.mpn && c.mpn !== "generic" ? <span className="text-[var(--fg-3)]"> · {c.manufacturer} {c.mpn}</span> : null}</span></span>
                 <span className="flex gap-1"><Pill>{c.category}</Pill><Pill tone={c.status === "verified" ? "ok" : c.status === "generic" ? "info" : "warn"}>{t(`comp.status.${c.status}` as "comp.status.generic")}</Pill>{c.symbol_kind && <Pill tone="info">SPICE</Pill>}</span>
               </button>
               {open === c.id && (

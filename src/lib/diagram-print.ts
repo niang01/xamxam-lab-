@@ -4,7 +4,7 @@
  * lisible par les logiciels de CAO (LibreCAD, QCAD, AutoCAD…). Le dessin reste modifiable dans l'éditeur 2D : ces
  * fichiers sont des sorties, l'original éditable est le schéma XAM-XAM LAB (JSON versionné).
  */
-import { BLOCK_W, blockHeight, bomOf, dimText, layerOf, pinPoint, visibleDiagram, type Block, type Diagram } from "./diagram";
+import { BLOCK_W, blockGlyph, blockHeight, bomOf, dimText, layerOf, pinPoint, visibleDiagram, type Block, type Diagram } from "./diagram";
 import { pdfStr, winAnsi } from "./docs/export";
 
 export const SHEETS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841] } as const;
@@ -56,9 +56,18 @@ export function diagramPdf(full: Diagram, m: PrintMeta): { pdf: Uint8Array; mmPe
   ops.push("0 0 0 RG 0.6 w");
   for (const bl of d.blocks) {
     const c = rectCorners(bl).map(([x, y]) => [X(x), Yd(y)] as [number, number]);
-    line([...c, c[0]]);
-    txt(X(bl.x) - (bl.label.length * fs * 0.3), Yd(bl.y) + fs * 0.2, bl.label, fs, true);
-    txt(X(bl.x) - (Math.min(bl.name.length, 24) * fs * 0.22), Yd(bl.y) - fs, bl.name.slice(0, 24), fs * 0.75);
+    const gl = blockGlyph(bl);
+    if (gl) {
+      // Symbole conventionnel ; cadre de l'élément en trait fin, repère sous le symbole.
+      ops.push("0.6 0.6 0.6 RG 0.3 w"); line([...c, c[0]]); ops.push("0 0 0 RG 0.6 w");
+      for (const l of gl.lines) line(l.map(([x, y]) => [X(x), Yd(y)]));
+      for (const t of gl.texts) txt(X(t.x) - t.s.length * fs * 0.25, Yd(t.y), t.s, fs * (t.size / 10));
+      txt(X(bl.x) - (bl.label.length * fs * 0.3), Yd(bl.y + blockHeight(bl) / 2 - 6), bl.label, fs, true);
+    } else {
+      line([...c, c[0]]);
+      txt(X(bl.x) - (bl.label.length * fs * 0.3), Yd(bl.y) + fs * 0.2, bl.label, fs, true);
+      txt(X(bl.x) - (Math.min(bl.name.length, 24) * fs * 0.22), Yd(bl.y) - fs, bl.name.slice(0, 24), fs * 0.75);
+    }
     bl.pins.forEach((p, i) => { const [px, py] = pinPoint(bl, i); ops.push(`${(X(px) - 1).toFixed(2)} ${(Yd(py) - 1).toFixed(2)} 2 2 re f`); txt(X(px) + 2, Yd(py) + 2, p, fs * 0.6); });
   }
   for (const n of d.notes) txt(X(n.x), Yd(n.y), n.text.slice(0, 120), fs * 0.85);
@@ -113,13 +122,18 @@ export function diagramDxf(full: Diagram, title = ""): string {
   const textE = (layer: string, x: number, y: number, h: number, s: string) => { g(0, "TEXT"); g(8, layer); g(10, x); g(20, -y); g(30, 0); g(40, h); g(1, ascii(s)); };
   g(0, "SECTION"); g(2, "HEADER"); g(9, "$ACADVER"); g(1, "AC1009"); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "TABLES"); g(0, "TABLE"); g(2, "LAYER"); g(70, 4);
-  for (const [name, color] of [["BLOCS", 7], ["LIAISONS", 4], ["TEXTES", 3], ["NOTES", 2], ["COTES", 1], ...blockLayers.map((n) => [`BLOCS_${n}`, 7] as const)]) { g(0, "LAYER"); g(2, name); g(70, 0); g(62, color); g(6, "CONTINUOUS"); }
+  for (const [name, color] of [["BLOCS", 7], ["SYMBOLES", 7], ["LIAISONS", 4], ["TEXTES", 3], ["NOTES", 2], ["COTES", 1], ...blockLayers.map((n) => [`BLOCS_${n}`, 7] as const)]) { g(0, "LAYER"); g(2, name); g(70, 0); g(62, color); g(6, "CONTINUOUS"); }
   g(0, "ENDTAB"); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "ENTITIES");
   for (const b of d.blocks) {
     const c = rectCorners(b);
     const lay = `BLOCS_${ascii0(layerOf(b)).toUpperCase().replace(/[^A-Z0-9_-]/g, "_")}`;
     for (let i = 0; i < 4; i++) lineE(lay, c[i], c[(i + 1) % 4]);
+    const gl = blockGlyph(b);
+    if (gl) {
+      for (const l of gl.lines) for (let i = 0; i < l.length - 1; i++) lineE("SYMBOLES", l[i], l[i + 1]);
+      for (const t of gl.texts) textE("SYMBOLES", t.x - t.s.length * t.size * 0.3, t.y, t.size * 0.8, t.s);
+    }
     textE("TEXTES", b.x - BLOCK_W / 2 + 6, b.y, 10, b.label);
     textE("TEXTES", b.x - BLOCK_W / 2 + 6, b.y + 14, 6, b.name.slice(0, 40));
     b.pins.forEach((p, i) => { const [px, py] = pinPoint(b, i); textE("TEXTES", px + 2, py - 2, 4, p); });

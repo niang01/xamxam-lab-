@@ -5,6 +5,7 @@
  * les scénarios temporels dans le Studio 4D.
  */
 import { z } from "zod";
+import { glyphFor, placeGlyph, type Glyph, type Pt } from "./symbols";
 
 export const blockSchema = z.object({
   id: z.string().min(1).max(40), component_id: z.string().uuid().nullable().optional(), name: z.string().min(1).max(120),
@@ -43,6 +44,16 @@ export function pinPoint(b: Block, i: number): [number, number] {
   const lx = side * (BLOCK_W / 2 + 10), ly = -h / 2 + 30 + row * PIN_STEP;
   const r = (b.rot * Math.PI) / 180;
   return [Math.round(b.x + lx * Math.cos(r) - ly * Math.sin(r)), Math.round(b.y + lx * Math.sin(r) + ly * Math.cos(r))];
+}
+
+/** Symbole conventionnel placé dans un bloc (centre décalé vers le haut, rotation du bloc), ou null. */
+export const GLYPH_DY = -6, GLYPH_SCALE = 0.9;
+export function blockGlyph(b: Block): { glyph: Glyph; lines: Pt[][]; texts: Glyph["texts"] } | null {
+  const glyph = glyphFor(b.name, b.symbol);
+  if (!glyph) return null;
+  const p = placeGlyph(glyph, 0, GLYPH_DY, b.rot, GLYPH_SCALE);
+  const sh = ([x, y]: Pt): Pt => [Math.round((b.x + x) * 100) / 100, Math.round((b.y + y) * 100) / 100];
+  return { glyph, lines: p.lines.map((l) => l.map(sh)), texts: p.texts.map((t) => { const [x, y] = sh([t.x, t.y]); return { ...t, x, y }; }) };
 }
 
 export interface Check { errors: string[]; warnings: string[]; nets: number }
@@ -108,7 +119,13 @@ export function diagramSvg(full: Diagram, title = ""): string {
   const blocks = d.blocks.map((b) => {
     const h = blockHeight(b);
     const pins = b.pins.map((p, i) => { const [px, py] = pinPoint(b, i); return `<circle cx="${px}" cy="${py}" r="3" fill="#111"/><text x="${px}" y="${py - 5}" font-size="8" text-anchor="middle" fill="#333">${esc(p)}</text>`; }).join("");
-    return `<g><rect x="${b.x - BLOCK_W / 2}" y="${b.y - h / 2}" width="${BLOCK_W}" height="${h}" rx="6" fill="#fff" stroke="#111" stroke-width="1.5" transform="rotate(${b.rot} ${b.x} ${b.y})"/><text x="${b.x}" y="${b.y - 4}" font-size="12" font-weight="bold" text-anchor="middle">${esc(b.label)}</text><text x="${b.x}" y="${b.y + 12}" font-size="9" text-anchor="middle" fill="#444">${esc(b.name.slice(0, 22))}</text>${pins}</g>`;
+    const gl = blockGlyph(b);
+    const body = gl
+      ? gl.lines.map((l) => `<polyline points="${l.map(([x, y]) => `${x},${y}`).join(" ")}" fill="none" stroke="#111" stroke-width="1.3" stroke-linejoin="round"/>`).join("")
+        + gl.texts.map((t) => `<text x="${t.x}" y="${t.y}" font-size="${t.size}" text-anchor="middle">${esc(t.s)}</text>`).join("")
+        + `<text x="${b.x}" y="${b.y + h / 2 - 6}" font-size="11" font-weight="bold" text-anchor="middle">${esc(b.label)}</text><title>${esc(`${b.name} — ${gl.glyph.title} (${gl.glyph.norm})`)}</title>`
+      : `<text x="${b.x}" y="${b.y - 4}" font-size="12" font-weight="bold" text-anchor="middle">${esc(b.label)}</text><text x="${b.x}" y="${b.y + 12}" font-size="9" text-anchor="middle" fill="#444">${esc(b.name.slice(0, 22))}</text>`;
+    return `<g data-symbol="${gl?.glyph.key ?? ""}"><rect x="${b.x - BLOCK_W / 2}" y="${b.y - h / 2}" width="${BLOCK_W}" height="${h}" rx="6" fill="#fff" stroke="${gl ? "#bbb" : "#111"}" stroke-width="${gl ? 0.8 : 1.5}" transform="rotate(${b.rot} ${b.x} ${b.y})"/>${body}${pins}</g>`;
   }).join("");
   const notes = d.notes.map((n) => `<text x="${n.x}" y="${n.y}" font-size="11" fill="#555">${esc(n.text)}</text>`).join("")
     + (d.dims ?? []).map((c) => `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x2}" y2="${c.y2}" stroke="#b45309" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/><text x="${(c.x1 + c.x2) / 2}" y="${(c.y1 + c.y2) / 2 - 4}" font-size="10" text-anchor="middle" fill="#b45309">${esc(dimText(d, c))}</text>`).join("");
