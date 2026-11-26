@@ -10,7 +10,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 const CORE_DIR = process.env.XX_ARDUINO_CORE ?? "/usr/share/arduino/hardware/arduino/avr";
-const FLAGS = ["-mmcu=atmega328p", "-DF_CPU=16000000L", "-DARDUINO=10806", "-DARDUINO_AVR_UNO", "-DARDUINO_ARCH_AVR", "-Os", "-ffunction-sections", "-fdata-sections", "-w"];
+// DECIMAL_DIG : avr-gcc 5 (Debian bookworm) ne le définit pas en C++11 alors que le cœur Arduino l'utilise (WString.cpp) ;
+// on reprend la constante interne du compilateur (float.h fait #undef avant de la redéfinir dans les versions récentes).
+const FLAGS = ["-DDECIMAL_DIG=__DECIMAL_DIG__", "-mmcu=atmega328p", "-DF_CPU=16000000L", "-DARDUINO=10806", "-DARDUINO_AVR_UNO", "-DARDUINO_ARCH_AVR", "-Os", "-ffunction-sections", "-fdata-sections", "-w"];
 const INCLUDES = () => ["-I", path.join(CORE_DIR, "cores", "arduino"), "-I", path.join(CORE_DIR, "variants", "standard")];
 
 export function toolchainStatus(): { available: boolean; reason: string | null } {
@@ -34,7 +36,7 @@ function run(cmd: string, args: string[], cwd: string, timeoutMs = 60_000): Prom
 let coreBuilding: Promise<string> | null = null;
 /** Bibliothèque du cœur Arduino compilée une fois par processus. */
 async function coreArchive(): Promise<string> {
-  const dir = path.join(tmpdir(), "xx-avr-core-v1");
+  const dir = path.join(tmpdir(), "xx-avr-core-v2");
   const archive = path.join(dir, "core.a");
   if (existsSync(archive)) return archive;
   coreBuilding ??= (async () => {
