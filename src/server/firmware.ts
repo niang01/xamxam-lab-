@@ -76,7 +76,9 @@ export interface CompileResult { ok: boolean; hex: string | null; flashBytes: nu
 export async function compileUno(source: string): Promise<CompileResult> {
   const st = toolchainStatus();
   if (!st.available) return { ok: false, hex: null, flashBytes: null, log: `Compilation indisponible sur ce serveur : ${st.reason}.` };
-  const core = await coreArchive();
+  let core: string;
+  try { core = await coreArchive(); }
+  catch (e) { return { ok: false, hex: null, flashBytes: null, log: `Compilation indisponible : ${e instanceof Error ? e.message : String(e)}` }; }
   const dir = mkdtempSync(path.join(tmpdir(), "xx-sketch-"));
   try {
     const protos = prototypes(source);
