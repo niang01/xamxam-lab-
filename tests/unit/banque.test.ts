@@ -84,3 +84,18 @@ describe("Banque IoT multisectorielle", () => {
     }
   });
 });
+
+import { bankDossier, dossierMarkdown } from "@/lib/bank/dossier";
+import { BANK as ALL } from "@/lib/bank";
+describe("Dossier complet en 35 rubriques", () => {
+  it("chaque projet : 35 rubriques numérotées, toutes renseignées ; sécurité IoT pour les projets IoT", () => {
+    for (const p of ALL) {
+      const d = bankDossier(p);
+      expect(d.map((x) => x.n)).toEqual(Array.from({ length: 35 }, (_, i) => i + 1));
+      for (const s of d) expect(s.body.length, `${p.id} ${s.title}`).toBeGreaterThan(0);
+      if (p.iot) expect(d[30].body.join(" ")).toContain("jeton");
+    }
+    const md = dossierMarkdown(ALL[0]);
+    expect(md).toContain("## 35. Documentation et références"); expect(md).toContain("## 25. Explication du code");
+  });
+});

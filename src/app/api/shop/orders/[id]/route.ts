@@ -7,7 +7,7 @@ type Ctx = { params: Promise<{ id: string }> };
 export const POST = endpoint<Ctx>(async (req, ctx) => {
   const u = await mustBeSignedIn(req);
   const id = await uuidParam(ctx);
-  const b = await readInput(req, z.object({ status: z.enum(["confirmed", "shipped", "delivered", "cancelled", "refused"]), note: z.string().trim().max(500).nullable().default(null) }));
+  const b = await readInput(req, z.object({ status: z.enum(["confirmed", "shipped", "delivered", "cancelled", "refused", "return_requested", "returned", "return_refused"]), note: z.string().trim().max(500).nullable().default(null) }));
   await transition(u, id, b.status, b.note);
   return ok({ ok: true });
 });

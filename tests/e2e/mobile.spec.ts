@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { ALERT, signup } from "./helpers";
 import { RUBRICS } from "../../src/lib/catalog";
+import { SOFTWARE } from "../../src/lib/studies";
 
 test("téléphone : menu, aucune page plus large que l'écran", async ({ page }) => {
   await signup(page, `mobile-${Date.now()}@e2e.local`, "student");
   await page.getByRole("button", { name: "Menu" }).click();
   await expect(page.locator("[data-nav=solar]")).toBeVisible();
   // Pages des logiciels de dimensionnement (formulaires larges : tableaux de lignes, 12 mois).
-  const extra = ["installation-electrique", "photovoltaique", "pompage", "solaire-thermique", "sechage-solaire", "biomasse-biogaz", "compostage"].map((k) => `/dimensionnement/${k}`).map((path) => ({ path }));
+  const extra = SOFTWARE.map((s) => `/dimensionnement/${s.key}`).map((path) => ({ path }));
   for (const r of [...RUBRICS, ...extra]) {
     await page.goto(r.path);
     await expect(page.locator("h1").first()).toBeVisible();

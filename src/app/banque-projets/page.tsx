@@ -9,9 +9,9 @@ import { useData } from "@/lib/client/hooks";
 import { api, post } from "@/lib/client/api";
 import type { BankProject } from "@/lib/bank/types";
 
-type Item = { id: string; title: string; filiere: string; domain: string; level: string; iot: boolean; components: number; code: boolean; favorite: boolean };
+type Item = { id: string; title: string; filiere: string; domain: string; level: string; iot: boolean; components: number; code: boolean; favorite: boolean; progress: string | null };
 type List = { items: Item[]; inventory: { total: number; iot: number }; sectors: { key: string; label: string; critical: boolean }[]; filieres: { key: string; label: string }[]; levels: { key: string; label: string }[] };
-type Detail = BankProject & { favorite: boolean; component_ids: Record<string, string>; code_source: { title: string; network: boolean; source: string } | null };
+type Detail = BankProject & { progress: string | null; dossier: { n: number; title: string; body: string[] }[]; favorite: boolean; component_ids: Record<string, string>; code_source: { title: string; network: boolean; source: string } | null };
 
 function Sec({ n, title, children }: { n: number; title: string; children: React.ReactNode }) { return <section className="space-y-1"><h3 className="font-semibold text-[var(--cyan)]">{n}. {title}</h3><div className="text-sm">{children}</div></section>; }
 function L({ xs }: { xs: string[] }) { return <ul className="list-disc space-y-0.5 pl-5">{xs.map((x) => <li key={x}>{x}</li>)}</ul>; }
@@ -19,7 +19,7 @@ function L({ xs }: { xs: string[] }) { return <ul className="list-disc space-y-0
 export default function Bank() {
   const { t } = useApp();
   const router = useRouter();
-  const [f, setF] = useState({ q: "", filiere: "", secteur: "", level: "", iot: "", favoris: "" });
+  const [f, setF] = useState({ q: "", filiere: "", secteur: "", level: "", iot: "", favoris: "", progression: "" });
   const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
   const { data, reload } = useData<List>(`/api/bank?${qs}`);
   const [open, setOpen] = useState<Detail | null>(null);
@@ -34,6 +34,9 @@ export default function Bank() {
       {open && (
         <Card title={open.title} testId="bank-detail" actions={<span className="flex flex-wrap gap-2">
           <Btn onClick={() => act("realise")} data-testid="bank-realise">{t("bank.realise")}</Btn>
+          <Btn kind="ghost" data-testid="bank-progress-doing" onClick={() => act("en_cours")}>{open.progress === "en_cours" ? "● " : ""}{t("bank.doing")}</Btn>
+          <Btn kind="ghost" data-testid="bank-progress-done" onClick={() => act("termine")}>{open.progress === "termine" ? "● " : ""}{t("bank.done")}</Btn>
+          {(["pdf", "docx", "md"] as const).map((fm) => <a key={fm} className="rounded-lg border border-[var(--line)] px-2 py-1 text-xs" data-testid={`bank-dossier-${fm}`} href={`/api/bank/${encodeURIComponent(open.id)}/dossier?format=${fm}`}>{t("bank.dossier")} {fm.toUpperCase()}</a>)}
           <Btn kind="ghost" onClick={() => act(open.favorite ? "unfavorite" : "favorite")} data-testid="bank-fav">{open.favorite ? `★ ${t("bank.saved")}` : `☆ ${t("bank.save")}`}</Btn>
           <Btn kind="ghost" onClick={() => setOpen(null)}>{t("c.close")}</Btn></span>}>
           <div className="space-y-4">
@@ -55,6 +58,8 @@ export default function Bank() {
             <Sec n={15} title={t("bank.s15")}>{open.faults.length ? <div className="overflow-x-auto"><table className="text-xs"><thead><tr className="text-left text-[var(--fg-3)]"><th className="pr-3">{t("bank.symptom")}</th><th className="pr-3">{t("bank.cause")}</th><th>{t("bank.remedy")}</th></tr></thead><tbody>{open.faults.map(([s, c, r]) => <tr key={s} className="border-t border-[var(--line)]"><td className="pr-3">{s}</td><td className="pr-3">{c}</td><td>{r}</td></tr>)}</tbody></table></div> : <p>—</p>}</Sec>
             <Sec n={16} title={t("bank.s16")}><L xs={open.applications} /></Sec>
             <Sec n={17} title={t("bank.s17")}><L xs={open.improvements} /></Sec>
+            <details className="rounded-lg border border-[var(--line)] p-2" data-testid="bank-dossier"><summary className="cursor-pointer font-semibold">{t("bank.dossier35")}</summary>
+              <ol className="mt-2 space-y-2 text-sm">{open.dossier.map((d) => <li key={d.n}><strong>{d.n}. {d.title}</strong><ul className="list-disc pl-5">{d.body.map((b, i) => <li key={i}>{b}</li>)}</ul></li>)}</ol></details>
           </div>
         </Card>
       )}
@@ -66,6 +71,7 @@ export default function Bank() {
           <Select aria-label={t("bank.sector")} name="bank-sector" value={f.secteur} onChange={(e) => setF({ ...f, secteur: e.target.value })}><option value="">{t("bank.allSectors", { n: data?.sectors.length ?? 0 })}</option>{data?.sectors.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</Select>
           <Select aria-label="IoT" name="bank-iot" value={f.iot} onChange={(e) => setF({ ...f, iot: e.target.value })}><option value="">{t("bank.allTypes")}</option><option value="1">IoT</option><option value="0">{t("bank.nonIot")}</option></Select>
           <Select aria-label={t("bank.saved")} name="bank-fav" value={f.favoris} onChange={(e) => setF({ ...f, favoris: e.target.value })}><option value="">{t("bank.all")}</option><option value="1">★ {t("bank.myFavorites")}</option></Select>
+          <Select aria-label={t("bank.progress")} name="bank-progress" value={f.progression} onChange={(e) => setF({ ...f, progression: e.target.value })}><option value="">{t("bank.progressAll")}</option><option value="en_cours">{t("bank.doing")}</option><option value="termine">{t("bank.done")}</option></Select>
         </div>
         <p className="mb-2 text-xs text-[var(--fg-3)]" data-testid="bank-count">{data ? t("bank.count", { n: data.items.length }) : t("c.loading")}</p>
         <ul className="divide-y divide-[var(--line)] text-sm">{data?.items.slice(0, 300).map((p) => (

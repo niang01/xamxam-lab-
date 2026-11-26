@@ -150,3 +150,15 @@ describe("Historique d'Aláji IA supprimable", () => {
     expect((await sql("SELECT 1 FROM ai_messages m JOIN ai_conversations c ON c.id=m.conversation_id WHERE c.user_id=(SELECT id FROM users WHERE email='alaji@test.local')")).length).toBe(0);
   });
 });
+
+import { executeStepForTest } from "./ai-helpers";
+describe("Aláji IA et logiciels de dimensionnement", () => {
+  it("orientation vers le bon logiciel ; outil run_study : calcul par le moteur, donnée absente signalée", async () => {
+    const r = await ask("Je veux dimensionner l'irrigation goutte-à-goutte de mon champ");
+    expect(r.json.answer as string).toContain("/dimensionnement/irrigation");
+    const ok = await executeStepForTest("run_study", { software: "drones", input: { m_frame: 900, m_bat: 450, m_payload: 300, n: 4, thrust: 1100, p_hover: 85, v_bat: 14.8, cap: 5000, usable: 80, tw_min: 2 } }) as { ok: boolean; summary: { label: string; value: number }[] };
+    expect(ok.ok).toBe(true); expect(ok.summary[0].value).toBeCloseTo(2.667, 2);
+    const miss = await executeStepForTest("run_study", { software: "drones", input: { m_frame: 900 } }) as { ok: boolean; missing: string[] };
+    expect(miss.ok).toBe(false); expect(miss.missing.join()).toContain("poussée");
+  });
+});

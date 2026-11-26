@@ -63,7 +63,7 @@ export const PUMPING: Software = {
       title: "5. Alimentation électrique", fields: [
         { key: "supply", label: "Alimentation", type: "select", options: [{ v: "reseau", l: "Réseau électrique" }, { v: "groupe", l: "Groupe électrogène" }, { v: "solaire", l: "Photovoltaïque au fil du soleil" }] },
         { key: "phases", label: "Moteur (1 ou 3 phases ; DC pour le solaire)", type: "int" }, { key: "u", label: "Tension d'alimentation du moteur", unit: "V", type: "number" }, { key: "cos", label: "cos φ du moteur", type: "number" },
-        { key: "start", label: "Démarrage", type: "select", options: [{ v: "direct", l: "Direct" }, { v: "etoile_triangle", l: "Étoile-triangle" }, { v: "progressif", l: "Démarreur progressif" }, { v: "variateur", l: "Variateur de fréquence" }] },
+        { key: "start", label: "Démarrage", type: "select", options: [{ v: "direct", l: "Direct" }, { v: "etoile_triangle", l: "Étoile-triangle" }, { v: "progressif", l: "Démarreur progressif" }, { v: "variateur", l: "Variateur de vitesse" }] },
         { key: "start_factor", label: "Rapport courant de démarrage / courant nominal", type: "number", optional: true, hint: "Fiche du moteur ou du démarreur (pour le groupe électrogène)" },
         { key: "l_cable", label: "Longueur du câble d'alimentation (aller)", unit: "m", type: "number" }, { key: "du_max", label: "Chute de tension maximale", unit: "%", type: "number" },
         { key: "t_cable", label: "Température de l'âme", unit: "°C", type: "number" },
@@ -253,7 +253,7 @@ export const PUMPING: Software = {
     bom.push({ name: "Réservoir / château d'eau", qty: 1, unit: "u", spec: `${r2(vDay * storage!, 4)} m³` });
     bom.push({ name: "Câble électrique", qty: r2(lC!, 4), unit: "m", spec: `${sec ?? "?"} mm², ${dc ? "2" : tri ? "4" : "3"} conducteurs` });
     if (!dc) bom.push({ name: "Disjoncteur moteur", qty: 1, unit: "u", spec: `réglage ≥ ${r2(iN, 3)} A` });
-    if (!dc) bom.push({ name: start === "etoile_triangle" ? "Démarreur étoile-triangle" : start === "progressif" ? "Démarreur progressif" : start === "variateur" ? "Variateur de fréquence" : "Démarreur direct", qty: 1, unit: "u", spec: `${r2(pMotor! / 1000, 3)} kW` });
+    if (!dc) bom.push({ name: start === "etoile_triangle" ? "Démarreur étoile-triangle" : start === "progressif" ? "Démarreur progressif" : start === "variateur" ? "Variateur de vitesse" : "Démarreur direct", qty: 1, unit: "u", spec: `${r2(pMotor! / 1000, 3)} kW` });
     bom.push({ name: "Coffret industriel étanche", qty: 1, unit: "u", spec: "commande et protection de la pompe" });
     res.bom = bom;
     res.summary = [{ label: "Débit au point de fonctionnement", value: r2(op.q, 3), unit: "m³/h" }, { label: "HMT", value: r2(op.h, 3), unit: "m" }, { label: "Puissance électrique absorbée", value: r2(pElec / 1000, 3), unit: "kW" }];

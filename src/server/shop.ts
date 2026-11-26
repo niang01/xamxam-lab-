@@ -11,13 +11,13 @@ import { canTransition, orderTotal, type OrderStatus } from "@/lib/shop";
 
 export const LISTING_VISIBLE = "l.status='published' AND l.moderation='visible' AND l.shop_section IS NOT NULL";
 
-export async function catalog(f: { q: string; section: string | null; maxPrice: number | null }) {
+export async function catalog(f: { q: string; section: string | null; maxPrice: number | null; sort?: "recent" | "price_asc" | "price_desc" }) {
   return sql(`SELECT l.id, l.title, l.description, l.category, l.condition, l.price_xof, l.quantity, l.location, l.delivery, l.specs, l.shop_section, l.datasheet_url, l.component_id,
       l.seller_id, COALESCE(v.business_name, u.display_name) AS seller, COALESCE(v.verified, false) AS seller_verified,
       (SELECT id FROM listing_images i WHERE i.listing_id=l.id ORDER BY created_at LIMIT 1) AS image_id
     FROM market_listings l JOIN users u ON u.id=l.seller_id LEFT JOIN shop_vendors v ON v.user_id=l.seller_id
     WHERE ${LISTING_VISIBLE} AND ($1='' OR l.title ILIKE '%'||$1||'%' OR l.description ILIKE '%'||$1||'%') AND ($2::text IS NULL OR l.shop_section=$2) AND ($3::bigint IS NULL OR l.price_xof <= $3)
-    ORDER BY l.sponsored DESC, l.created_at DESC LIMIT 300`, [f.q, f.section, f.maxPrice]);
+    ORDER BY ${f.sort === "price_asc" ? "l.price_xof ASC NULLS LAST," : f.sort === "price_desc" ? "l.price_xof DESC NULLS LAST," : "l.sponsored DESC,"} l.created_at DESC LIMIT 300`, [f.q, f.section, f.maxPrice]);
 }
 
 export async function addToCart(u: User, listingId: string, qty: number) {
@@ -80,7 +80,8 @@ export async function transition(u: User, orderId: string, to: OrderStatus, note
       if (!r.length) throw new ApiFailure(409, `Stock insuffisant pour « ${it.title} » : mettez le stock à jour ou refusez la commande`, "shop.err.stock");
     }
   }
-  if (to === "cancelled" && o.status === "confirmed") {
+  if (["return_requested", "return_refused"].includes(to) && !note?.trim()) throw new ApiFailure(400, "Motif obligatoire", "shop.err.reason");
+  if (to === "cancelled" && o.status === "confirmed" || to === "returned") {
     for (const it of items) if (it.listing_id) await sql("UPDATE market_listings SET quantity = quantity + $2, status = CASE WHEN status='sold' THEN 'published' ELSE status END WHERE id=$1 AND quantity IS NOT NULL", [it.listing_id, it.qty]);
   }
   await sql("UPDATE shop_orders SET status=$2, updated_at=now() WHERE id=$1", [orderId, to]);

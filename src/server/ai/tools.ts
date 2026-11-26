@@ -20,6 +20,8 @@ import { automationSpec } from "@/lib/automation";
 import { MARKET_CATEGORIES } from "@/lib/market";
 import type { ToolEffect } from "@/lib/autonomy";
 import { projectReportMarkdown } from "./analysis";
+import { SOFTWARE } from "@/lib/studies";
+import { runStudy } from "../studies";
 import { GENERATORS, generatorByKind, resolveParams } from "@/lib/schematics-gen";
 import { projectReportData } from "../projects";
 
@@ -212,6 +214,18 @@ export const TOOLS = {
       if (errors.length) throw new Error(errors.join(" ; "));
       const r = g.build(values);
       return { title: r.title, description: r.description, checks: r.checks, warnings: r.warnings, blocks: r.diagram.blocks.length, wires: r.diagram.wires.length, url: `/schemas?generer=${g.kind}&p=${encodeURIComponent(JSON.stringify(values))}` };
+    },
+  }),
+  list_software: tool({
+    description: "Liste les logiciels de dimensionnement de XAM-XAM LAB (clé, titre, discipline) et les champs attendus de chacun.", effect: "read", schema: z.object({ discipline: z.string().max(40).optional() }),
+    run: async (i) => SOFTWARE.filter((s) => !i.discipline || s.discipline === i.discipline).map((s) => ({ key: s.key, title: s.title, discipline: s.discipline, url: `/dimensionnement/${s.key}`, fields: s.sections.flatMap((x) => x.fields.map((f) => `${f.key}${f.unit ? ` (${f.unit})` : ""}${f.optional ? " [facultatif]" : ""}`)) })),
+  }),
+  run_study: tool({
+    description: "Exécute un logiciel de dimensionnement (moteur testé) avec les données fournies : renvoie synthèse, calculs, données manquantes, alertes et nomenclature. Ne jamais inventer une donnée absente : la laisser vide, le moteur la signalera.",
+    effect: "compute", schema: z.object({ software: z.string().max(60), input: z.record(z.string().max(60), z.unknown()), table_id: z.string().uuid().nullable().default(null) }),
+    run: async (i) => {
+      const r = await runStudy(i.software, i.input, i.table_id);
+      return { ok: r.ok, summary: r.summary, missing: r.missing, warnings: r.warnings, steps: r.steps.map((s) => ({ title: s.title, ok: s.ok, lines: s.lines.slice(0, 12) })), bom: r.bom, diagram: r.diagram, url: `/dimensionnement/${i.software}` };
     },
   }),
   propose_device_command: tool({

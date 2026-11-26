@@ -59,3 +59,26 @@ export function req(res: StudyResult, v: number | null, name: string, opts: { mi
 }
 export function rows(v: unknown): Record<string, unknown>[] { return Array.isArray(v) ? v.filter((x) => x && typeof x === "object") as Record<string, unknown>[] : []; }
 export function finish(res: StudyResult): StudyResult { res.ok = res.missing.length === 0; return res; }
+
+/** Champ numérique (raccourci de déclaration). */
+export const nf = (key: string, label: string, unit?: string, o: Partial<StudyField> = {}): StudyField => ({ key, label, ...(unit ? { unit } : {}), type: "number", ...o });
+/** Lecture groupée de valeurs obligatoires : chaque absence est ajoutée aux données manquantes. */
+export function grab(res: StudyResult, input: Input, spec: Record<string, [label: string, opts?: { min?: number; max?: number; positive?: boolean }]>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, [label, opts]] of Object.entries(spec)) { const v = num(input[k]); if (req(res, v, label, opts)) out[k] = v; }
+  return out;
+}
+/** Valeurs normalisées de la série E12 (CEI 60063), une décade. */
+export const E12 = [1, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
+/** Valeur E12 la plus proche (en échelle logarithmique). */
+export function nearestE12(x: number): number {
+  if (!(x > 0)) return NaN;
+  const dec = 10 ** Math.floor(Math.log10(x));
+  const cands = [...E12.map((v) => v * dec), 10 * dec, 0.82 * dec];
+  return cands.reduce((a, b) => (Math.abs(Math.log(b / x)) < Math.abs(Math.log(a / x)) ? b : a));
+}
+/** Valeur E12 immédiatement supérieure ou égale. */
+export function nextE12(x: number): number {
+  const dec = 10 ** Math.floor(Math.log10(x));
+  return [...E12.map((v) => v * dec), 10 * dec].find((v) => v >= x * (1 - 1e-9))!;
+}

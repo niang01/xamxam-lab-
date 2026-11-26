@@ -47,6 +47,14 @@ const RENAMED: Record<string, string> = {
 /** Doublons retirés de la bibliothèque (25/11/2026) : fusionnés dans l'entrée d'origine, références reportées. */
 const MERGED: Record<string, string> = {
   "ESP32 DevKit (ESP32-WROOM-32)": "Carte ESP32", "Seeed Studio XIAO ESP32S3": "Seeed XIAO ESP32-S3", "ESP8266 NodeMCU": "Carte ESP8266",
+  "Transistor bipolaire NPN": "Transistor NPN",
+  "Transistor MOSFET canal N": "MOSFET canal N",
+  "Régulateur linéaire de tension": "Régulateur de tension linéaire",
+  "Convertisseur abaisseur (buck)": "Convertisseur DC-DC abaisseur",
+  "LED et résistance de limitation": "LED",
+  "Variateur de fréquence": "Variateur de vitesse",
+  "Module 4G LTE (Cat-1 / Cat-M)": "Module GSM/4G",
+  "Routeur 4G industriel": "Modem / routeur 4G",
   "Arduino Uno": "Carte Arduino (famille Uno)", "Arduino Mega 2560": "Carte Arduino Mega", "Carte STM32 Nucleo": "Carte STM32 (Nucleo)",
 };
 const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);

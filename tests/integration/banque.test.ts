@@ -51,3 +51,19 @@ describe("Exercices et épreuves (API)", () => {
     expect(r.json.score).toBe(10);
   });
 });
+
+import * as dossier from "@/app/api/bank/[id]/dossier/route";
+describe("Banque : progression et dossier exporté", () => {
+  it("en cours → terminé ; filtre ; dossier Word et PDF", async () => {
+    const s = await register(registerRoute.POST as never, "progres@test.local");
+    const id = (await import("@/lib/bank")).BANK[5].id;
+    expect((await call(bankItem.POST as never, "POST", "/x", { session: s, params: { id }, body: { action: "en_cours" } })).status).toBe(200);
+    expect((await call(bankItem.GET as never, "GET", "/x", { session: s, params: { id } })).json.progress).toBe("en_cours");
+    await call(bankItem.POST as never, "POST", "/x", { session: s, params: { id }, body: { action: "termine" } });
+    const l = await call(bank.GET as never, "GET", "/api/bank?progression=termine", { session: s });
+    expect((l.json.items as { id: string }[]).map((x) => x.id)).toEqual([id]);
+    expect((l.json.progress as { termine: number }).termine).toBe(1);
+    const res = await (dossier.GET as unknown as (r: Request, c: unknown) => Promise<Response>)(new Request("http://localhost/x?format=docx", { headers: { cookie: s.cookie } }), { params: Promise.resolve({ id }) });
+    expect(res.status).toBe(200); expect(Buffer.from(await res.arrayBuffer()).subarray(0, 2).toString()).toBe("PK");
+  });
+});

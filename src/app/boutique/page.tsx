@@ -20,9 +20,11 @@ const fcfa = (n: number | null) => (n == null ? null : `${Number(n).toLocaleStri
 export default function Shop() {
   const { t } = useApp();
   const [tab, setTab] = useState<Tab>("catalogue");
+  const [sort, setSort] = useState("");
+  const [imp, setImp] = useState<{ csv: string; result: { created: number; dry_run: boolean; lines: { line: number; ok: boolean; errors: string[] }[] } | null }>({ csv: "", result: null });
   const [studyCtx, setStudyCtx] = useState<string | null>(null); const [projectCtx, setProjectCtx] = useState<string | null>(null);
   const [q, setQ] = useState(""); const [section, setSection] = useState("");
-  const { data: cat, reload: reloadCat } = useData<Cat>(`/api/shop/catalog?q=${encodeURIComponent(q)}${section ? `&section=${section}` : ""}`);
+  const { data: cat, reload: reloadCat } = useData<Cat>(`/api/shop/catalog?q=${encodeURIComponent(q)}${section ? `&section=${section}` : ""}${sort ? `&tri=${sort}` : ""}`);
   const { data: cart, reload: reloadCart } = useData<CartT>("/api/shop/cart");
   const { data: mine, reload: reloadMine } = useData<{ items: Order[] }>(tab === "commandes" ? "/api/shop/orders" : null);
   const { data: sales, reload: reloadSales } = useData<{ items: Order[] }>(tab === "ventes" ? "/api/shop/orders?role=seller" : null);
@@ -56,6 +58,8 @@ export default function Shop() {
         {seller && o.status === "confirmed" && <><Btn onClick={() => run(() => post(`/api/shop/orders/${o.id}`, { status: "shipped" }))}>{t("shop.ship")}</Btn><Btn onClick={() => run(() => post(`/api/shop/orders/${o.id}`, { status: "delivered" }))}>{t("shop.delivered")}</Btn></>}
         {!seller && o.status === "placed" && <Btn kind="danger" onClick={() => run(() => post(`/api/shop/orders/${o.id}`, { status: "cancelled" }))}>{t("shop.cancel")}</Btn>}
         {!seller && o.status === "shipped" && <Btn kind="ok" onClick={() => run(() => post(`/api/shop/orders/${o.id}`, { status: "delivered" }))}>{t("shop.received")}</Btn>}
+        {!seller && o.status === "delivered" && <Btn kind="ghost" data-testid="order-return" onClick={() => { const r = prompt(t("shop.returnReason")); if (r) void run(() => post(`/api/shop/orders/${o.id}`, { status: "return_requested", note: r })); }}>{t("shop.returnAsk")}</Btn>}
+        {seller && o.status === "return_requested" && <><Btn kind="ok" data-testid="return-accept" onClick={() => run(() => post(`/api/shop/orders/${o.id}`, { status: "returned", note: null }))}>{t("shop.returnAccept")}</Btn><Btn kind="danger" onClick={() => { const r = prompt(t("shop.reason")); if (r) void run(() => post(`/api/shop/orders/${o.id}`, { status: "return_refused", note: r })); }}>{t("shop.returnRefuse")}</Btn></>}
       </div>
     </li>);
   return (
@@ -74,7 +78,8 @@ export default function Shop() {
       {tab === "catalogue" && (
         <Card testId="shop-catalog">
           <div className="mb-3 grid gap-2 sm:grid-cols-2"><Input aria-label={t("c.search")} placeholder={t("c.search")} name="shop-q" value={q} onChange={(e) => setQ(e.target.value)} />
-            <Select aria-label={t("shop.section")} name="shop-section" value={section} onChange={(e) => setSection(e.target.value)}><option value="">{t("shop.allSections")}</option>{cat?.sections.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</Select></div>
+            <Select aria-label={t("shop.section")} name="shop-section" value={section} onChange={(e) => setSection(e.target.value)}><option value="">{t("shop.allSections")}</option>{cat?.sections.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</Select>
+            <Select aria-label={t("shop.sort")} name="shop-sort" value={sort} onChange={(e) => setSort(e.target.value)}><option value="">{t("shop.sortRecent")}</option><option value="prix">{t("shop.sortPriceAsc")}</option><option value="prix_desc">{t("shop.sortPriceDesc")}</option></Select></div>
           {!cat?.items.length ? <p className="text-sm text-[var(--fg-3)]" data-testid="shop-empty">{t("shop.empty")}</p> :
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{cat.items.map((i) => (
               <li key={i.id} className="flex flex-col rounded-xl border border-[var(--line)] p-3 text-sm" data-product={i.title}>
@@ -125,10 +130,18 @@ export default function Shop() {
           </Card>
           <Card title={t("shop.myProducts")}>
             <p className="mb-2 text-xs text-[var(--fg-3)]">{t("shop.howToSell")} <Link className="underline" href="/marketplace">{t("nav.market")}</Link></p>
+            <details className="mb-3 rounded-lg border border-[var(--line)] p-2 text-sm" data-testid="shop-import">
+              <summary className="cursor-pointer">{t("shop.import")}</summary>
+              <p className="mt-1 text-xs text-[var(--fg-3)]">{t("shop.importInfo")} <a className="underline" href="/api/shop/import">{t("shop.importTemplate")}</a></p>
+              <input type="file" accept=".csv,text/csv" name="import-file" className="mt-1 text-xs" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setImp({ csv: await f.text(), result: null }); }} />
+              <div className="mt-1 flex gap-2"><Btn kind="ghost" disabled={!imp.csv} data-testid="import-check" onClick={() => run(async () => setImp({ ...imp, result: await post("/api/shop/import", { csv: imp.csv, dry_run: true }) }))}>{t("shop.importCheck")}</Btn>
+                <Btn disabled={!imp.csv || !imp.result || imp.result.lines.every((l) => !l.ok)} data-testid="import-run" onClick={() => run(async () => setImp({ csv: "", result: await post("/api/shop/import", { csv: imp.csv, dry_run: false }) }), t("shop.imported"))}>{t("shop.importRun")}</Btn></div>
+              {imp.result && <ul className="mt-1 max-h-40 overflow-y-auto text-xs" data-testid="import-result">{!imp.result.dry_run && <li>{t("shop.importCreated", { n: imp.result.created })}</li>}{imp.result.lines.map((l) => <li key={l.line} className={l.ok ? "" : "text-[var(--danger)]"}>{t("shop.importLine", { n: l.line })} : {l.ok ? "✓" : l.errors.join(" ; ")}</li>)}</ul>}
+            </details>
             <ul className="divide-y divide-[var(--line)] text-sm">{vend?.listings.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2" data-mine={l.title}><span>{l.title} · {fcfa(l.price_xof) ?? t("shop.onRequest")} · {l.quantity ?? "—"}</span>
                 <span className="flex flex-wrap items-center gap-2"><Select aria-label={t("shop.section")} name="listing-section" value={l.shop_section ?? ""} onChange={(e) => run(() => patch(`/api/shop/listings/${l.id}`, { shop_section: e.target.value || null }), t("c.saved"))} className="!w-auto"><option value="">{t("shop.notInShop")}</option>{cat?.sections.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</Select>
-                  <label className="cursor-pointer text-xs underline">{t("shop.addImage")}<input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append("image", f); const r = await fetch(`/api/shop/listings/${l.id}/image`, { method: "POST", body: fd }); const j = await r.json(); if (!r.ok) setErr(new RequestError(r.status, j.error, j.key)); else { setMsg(t("c.saved")); reloadCat(); } }} /></label></span></li>))}</ul>
+                  <label className="cursor-pointer text-xs underline">{t("shop.addImage")}<input type="file" accept="image/png,image/jpeg,image/webp" capture="environment" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append("image", f); const r = await fetch(`/api/shop/listings/${l.id}/image`, { method: "POST", body: fd }); const j = await r.json(); if (!r.ok) setErr(new RequestError(r.status, j.error, j.key)); else { setMsg(t("c.saved")); reloadCat(); } }} /></label></span></li>))}</ul>
           </Card>
         </div>
       )}

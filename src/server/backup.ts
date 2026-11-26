@@ -24,7 +24,7 @@ export const BACKUP_TABLES = [
   "translations", "notifications", "settings", "audit_log",
   // Ajouts du 25/11/2026 (tables créées depuis la v1 de la sauvegarde) — parents avant enfants.
   "trials", "licence_plans", "licences", "licence_activations", "licence_events", "user_devices",
-  "drone_profiles", "drone_state", "drone_missions", "project_components", "documents", "bank_favorites", "exercise_attempts",
+  "drone_profiles", "drone_state", "drone_missions", "project_components", "documents", "bank_favorites", "bank_progress", "exercise_attempts",
   "shop_vendors", "listing_images", "shop_cart_items", "shop_orders", "shop_order_items", "shop_order_events",
   "course_resources", "course_assignments", "assignment_submissions",
 ] as const;

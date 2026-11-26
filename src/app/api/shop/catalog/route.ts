@@ -9,5 +9,5 @@ export const GET = endpoint(async (req) => {
   const sp = new URL(req.url).searchParams;
   const max = Number(sp.get("max"));
   return ok({ sections: SHOP_SECTIONS.map(([key, label]) => ({ key, label })), payment: paymentStatus(),
-    items: await catalog({ q: (sp.get("q") ?? "").trim().slice(0, 100), section: sp.get("section") || null, maxPrice: Number.isFinite(max) && max > 0 ? max : null }) });
+    items: await catalog({ q: (sp.get("q") ?? "").trim().slice(0, 100), section: sp.get("section") || null, maxPrice: Number.isFinite(max) && max > 0 ? max : null, sort: sp.get("tri") === "prix" ? "price_asc" : sp.get("tri") === "prix_desc" ? "price_desc" : "recent" }) });
 });

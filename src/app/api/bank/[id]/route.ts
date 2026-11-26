@@ -4,6 +4,7 @@ import { sql } from "@/server/db";
 import { audit } from "@/server/audit";
 import { bankById, bankToProject } from "@/lib/bank";
 import { CODES } from "@/lib/bank/codes";
+import { bankDossier } from "@/lib/bank/dossier";
 
 type Ctx = { params: Promise<{ id: string }> };
 const get = async (ctx: Ctx) => { const id = (await ctx.params).id; const p = bankById(id); if (!p) throw new ApiFailure(404, "Projet de la banque introuvable", "err.notFound"); return p; };
@@ -14,14 +15,17 @@ export const GET = endpoint<Ctx>(async (req, ctx) => {
   const p = await get(ctx);
   const ids = await sql<{ name: string; id: string }>("SELECT name, id FROM components WHERE mpn='generic' AND name = ANY($1)", [p.components.map(([n]) => n)]);
   const favorite = !!(await sql("SELECT 1 FROM bank_favorites WHERE user_id=$1 AND bank_id=$2", [u.id, p.id])).length;
-  return ok({ ...p, favorite, component_ids: Object.fromEntries(ids.map((r) => [r.name, r.id])), code_source: p.code ? CODES[p.code] : null });
+  const progress = (await sql<{ status: string }>("SELECT status FROM bank_progress WHERE user_id=$1 AND bank_id=$2", [u.id, p.id]))[0]?.status ?? null;
+  return ok({ ...p, favorite, progress, dossier: bankDossier(p), component_ids: Object.fromEntries(ids.map((r) => [r.name, r.id])), code_source: p.code ? CODES[p.code] : null });
 });
 
 /** Actions : enregistrer / retirer des favoris, réaliser (copie en projet personnel modifiable). */
 export const POST = endpoint<Ctx>(async (req, ctx) => {
   const u = await mustBeSignedIn(req);
   const p = await get(ctx);
-  const b = await readInput(req, z.object({ action: z.enum(["favorite", "unfavorite", "realise"]) }));
+  const b = await readInput(req, z.object({ action: z.enum(["favorite", "unfavorite", "realise", "en_cours", "termine", "reset"]) }));
+  if (b.action === "en_cours" || b.action === "termine") { await sql("INSERT INTO bank_progress(user_id, bank_id, status) VALUES ($1,$2,$3) ON CONFLICT (user_id, bank_id) DO UPDATE SET status=EXCLUDED.status, updated_at=now()", [u.id, p.id, b.action]); return ok({ ok: true }); }
+  if (b.action === "reset") { await sql("DELETE FROM bank_progress WHERE user_id=$1 AND bank_id=$2", [u.id, p.id]); return ok({ ok: true }); }
   if (b.action === "favorite") { await sql("INSERT INTO bank_favorites(user_id, bank_id) VALUES ($1,$2) ON CONFLICT DO NOTHING", [u.id, p.id]); return ok({ ok: true }); }
   if (b.action === "unfavorite") { await sql("DELETE FROM bank_favorites WHERE user_id=$1 AND bank_id=$2", [u.id, p.id]); return ok({ ok: true }); }
   const x = bankToProject(p);
@@ -30,6 +34,7 @@ export const POST = endpoint<Ctx>(async (req, ctx) => {
   await sql("INSERT INTO project_members(project_id, user_id, role) VALUES ($1,$2,'owner')", [row.id, u.id]);
   for (const [name, qty] of x.components) await sql("INSERT INTO project_components(project_id, component_id, name, qty) VALUES ($1, (SELECT id FROM components WHERE name=$2 AND mpn='generic' LIMIT 1), $2, $3)", [row.id, name, qty]);
   for (const t of x.tasks) await sql("INSERT INTO project_tasks(project_id, title, created_by) VALUES ($1,$2,$3)", [row.id, t.slice(0, 300), u.id]);
+  await sql("INSERT INTO bank_progress(user_id, bank_id, status) VALUES ($1,$2,'en_cours') ON CONFLICT (user_id, bank_id) DO NOTHING", [u.id, p.id]);
   await audit(u.id, "human", "project.create", { kind: "project", id: row.id }, { bank: p.id });
   return ok({ id: row.id }, 201);
 });

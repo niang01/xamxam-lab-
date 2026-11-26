@@ -18,6 +18,7 @@ import { audit } from "../audit";
 import { decide, effectiveLevel, EFFECT_LEVEL } from "@/lib/autonomy";
 import { AGENTS, ownerOf, selectAgents, toolsFor, type AgentDef } from "./agents";
 import { CALCS, CALC_KINDS } from "../calc";
+import { matchSoftware } from "@/lib/studies";
 import { guessGenerator } from "@/lib/schematics-gen";
 import { TEMPLATES as EX_TEMPLATES } from "@/lib/exercises";
 import { TOOLS, toolDef, toolJsonSchema, type ToolCtx, type ToolName } from "./tools";
@@ -271,6 +272,13 @@ async function rulesCore(question: string, ctx: Parameters<typeof executeStep>[2
   const qn = question.toLowerCase();
 
   // Schéma technique demandé : générateur paramétré, ouvert dans l'éditeur 2D.
+  // Orientation vers les logiciels de dimensionnement (le moteur fait le calcul ; l'utilisateur saisit ses données).
+  const sws = /dimensionn|calcul|concevoir|conception|étude|bilan|combien|quelle (taille|puissance|section)|logiciel/i.test(question) ? matchSoftware(question) : [];
+  if (sws.length) {
+    const s = await call("list_software", {});
+    void s;
+    return out(["Logiciel(s) de dimensionnement adapté(s) à votre demande :", ...sws.map((w) => `• ${w.title} → /dimensionnement/${w.key}`), "Saisissez vos données (ou chargez l'exemple de cas d'étude), puis « Calculer » : le moteur testé fait les calculs, signale les données manquantes, produit la nomenclature, le schéma et le rapport. Revenez ensuite me poser vos questions depuis l'étude (« Demander à Aláji IA ») : je recevrai ses résultats."].join("\n"));
+  }
   const schemaKind = /sch[ée]ma|plan|diagram|dessine|câblage|cablage|unifilaire|architecture/i.test(question) ? guessGenerator(question) : null;
   if (schemaKind) {
     const pk = question.match(/(\d+(?:[.,]\d+)?)\s*kW/i)?.[1];

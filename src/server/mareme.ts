@@ -17,7 +17,7 @@ import { SHOP_SECTIONS } from "@/lib/shop";
 export interface MaremeItem { id: string; title: string; price_xof: number | null; quantity: number | null; seller: string; seller_verified: boolean; delivery?: string[]; specs?: Record<string, string> | null }
 export interface MaremeReply { intent: string; text: string[]; items: MaremeItem[]; mode: "rules"; sources: string[] }
 
-const STATUS: Record<string, string> = { placed: "transmise au vendeur", confirmed: "confirmée par le vendeur (stock réservé)", shipped: "expédiée", delivered: "livrée", cancelled: "annulée", refused: "refusée par le vendeur" };
+const STATUS: Record<string, string> = { placed: "transmise au vendeur", confirmed: "confirmée par le vendeur (stock réservé)", shipped: "expédiée", delivered: "livrée", cancelled: "annulée", refused: "refusée par le vendeur", return_requested: "retour demandé", returned: "retournée (stock réintégré)", return_refused: "retour refusé par le vendeur" };
 const DELIVERY: Record<string, string> = { pickup: "retrait chez le vendeur", shipping: "expédition / livraison organisée par le vendeur", digital: "remise numérique", onsite: "intervention sur site" };
 const STOP = new Set(["je", "j", "veux", "voudrais", "cherche", "besoin", "un", "une", "des", "de", "du", "le", "la", "les", "pour", "mon", "ma", "mes", "avec", "et", "ou", "en", "à", "a", "au", "aux", "d", "l", "qui", "quel", "quelle", "quels", "est", "sont", "il", "y", "svp", "merci", "bonjour", "acheter", "trouver", "avez", "vous", "comparer", "compare", "comparez", "prix", "moins", "cher", "plus", "entre", "panier", "ajoute", "ajouter", "donne", "moi", "me", "combien", "coûte", "coute", "plaît", "plait", "stp", "voudrais", "aimerais", "quoi", "dispo", "disponible", "disponibles", "avoir", "faut"]);
 
@@ -55,7 +55,7 @@ export async function mareme(u: User, message: string, ctx: { study?: string | n
   }
   // 3. Mise en relation humaine
   if (/vendeur|administrat|humain|réclamation|reclamation|litige|retour|rembours|garantie|contact/.test(low)) {
-    return reply("human", ["Pour une question sur un article (garantie, retour, délai), écrivez au vendeur depuis la fiche de l'annonce dans XAM-XAM MARKETPLACE (bouton « Demander ») : l'échange reste tracé.", "Pour un litige ou un vendeur non conforme, signalez l'annonce : l'administrateur de la plateforme examine les signalements.", "Je ne peux ni accorder un remboursement ni modifier une commande : seuls le vendeur et l'administrateur le peuvent."], [], []);
+    return reply("human", ["Pour une question sur un article (garantie, retour, délai), écrivez au vendeur depuis la fiche de l'annonce dans XAM-XAM MARKETPLACE (bouton « Demander ») : l'échange reste tracé.", "Pour un litige ou un vendeur non conforme, signalez l'annonce : l'administrateur de la plateforme examine les signalements.", "Retour d'un article livré : onglet « Mes commandes » → « Demander un retour » avec le motif ; le vendeur l'accepte (stock réintégré) ou le refuse en motivant sa décision.", "Je ne peux ni accorder un remboursement ni modifier une commande : seuls le vendeur et l'administrateur le peuvent."], [], []);
   }
   // 4. Équipements d'une étude ou d'un projet
   if (ctx.study || ctx.project || /mon étude|ma nomenclature|mon projet/.test(low)) {

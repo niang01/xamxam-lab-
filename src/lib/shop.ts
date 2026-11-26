@@ -3,17 +3,22 @@ export const SHOP_SECTIONS = [
   ["electricite", "Électricité"], ["electronique", "Électronique"], ["enr", "Énergies renouvelables"], ["iot", "Composants IoT"], ["informatique", "Informatique"],
   ["robotique", "Robotique"], ["automatisme", "Automatisme industriel"], ["froid", "Froid et climatisation"], ["mecanique", "Mécanique"], ["genie_civil", "Génie civil"],
   ["telecom", "Télécommunications"], ["drones", "Drones"], ["plomberie", "Plomberie"], ["outillage", "Outillage et équipements techniques"], ["logiciels", "Logiciels et ressources numériques"],
+  ["electrotechnique", "Électrotechnique"], ["arduino", "Arduino"], ["esp32", "ESP32"], ["actionneurs", "Actionneurs"], ["communication", "Modules de communication"],
+  ["batteries", "Batteries"], ["onduleurs", "Onduleurs"], ["regulateurs", "Régulateurs de charge"], ["pompes", "Pompes"], ["hydraulique", "Équipements hydrauliques"],
+  ["automates", "Automates"], ["industriel", "Équipements industriels"], ["reseaux", "Réseaux"], ["agricole", "Matériel agricole"], ["laboratoire", "Laboratoire"], ["consommables", "Accessoires et consommables"],
 ] as const;
 export type ShopSection = (typeof SHOP_SECTIONS)[number][0];
 export const SECTION_KEYS = SHOP_SECTIONS.map(([k]) => k) as [ShopSection, ...ShopSection[]];
 
-export type OrderStatus = "placed" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refused";
+export type OrderStatus = "placed" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refused" | "return_requested" | "returned" | "return_refused";
 /** Qui peut faire passer une commande d'un état à un autre. */
 export const TRANSITIONS: Record<OrderStatus, { to: OrderStatus; by: "seller" | "buyer" }[]> = {
   placed: [{ to: "confirmed", by: "seller" }, { to: "refused", by: "seller" }, { to: "cancelled", by: "buyer" }],
   confirmed: [{ to: "shipped", by: "seller" }, { to: "delivered", by: "seller" }, { to: "cancelled", by: "seller" }],
   shipped: [{ to: "delivered", by: "buyer" }, { to: "delivered", by: "seller" }],
-  delivered: [], cancelled: [], refused: [],
+  delivered: [{ to: "return_requested", by: "buyer" }],
+  return_requested: [{ to: "returned", by: "seller" }, { to: "return_refused", by: "seller" }],
+  returned: [], return_refused: [], cancelled: [], refused: [],
 };
 export function canTransition(from: OrderStatus, to: OrderStatus, role: "seller" | "buyer"): boolean {
   return TRANSITIONS[from].some((t) => t.to === to && t.by === role);
