@@ -40,6 +40,11 @@ export function AssemblyEditor() {
   const report = useMemo(() => massReport(a), [a]);
   const p = a.parts.find((x) => x.id === sel) ?? null;
 
+  // Ouverture d'une maquette générée (?maquette=<id>)
+  useEffect(() => {
+    const mid = new URLSearchParams(window.location.search).get("maquette");
+    if (mid) api<{ id: string; title: string; graph: Assembly }>(`/api/assemblies/${mid}`).then((r) => { setA(r.graph); setTitle(r.title); setId(r.id); }).catch(setErr);
+  }, []);
   useEffect(() => {
     const el = host.current; if (!el) return;
     let renderer: THREE.WebGLRenderer;

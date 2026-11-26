@@ -1,0 +1,4 @@
+Cahier des charges — Armoire de pompage
+Le tableau comporte un disjoncteur QF1 32 A, un contacteur KM1, un relais thermique F1 et un démarreur étoile-triangle pour la pompe immergée de forage de 7,5 kW.
+Armoire 800 x 600 x 300 mm, câble 4G6 de 45 m, réservoir de 20 m³, conduite PEHD Ø 63 mm.
+Capteur de niveau à flotteur dans le château d'eau.

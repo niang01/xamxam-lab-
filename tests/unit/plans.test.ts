@@ -30,3 +30,23 @@ describe("Impression des plans", () => {
     expect(x).not.toMatch(/[^\x00-\x7f]/); // ASCII strict (accents translittérés)
   });
 });
+
+import { dimText, layersOf, visibleDiagram, diagramSvg } from "@/lib/diagram";
+describe("Plans d'implantation : cotes, échelle, calques", () => {
+  const withLayers = { ...d, scale: 20, dims: [{ x1: 0, y1: 0, x2: 300, y2: 0 }, { x1: 0, y1: 0, x2: 0, y2: 100, text: "Hauteur 2,5 m" }], blocks: d.blocks.map((b, i) => ({ ...b, layer: i % 2 ? "Commande" : "Puissance" })) };
+  it("texte des cotes : saisi, sinon longueur × échelle", () => {
+    expect(dimText(withLayers, withLayers.dims[0]).replace(/[  ]/g, " ")).toBe("6 000 mm");
+    expect(dimText(withLayers, withLayers.dims[1])).toBe("Hauteur 2,5 m");
+    expect(dimText({}, withLayers.dims[0])).toBe("300 u");
+  });
+  it("calques masqués absents des exports ; cotes présentes en SVG, PDF et DXF (calque COTES)", () => {
+    expect(layersOf(withLayers)).toEqual(["Puissance", "Commande"]);
+    const hid = { ...withLayers, hidden_layers: ["Commande"] };
+    expect(visibleDiagram(hid).blocks.every((b) => b.layer === "Puissance")).toBe(true);
+    expect(visibleDiagram(hid).wires.every((w) => visibleDiagram(hid).blocks.some((b) => b.id === w.a.block))).toBe(true);
+    expect(diagramSvg(withLayers)).toContain("6");
+    expect(Buffer.from(diagramPdf(withLayers, meta).pdf).toString("latin1")).toContain("(Hauteur 2,5 m)");
+    const x = diagramDxf(hid);
+    expect(x).toContain("COTES"); expect(x).toContain("BLOCS_PUISSANCE"); expect(x).not.toContain("BLOCS_COMMANDE\n0\nLINE");
+  });
+});

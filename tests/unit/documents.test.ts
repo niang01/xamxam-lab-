@@ -86,3 +86,21 @@ describe("Formats Office, DXF, STL et exports (aller-retour réel)", () => {
     expect(execFileSync("pdfinfo", [f]).toString()).toMatch(/Pages:\s+2/);
   });
 });
+
+import { readPlan } from "@/lib/docs/plan-reading";
+import { reportMarkdown as reportMd } from "@/server/docs/process";
+describe("Lecture d'un plan ou cahier des charges", () => {
+  const text = readFileSync("tests/fixtures/cahier-pompage.txt", "utf8");
+  it("équipements de la bibliothèque, repères, dimensions lisibles, schéma proposé ; aucun faux positif", () => {
+    const r = readPlan(text);
+    expect(r.equipment).toHaveLength(6);
+    expect(r.equipment.map((e) => e.name)).toEqual(expect.arrayContaining(["Capteur de niveau à flotteur", "Contacteur", "Démarreur étoile-triangle", "Disjoncteur", "Pompe immergée de forage", "Relais thermique"]));
+    expect(r.references).toEqual(["QF1", "KM1", "F1"]);
+    expect(r.dimensions).toEqual(["32 A", "7,5 kW", "800 x 600 x 300 mm", "45 m", "20 m³", "Ø 63 mm"]);
+    expect(r.generator).toBe("etoile_triangle");
+    expect(readPlan("Texte sans équipement ni cote.").missing.length).toBe(2);
+  });
+  it("le rapport d'analyse inclut la lecture technique", () => {
+    expect(reportMd("cahier.txt", analyseText(text, []), [])).toContain("## Lecture technique du document");
+  });
+});

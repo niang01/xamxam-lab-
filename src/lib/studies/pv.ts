@@ -51,12 +51,13 @@ export const PV: Software = {
       ],
     },
     {
-      title: "4. Module photovoltaïque", equipment: [{ label: "Module", names: ["Module photovoltaïque", "Module photovoltaïque monocristallin", "Module photovoltaïque polycristallin", "Module photovoltaïque bifacial"], map: { pmax: "pmax", voc: "voc", vmp: "vmp", isc: "isc", imp: "imp", beta_voc: "beta_voc", gamma_p: "gamma_p" } }],
+      title: "4. Module photovoltaïque", equipment: [{ label: "Module", names: ["Module photovoltaïque", "Module photovoltaïque monocristallin", "Module photovoltaïque polycristallin", "Module photovoltaïque bifacial"], map: { pmax: "pmax", voc: "voc", vmp: "vmp", isc: "isc", imp: "imp", beta_voc: "beta_voc", gamma_p: "gamma_p", l: "mod_l", w: "mod_w" } }],
       fields: [
         { key: "pmax", label: "Puissance crête Pmax (STC)", unit: "Wc", type: "number" }, { key: "voc", label: "Voc", unit: "V", type: "number" }, { key: "vmp", label: "Vmp", unit: "V", type: "number" },
         { key: "isc", label: "Isc", unit: "A", type: "number" }, { key: "imp", label: "Imp", unit: "A", type: "number" },
         { key: "beta_voc", label: "Coefficient de température de Voc", unit: "%/°C", type: "number" }, { key: "gamma_p", label: "Coefficient de température de Pmax", unit: "%/°C", type: "number" },
         { key: "noct", label: "NOCT (température nominale de cellule)", unit: "°C", type: "number" },
+        { key: "mod_l", label: "Longueur du module (maquette 3D)", unit: "mm", type: "number", optional: true }, { key: "mod_w", label: "Largeur du module (maquette 3D)", unit: "mm", type: "number", optional: true },
       ],
     },
     {
@@ -100,7 +101,7 @@ export const PV: Software = {
     ghi: [5.4, 6.2, 6.8, 7.0, 6.9, 6.4, 5.7, 5.4, 5.5, 5.6, 5.4, 5.0], tmean: [23, 25, 27, 28, 29, 29, 28, 27, 28, 28, 27, 24], t_min: 14, t_max: 40, albedo: 0.2, tilt: 15, azimuth: 0,
     loads: [{ name: "Éclairage LED", kind: "ac", p: 10, qty: 8, hours: 5 }, { name: "Réfrigérateur", kind: "ac", p: 120, qty: 1, hours: 10 }, { name: "Télévision", kind: "ac", p: 80, qty: 1, hours: 4 }, { name: "Ventilateur", kind: "ac", p: 60, qty: 2, hours: 6 }],
     ks: 0.8, p_surge: 600, system: "autonome",
-    pmax: 450, voc: 49.5, vmp: 41.2, isc: 11.5, imp: 10.9, beta_voc: -0.28, gamma_p: -0.36, noct: 45,
+    pmax: 450, voc: 49.5, vmp: 41.2, isc: 11.5, imp: 10.9, beta_voc: -0.28, gamma_p: -0.36, noct: 45, mod_l: 1903, mod_w: 1134,
     loss_soiling: 3, loss_dc: 2, loss_mismatch: 2, loss_other: 3,
     battery_type: "lifepo4", v_sys: 24, days: 2, dod: 80, eta_bat: 95, unit_v: 12.8, unit_c: 100,
     eta_inv: 92, inv_p: 1500, v_dc_max: 150, mppt_min: 30, mppt_max: 145, i_in_max: 40, reg_i: 60,

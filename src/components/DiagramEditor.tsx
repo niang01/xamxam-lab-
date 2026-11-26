@@ -10,7 +10,7 @@ import { Btn, Card, ErrorBox, Field, Input, Pill, Select } from "./ui";
 import { ProjectPicker } from "./ProjectPicker";
 import { useData } from "@/lib/client/hooks";
 import { api, post, put } from "@/lib/client/api";
-import { BLOCK_W, blockHeight, bomOf, checkDiagram, diagramSvg, nextLabel, pinPoint, type Block, type Diagram } from "@/lib/diagram";
+import { BLOCK_W, blockHeight, bomOf, checkDiagram, diagramSvg, nextLabel, pinPoint, type Block, type Diagram, dimText, layerOf, layersOf } from "@/lib/diagram";
 import { DISCIPLINE_LABEL, type Discipline } from "@/lib/library";
 
 type Comp = { id: string; name: string; symbol2d: string | null; pins: string[]; params: { key: string; label: string; unit: string }[]; discipline: string | null; category: string };
@@ -33,6 +33,7 @@ export function DiagramEditor() {
   const [sel, setSel] = useState<string | null>(null);
   const [selWire, setSelWire] = useState<number | null>(null);
   const [pending, setPending] = useState<{ block: string; pin: number } | null>(null);
+  const [dimMode, setDimMode] = useState(false); const [dimStart, setDimStart] = useState<[number, number] | null>(null);
   const [view, setView] = useState({ x: -400, y: -300, w: 800, h: 600 });
   const [msg, setMsg] = useState(""); const [err, setErr] = useState<unknown>(null);
   const svg = useRef<SVGSVGElement>(null);
@@ -106,6 +107,7 @@ export function DiagramEditor() {
   }
   const zoom = (f: number) => setView((v) => ({ x: v.x + (v.w * (1 - f)) / 2, y: v.y + (v.h * (1 - f)) / 2, w: v.w * f, h: v.h * f }));
   const pan = (dx: number, dy: number) => setView((v) => ({ ...v, x: v.x + dx * v.w, y: v.y + dy * v.h }));
+  const hidden = new Set(d.blocks.filter((b) => (d.hidden_layers ?? []).includes(layerOf(b))).map((b) => b.id));
   const byId = new Map(d.blocks.map((b) => [b.id, b]));
 
   return (
@@ -166,17 +168,28 @@ export function DiagramEditor() {
               {selected && <><Btn kind="ghost" onClick={() => updateSel({ rot: ((selected.rot + 90) % 360) as Block["rot"] })} data-testid="rotate">⟳ {t("dia.rotate")}</Btn><Btn kind="danger" onClick={() => { setD((x) => ({ ...x, blocks: x.blocks.filter((b) => b.id !== sel), wires: x.wires.filter((w) => w.a.block !== sel && w.b.block !== sel) })); setSel(null); }}>{t("c.delete")}</Btn></>}
               {selWire != null && <Btn kind="danger" onClick={() => { setD((x) => ({ ...x, wires: x.wires.filter((_, i) => i !== selWire) })); setSelWire(null); }}>{t("dia.deleteWire")}</Btn>}
               <Btn kind="ghost" onClick={() => { const text = prompt(t("dia.noteText")); if (text) setD((x) => ({ ...x, notes: [...x.notes, { x: Math.round(view.x + 20), y: Math.round(view.y + 40 + x.notes.length * 20), text: text.slice(0, 300) }] })); }}>{t("dia.note")}</Btn>
+              <Btn kind={dimMode ? "primary" : "ghost"} data-testid="dim-mode" onClick={() => { setDimMode((m) => !m); setDimStart(null); }}>↔ {t("dia.dim")}</Btn>
+              {!!(d.dims ?? []).length && <Btn kind="ghost" onClick={() => setD((x) => ({ ...x, dims: (x.dims ?? []).slice(0, -1) }))}>{t("dia.dimUndo")}</Btn>}
+              <label className="flex items-center gap-1">{t("dia.scale")}<Input aria-label={t("dia.scale")} name="dia-scale" inputMode="decimal" className="!w-20" value={d.scale ?? ""} onChange={(e) => { const v = Number(e.target.value.replace(",", ".")); setD((x) => ({ ...x, scale: e.target.value && v > 0 ? v : undefined })); }} />mm/u</label>
               {pending && <Pill tone="info">{t("dia.pickSecond")}</Pill>}
+              {dimMode && <Pill tone="info">{dimStart ? t("dia.dimSecond") : t("dia.dimFirst")}</Pill>}
             </div>
             <svg ref={svg} data-testid="diagram-canvas" viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`} className="h-[55vh] w-full touch-none rounded-lg border border-[var(--line)] bg-[var(--bg-2)]"
               onPointerMove={(e) => { if (!drag.current) return; const [x, y] = toSvgPoint(e); const g = drag.current; setD((dd) => ({ ...dd, blocks: dd.blocks.map((b) => (b.id === g.id ? { ...b, x: Math.round((x - g.dx) / 10) * 10, y: Math.round((y - g.dy) / 10) * 10 } : b)) })); }}
               onPointerUp={() => { drag.current = null; }} onPointerLeave={() => { drag.current = null; }}
-              onPointerDown={(e) => { if (e.target === svg.current) { setSel(null); setSelWire(null); setPending(null); } }}>
+              onPointerDownCapture={(e) => {
+                // Mode cotation : prioritaire sur la sélection et le déplacement des blocs.
+                if (!dimMode) return;
+                e.stopPropagation();
+                const [x, y] = toSvgPoint(e).map((v) => Math.round(v / 10) * 10) as [number, number];
+                if (!dimStart) setDimStart([x, y]); else { setD((dd) => ({ ...dd, dims: [...(dd.dims ?? []), { x1: dimStart[0], y1: dimStart[1], x2: x, y2: y }] })); setDimStart(null); } }}
+              onPointerDown={(e) => {
+                if (e.target === svg.current) { setSel(null); setSelWire(null); setPending(null); } }}>
               <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="var(--line)" strokeWidth="0.5" /></pattern></defs>
               <rect x={view.x} y={view.y} width={view.w} height={view.h} fill="url(#grid)" pointerEvents="none" />
-              {d.wires.map((w, i) => { const a = byId.get(w.a.block), b = byId.get(w.b.block); if (!a || !b) return null; const [x1, y1] = pinPoint(a, w.a.pin), [x2, y2] = pinPoint(b, w.b.pin); const mx = (x1 + x2) / 2;
+              {d.wires.map((w, i) => { if (hidden.has(w.a.block) || hidden.has(w.b.block)) return null; const a = byId.get(w.a.block), b = byId.get(w.b.block); if (!a || !b) return null; const [x1, y1] = pinPoint(a, w.a.pin), [x2, y2] = pinPoint(b, w.b.pin); const mx = (x1 + x2) / 2;
                 return <polyline key={i} data-wire={i} points={`${x1},${y1} ${mx},${y1} ${mx},${y2} ${x2},${y2}`} fill="none" stroke={selWire === i ? "var(--warn)" : "var(--cyan)"} strokeWidth={selWire === i ? 4 : 2} onPointerDown={(e) => { e.stopPropagation(); setSelWire(i); setSel(null); }} />; })}
-              {d.blocks.map((b) => { const h = blockHeight(b); return (
+              {d.blocks.map((b) => { if (hidden.has(b.id)) return null; const h = blockHeight(b); return (
                 <g key={b.id} data-block={b.label}>
                   <g transform={`rotate(${b.rot} ${b.x} ${b.y})`} onPointerDown={(e) => { e.stopPropagation(); const [x, y] = toSvgPoint(e); drag.current = { id: b.id, dx: x - b.x, dy: y - b.y }; setSel(b.id); setSelWire(null); }}>
                     <rect x={b.x - BLOCK_W / 2} y={b.y - h / 2} width={BLOCK_W} height={h} rx={6} fill="var(--panel)" stroke={sel === b.id ? "var(--cyan)" : "var(--fg-2)"} strokeWidth={sel === b.id ? 2.5 : 1.5} />
@@ -189,6 +202,8 @@ export function DiagramEditor() {
                     </g>); })}
                 </g>); })}
               {d.notes.map((n, i) => <text key={i} x={n.x} y={n.y} fontSize={11} fill="var(--fg-2)">{n.text}</text>)}
+              {(d.dims ?? []).map((c, i) => <g key={`dim${i}`} data-dim={i}><line x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2} stroke="var(--warn)" strokeWidth={1.2} /><circle cx={c.x1} cy={c.y1} r={2.5} fill="var(--warn)" /><circle cx={c.x2} cy={c.y2} r={2.5} fill="var(--warn)" /><text x={(c.x1 + c.x2) / 2} y={(c.y1 + c.y2) / 2 - 5} fontSize={10} textAnchor="middle" fill="var(--warn)">{dimText(d, c)}</text></g>)}
+              {dimStart && <circle cx={dimStart[0]} cy={dimStart[1]} r={4} fill="var(--warn)" />}
             </svg>
             <p className="mt-1 text-xs text-[var(--fg-3)]">{t("dia.help")}</p>
           </Card>
@@ -196,12 +211,18 @@ export function DiagramEditor() {
             <Card title={`${selected.label} — ${selected.name}`} testId="block-props">
               <div className="grid gap-2 md:grid-cols-3">
                 <Field label={t("dia.label")}><Input name="block-label" value={selected.label} onChange={(e) => updateSel({ label: e.target.value.slice(0, 40) })} /></Field>
+                <Field label={t("dia.layer")}><Input name="block-layer" list="dia-layers" value={selected.layer ?? ""} placeholder="Général" onChange={(e) => updateSel({ layer: e.target.value.slice(0, 30) || undefined })} /><datalist id="dia-layers">{layersOf(d).map((l) => <option key={l} value={l} />)}</datalist></Field>
                 {(selected.meta ?? Object.keys(selected.params).map((k) => ({ key: k, label: k, unit: "" }))).map((m) => (
                   <Field key={m.key} label={`${m.label}${m.unit ? ` (${m.unit})` : ""}`}><Input name={`param-${m.key}`} value={selected.params[m.key] ?? ""} onChange={(e) => updateSel({ params: { ...selected.params, [m.key]: e.target.value.slice(0, 80) } })} /></Field>
                 ))}
               </div>
             </Card>
           )}
+          {layersOf(d).length > 1 || (d.hidden_layers ?? []).length ? (
+            <Card title={t("dia.layers")} testId="layers">
+              <ul className="flex flex-wrap gap-3 text-sm">{[...new Set([...layersOf(d), ...(d.hidden_layers ?? [])])].map((l) => { const off = (d.hidden_layers ?? []).includes(l); return <li key={l}><label className="flex items-center gap-1"><input type="checkbox" data-layer={l} checked={!off} onChange={() => setD((x) => ({ ...x, hidden_layers: off ? (x.hidden_layers ?? []).filter((y) => y !== l) : [...(x.hidden_layers ?? []), l] }))} />{l} ({d.blocks.filter((b) => layerOf(b) === l).length})</label></li>; })}</ul>
+              <p className="mt-1 text-xs text-[var(--fg-3)]">{t("dia.layersInfo")}</p>
+            </Card>) : null}
           <Card title={t("dia.check")} testId="diagram-check">
             <p className="text-sm">{check.errors.length ? <Pill tone="danger">{t("dia.errors", { n: check.errors.length })}</Pill> : <Pill tone="ok">{t("dia.noError")}</Pill>} <span className="text-xs text-[var(--fg-3)]">{t("dia.stats", { b: d.blocks.length, w: d.wires.length, n: check.nets })}</span></p>
             <ul className="mt-1 max-h-40 list-disc overflow-y-auto pl-5 text-xs">{check.errors.map((x, i) => <li key={`e${i}`} className="text-[var(--danger)]">{x}</li>)}{check.warnings.slice(0, 30).map((x, i) => <li key={`w${i}`} className="text-[var(--warn)]">{x}</li>)}</ul>

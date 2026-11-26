@@ -24,11 +24,30 @@ test("dimensionnement : photovoltaïque et pompage (calcul, enregistrement, expo
   const docx = await page.request.get((await page.locator("[data-testid=study-export-docx]").getAttribute("href"))!);
   expect(docx.status()).toBe(200);
   expect((await docx.body()).subarray(0, 2).toString()).toBe("PK");
+  // Maquette 3D générée depuis l'étude (dimensions du module saisies)
+  await page.click("[data-testid=study-3d]");
+  await expect(page).toHaveURL(/\/studio\?maquette=[0-9a-f-]{36}/);
+  await expect(page.getByRole("button", { name: "Module 1", exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("[data-testid=assembly-stl]")).toBeEnabled();
+  await page.goBack();
+  await page.waitForLoadState("networkidle");
+  await page.click("[data-testid=study-run]");
+  await expect(page.locator("[data-testid=study-diagram]")).toBeVisible({ timeout: 30_000 });
   await page.click("[data-testid=study-diagram]");
   await expect(page).toHaveURL(/\/schemas\?generer=unifilaire_pv/);
   await expect(page.locator("[data-block]").first()).toBeVisible({ timeout: 30_000 });
   // Planche imprimable : enregistrer le schéma, puis PDF A3 avec cartouche et DXF
   await page.fill("input[name=diagram-title]", "Unifilaire PV e2e");
+  // Cotation : deux points sur la planche, échelle 10 mm par unité ; calques
+  await page.fill("input[name=dia-scale]", "10");
+  await page.click("[data-testid=dim-mode]");
+  const canvas = page.locator("[data-testid=diagram-canvas]");
+  await canvas.scrollIntoViewIfNeeded();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.click(box.x + 30, box.y + box.height / 2);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.locator("[data-dim='0']")).toContainText("mm");
+  await page.click("[data-testid=dim-mode]");
   await page.click("[data-testid=diagram-save]");
   await page.locator("[data-testid=print-panel] summary").click();
   await page.fill("input[name=print-number]", "PV-01");
@@ -37,7 +56,9 @@ test("dimensionnement : photovoltaïque et pompage (calcul, enregistrement, expo
   expect(pdf.headers()["content-type"]).toContain("application/pdf");
   expect((await pdf.body()).toString("latin1")).toContain("(PV-01)");
   const dxf = await page.request.get((await page.locator("[data-testid=export-dxf]").getAttribute("href"))!);
-  expect((await dxf.text())).toContain("AC1009");
+  const dxfText = await dxf.text();
+  expect(dxfText).toContain("AC1009");
+  expect(dxfText).toContain("COTES");
 
   // Pompage
   await page.goto("/dimensionnement/pompage");

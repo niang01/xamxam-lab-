@@ -3,6 +3,7 @@ import mqtt from "mqtt";
 import { MockBinding } from "@serialport/binding-mock";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { signup } from "./helpers";
 
 // Import ESM natif (non réécrit par le transpileur des tests).
 const esm = new Function("u", "return import(u)") as (u: string) => Promise<Record<string, unknown>>;
@@ -72,4 +73,35 @@ test("agent local série : mesures, commande écrite sur le port, accusé (port 
     mockPort.emitData(`ACK ${cmd.id} ok {"relay":"on"}\n`);
     await waitFor(async () => (await status(request, dev.id, cmd.id)) === "acknowledged");
   } finally { await agent.stop(); }
+});
+
+/** Programmation Arduino : compilation réelle sur le serveur, exécution du binaire dans l'émulateur, entrées et sorties. */
+test("laboratoire IoT : compiler le croquis « seuil », simuler, relais D7 selon la tension A0, .hex téléchargeable", async ({ page }) => {
+  test.setTimeout(180_000);
+  await signup(page, `avr-${Date.now()}@e2e.local`);
+  await page.click("button[data-lang=fr]");
+  await page.goto("/lab/iot");
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("[data-testid=toolchain-ok]")).toBeVisible();
+  await page.selectOption("[data-testid=sim-sketch]", "seuil");
+  await expect(page.locator("[data-testid=sim-editor]")).toContainText("SEUIL_HAUT");
+  await expect(page.locator("[data-testid=sim-wiring]")).toContainText("Relais D7");
+  await page.click("[data-testid=sim-compile]");
+  await expect(page.locator("[data-testid=sim-log]")).toContainText("Compilation réussie", { timeout: 120_000 });
+  const dl = page.waitForEvent("download");
+  await page.click("[data-testid=sim-hex]");
+  expect((await dl).suggestedFilename()).toBe("seuil.hex");
+  await page.click("[data-testid=sim-run]");
+  await page.locator("[data-testid=sim-a0]").fill("4");
+  await expect(page.locator("[data-pin='7']")).toHaveAttribute("data-state", "1", { timeout: 20_000 });
+  await expect(page.locator("[data-testid=sim-serial]")).toContainText(/mesure=8\d\d relais=1/, { timeout: 20_000 });
+  await page.locator("[data-testid=sim-a0]").fill("1");
+  await expect(page.locator("[data-pin='7']")).toHaveAttribute("data-state", "0", { timeout: 20_000 });
+  // Erreur de compilation : message du compilateur avec le numéro de ligne
+  await page.click("[data-testid=sim-stop]");
+  await page.locator("[data-testid=sim-editor] .cm-content").click();
+  await page.keyboard.press("Control+End");
+  await page.keyboard.type("\nint x = ;");
+  await page.click("[data-testid=sim-compile]");
+  await expect(page.locator("[data-testid=sim-log]")).toContainText(/croquis\.ino:\d+:\d+: error/, { timeout: 60_000 });
 });

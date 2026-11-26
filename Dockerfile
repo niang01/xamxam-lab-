@@ -16,7 +16,11 @@ RUN rm -rf mobile && npm run build && npm prune --omit=dev
 FROM ${BASE_REGISTRY}/python:3.12-slim-bookworm
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 # Traitement des documents : Poppler (texte des PDF, rendu des pages scannées) et Tesseract (OCR français et anglais).
-RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng && rm -rf /var/lib/apt/lists/*
+# Laboratoire IoT : compilation des croquis Arduino Uno (avr-gcc, avr-libc, cœur Arduino AVR ; logiciels libres).
+# Si un paquet AVR manque, l'image reste valide : le laboratoire affiche alors « compilation indisponible ».
+RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng \
+ && (apt-get install -y --no-install-recommends gcc-avr binutils-avr avr-libc arduino-core-avr || echo 'AVR : paquets indisponibles') \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY workers/requirements.txt workers/requirements.txt
 RUN --mount=type=secret,id=extra_ca,required=false sh -c 'if [ -s /run/secrets/extra_ca ]; then export PIP_CERT=/run/secrets/extra_ca; fi; pip install --no-cache-dir -r workers/requirements.txt'

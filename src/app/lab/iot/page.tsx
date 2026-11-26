@@ -6,6 +6,7 @@ import { Btn, Card, ErrorBox, Field, Page, Pill, Select } from "@/components/ui"
 import { useData } from "@/lib/client/hooks";
 import { post } from "@/lib/client/api";
 import { parseSerialLine } from "@/lib/serial";
+import { ArduinoSim } from "@/components/ArduinoSim";
 
 type SerialPortLike = { open: (o: { baudRate: number }) => Promise<void>; close: () => Promise<void>; readable: ReadableStream<Uint8Array> | null };
 
@@ -55,6 +56,7 @@ export default function IotLab() {
 
   return (
     <Page title={t("nav.iotlab")} subtitle={t("lab.iot.desc")}>
+      <ArduinoSim />
       <Card title={t("iotlab.serial")}>
         {!supported ? <p className="text-sm text-[var(--warn)]" data-testid="serial-unsupported">{t("iotlab.unsupported")}</p> : (
           <div className="space-y-3">

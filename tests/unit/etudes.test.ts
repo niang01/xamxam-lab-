@@ -264,3 +264,25 @@ describe("Solaire thermique", () => {
     expect(bad.warnings.join()).toContain("Rendement nul");
   });
 });
+
+import { modelFromStudy } from "@/lib/studies/model3d";
+import { assemblySchema, massReport } from "@/lib/assembly";
+import { SOFTWARE as ALLSW } from "@/lib/studies";
+describe("Maquette 3D depuis une étude", () => {
+  const sw = (k: string) => ALLSW.find((s) => s.key === k)!;
+  it("photovoltaïque : un volume par module, dimensions de la fiche ; sans dimensions → refus motivé", () => {
+    const pv = sw("photovoltaique"), r = pv.run(pv.example, {});
+    const m = modelFromStudy("photovoltaique", pv.example, r);
+    expect(assemblySchema.safeParse(m.assembly).success).toBe(true);
+    expect(m.assembly!.parts.filter((p) => p.id.startsWith("M"))).toHaveLength(2);
+    expect(m.assembly!.parts[0].dims[0]).toBe(1134);
+    const no = modelFromStudy("photovoltaique", { ...pv.example, mod_l: null }, r);
+    expect(no.assembly).toBeNull(); expect(no.missing.join()).toContain("longueur");
+  });
+  it("séchoir, chambre froide, poutre : volumes aux dimensions de l'étude ; logiciel sans maquette : explication", () => {
+    for (const k of ["sechage-solaire", "froid", "genie-civil"]) { const s = sw(k); const m = modelFromStudy(k, s.example, s.run(s.example, {})); expect(assemblySchema.safeParse(m.assembly).success, k).toBe(true); expect(massReport(m.assembly!).parts.length).toBeGreaterThan(0); }
+    const cf = modelFromStudy("froid", sw("froid").example, sw("froid").run(sw("froid").example, {}));
+    expect(cf.assembly!.parts[0].dims).toEqual([4000, 3000, 2500]);
+    expect(modelFromStudy("reseaux", {}, sw("reseaux").run(sw("reseaux").example, {})).note).toContain("non disponible");
+  });
+});

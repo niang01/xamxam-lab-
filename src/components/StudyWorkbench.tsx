@@ -6,6 +6,7 @@
  * Un champ vide reste vide : le moteur le signale comme donnée manquante (jamais de valeur supposée).
  */
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "./providers";
 import { ProjectPicker } from "./ProjectPicker";
@@ -181,6 +182,7 @@ function EquipmentChooser({ pick, onPick }: { pick: EquipmentPick; onPick: (v: S
 
 function StudyResultView({ r, studyId, pid, setPid, onMsg, onErr }: { r: StudyResult; studyId: string | null; pid: string; setPid: (s: string) => void; onMsg: (s: string) => void; onErr: (e: unknown) => void }) {
   const { t } = useApp();
+  const router = useRouter();
   return (
     <div className="space-y-4" data-testid="study-result">
       {!!r.missing.length && <Card title={t("study.missing")}><ul className="list-disc pl-5 text-sm text-[var(--warn)]" data-testid="study-missing">{r.missing.map((m) => <li key={m}>{m}</li>)}</ul></Card>}
@@ -204,6 +206,7 @@ function StudyResultView({ r, studyId, pid, setPid, onMsg, onErr }: { r: StudyRe
           {studyId ? <>
             {(["pdf", "docx", "xlsx", "md"] as const).map((f) => <a key={f} className="rounded-lg border border-[var(--line)] px-2 py-1 text-xs uppercase" href={`/api/studies/${studyId}/export?format=${f}`} data-testid={`study-export-${f}`}>{f}</a>)}
             <Link className="rounded-lg border border-[var(--line)] px-3 py-1.5" href={`/boutique?etude=${studyId}`} data-testid="study-shop">{t("study.toShop")}</Link>
+            <Btn kind="ghost" data-testid="study-3d" onClick={async () => { try { const m = await post<{ id: string }>(`/api/studies/${studyId}/model3d`, {}); router.push(`/studio?maquette=${m.id}`); } catch (e) { onErr(e); } }}>{t("study.model3d")}</Btn>
             <ProjectPicker value={pid} onChange={setPid} />
             <Btn kind="ghost" disabled={!pid} onClick={async () => { try { await post(`/api/studies/${studyId}`, { project_id: pid }); onMsg(t("study.sentToProject")); } catch (e) { onErr(e); } }} data-testid="study-to-project">{t("study.toProject")}</Btn>
             <Link className="rounded-lg border border-[var(--line)] px-3 py-1.5" href={`/ai?q=${encodeURIComponent(t("study.askAi"))}&etude=${studyId}`}>{t("study.askAiBtn")}</Link>

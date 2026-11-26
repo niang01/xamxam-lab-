@@ -1,4 +1,5 @@
 /** Analyse d'un document extrait : exercices, données, calculs de la plateforme, contrôles, rapport. */
+import { readPlan, type PlanReading } from "@/lib/docs/plan-reading";
 import { CALCS } from "../calc";
 import { checkAnswers, crossChecks, planFor, splitExercises, steps, type CalcOutput, type Quantity } from "@/lib/docs/analyze";
 
@@ -9,7 +10,7 @@ export interface ExerciseReport {
   result: CalcOutput | null; steps: string[]; checks: string[]; answers: ReturnType<typeof checkAnswers>;
   missing: string[]; humanReview: string[];
 }
-export interface DocReport { generatedAt: string; engine: string; exercises: ExerciseReport[]; tables: number; warnings: string[]; humanReview: string[] }
+export interface DocReport { generatedAt: string; engine: string; exercises: ExerciseReport[]; tables: number; warnings: string[]; humanReview: string[]; plan?: PlanReading }
 
 export const ENGINE = "Aláji IA — analyse déterministe v1 (registre de calculs testé)";
 
@@ -44,7 +45,7 @@ export function analyseText(text: string, tables: string[][][], warnings: string
   });
   const humanReview = ["Résultats produits par des calculs déterministes testés ; ils dépendent de la lecture correcte de l'énoncé : relire les données extraites avant toute utilisation (examen, installation réelle)."];
   if (warnings.some((w) => /OCR/.test(w))) humanReview.push("Texte issu d'une reconnaissance optique : vérifier chaque chiffre et chaque unité.");
-  return { generatedAt: new Date().toISOString(), engine: ENGINE, exercises, tables: tables.length, warnings, humanReview };
+  return { generatedAt: new Date().toISOString(), engine: ENGINE, exercises, tables: tables.length, warnings, humanReview, plan: readPlan(text) };
 }
 
 /** Rapport lisible (Markdown) : extrait / hypothèses / calculs / contrôles / à valider. */
@@ -63,6 +64,15 @@ export function reportMarkdown(filename: string, r: DocReport, tables: string[][
     if (e.humanReview.length) L.push("### À valider par une personne", ...e.humanReview.map((h) => `- ${h}`));
     L.push("");
   });
+  if (r.plan && (r.plan.equipment.length || r.plan.references.length || r.plan.dimensions.length)) {
+    L.push("## Lecture technique du document (plan, cahier des charges, photo)");
+    if (r.plan.equipment.length) L.push("### Équipements mentionnés (rapprochés de la bibliothèque)", ...r.plan.equipment.map((e) => `- ${e.name} (${e.count} mention${e.count > 1 ? "s" : ""})`));
+    if (r.plan.references.length) L.push("### Repères d'appareils lus", `- ${r.plan.references.join(", ")}`);
+    if (r.plan.dimensions.length) L.push("### Dimensions et grandeurs lisibles", `- ${r.plan.dimensions.join(" ; ")}`);
+    if (r.plan.generator) L.push("### Schéma proposé", `- Générateur « ${r.plan.generator} » : /schemas?generer=${r.plan.generator}`);
+    if (r.plan.missing.length) L.push("### Informations manquantes", ...r.plan.missing.map((m) => `- ${m}`));
+    L.push("");
+  }
   if (tables.length) L.push(`## Tableaux extraits : ${tables.length} (voir l'export Excel)`, "");
   L.push("## Validation humaine", ...r.humanReview.map((h) => `- ${h}`));
   return L.join("\n");

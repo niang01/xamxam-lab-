@@ -4,14 +4,15 @@
  * lisible par les logiciels de CAO (LibreCAD, QCAD, AutoCAD…). Le dessin reste modifiable dans l'éditeur 2D : ces
  * fichiers sont des sorties, l'original éditable est le schéma XAM-XAM LAB (JSON versionné).
  */
-import { BLOCK_W, blockHeight, bomOf, pinPoint, type Block, type Diagram } from "./diagram";
+import { BLOCK_W, blockHeight, bomOf, dimText, layerOf, pinPoint, visibleDiagram, type Block, type Diagram } from "./diagram";
 import { pdfStr, winAnsi } from "./docs/export";
 
 export const SHEETS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841] } as const;
 export type SheetSize = keyof typeof SHEETS;
 export interface PrintMeta { size: SheetSize; orientation: "portrait" | "landscape"; margin: number; project: string; title: string; number: string; designer: string; date: string }
 
-const PT = 72 / 25.4; // points par millimètre
+const PT = 72 / 25.4;
+const ascii0 = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7e]/g, "_"); // points par millimètre
 
 function rectCorners(b: Block): [number, number][] {
   const h = blockHeight(b), r = (b.rot * Math.PI) / 180;
@@ -24,13 +25,14 @@ function wirePath(d: Diagram, w: Diagram["wires"][number]): [number, number][] |
   return [[x1, y1], [mx, y1], [mx, y2], [x2, y2]];
 }
 export function bounds(d: Diagram) {
-  const pts: [number, number][] = [...d.blocks.flatMap(rectCorners), ...d.blocks.flatMap((b) => b.pins.map((_, i) => pinPoint(b, i))), ...d.notes.map((n) => [n.x, n.y] as [number, number]), ...d.notes.map((n) => [n.x + n.text.length * 6, n.y] as [number, number])];
+  const pts: [number, number][] = [...(d.dims ?? []).flatMap((c) => [[c.x1, c.y1], [c.x2, c.y2]] as [number, number][]), ...d.blocks.flatMap(rectCorners), ...d.blocks.flatMap((b) => b.pins.map((_, i) => pinPoint(b, i))), ...d.notes.map((n) => [n.x, n.y] as [number, number]), ...d.notes.map((n) => [n.x + n.text.length * 6, n.y] as [number, number])];
   if (!pts.length) return { minX: 0, minY: 0, maxX: 100, maxY: 100 };
   return { minX: Math.min(...pts.map((p) => p[0])) - 20, minY: Math.min(...pts.map((p) => p[1])) - 20, maxX: Math.max(...pts.map((p) => p[0])) + 20, maxY: Math.max(...pts.map((p) => p[1])) + 20 };
 }
 
 /** Planche PDF vectorielle d'un schéma. Renvoie aussi l'échelle appliquée (mm par unité du schéma). */
-export function diagramPdf(d: Diagram, m: PrintMeta): { pdf: Uint8Array; mmPerUnit: number } {
+export function diagramPdf(full: Diagram, m: PrintMeta): { pdf: Uint8Array; mmPerUnit: number } {
+  const d = visibleDiagram(full);
   const [a, b] = SHEETS[m.size];
   const [W, H] = m.orientation === "landscape" ? [b, a] : [a, b]; // mm
   const titleH = 32, legendW = 70;
@@ -60,6 +62,14 @@ export function diagramPdf(d: Diagram, m: PrintMeta): { pdf: Uint8Array; mmPerUn
     bl.pins.forEach((p, i) => { const [px, py] = pinPoint(bl, i); ops.push(`${(X(px) - 1).toFixed(2)} ${(Yd(py) - 1).toFixed(2)} 2 2 re f`); txt(X(px) + 2, Yd(py) + 2, p, fs * 0.6); });
   }
   for (const n of d.notes) txt(X(n.x), Yd(n.y), n.text.slice(0, 120), fs * 0.85);
+  // Cotes
+  ops.push("0.71 0.33 0.04 RG 0.5 w");
+  for (const c of d.dims ?? []) {
+    line([[X(c.x1), Yd(c.y1)], [X(c.x2), Yd(c.y2)]]);
+    for (const [x, y] of [[c.x1, c.y1], [c.x2, c.y2]]) ops.push(`${(X(x) - 1.5).toFixed(2)} ${(Yd(y) - 1.5).toFixed(2)} 3 3 re f`);
+    txt(X((c.x1 + c.x2) / 2), Yd((c.y1 + c.y2) / 2) + 2, dimText(d, c), fs * 0.8);
+  }
+  ops.push("0 0 0 RG");
   // Cartouche (bas, pleine largeur utile)
   const cx = m.margin, cy = m.margin, cw = W - 2 * m.margin;
   ops.push(`${(cx * PT).toFixed(2)} ${(cy * PT).toFixed(2)} ${(cw * PT).toFixed(2)} ${(titleH * PT).toFixed(2)} re S`);
@@ -93,7 +103,9 @@ export function diagramPdf(d: Diagram, m: PrintMeta): { pdf: Uint8Array; mmPerUn
 }
 
 /** Export DXF R12 (ASCII) : calques BLOCS, LIAISONS, TEXTES, NOTES ; axe Y inversé (repère CAO). */
-export function diagramDxf(d: Diagram, title = ""): string {
+export function diagramDxf(full: Diagram, title = ""): string {
+  const d = visibleDiagram(full);
+  const blockLayers = [...new Set(d.blocks.map((b) => ascii0(layerOf(b)).toUpperCase().replace(/[^A-Z0-9_-]/g, "_")))];
   const L: string[] = [];
   const g = (code: number, v: string | number) => L.push(String(code), typeof v === "number" ? (Number.isInteger(v) ? String(v) : v.toFixed(3)) : v);
   const ascii = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\x20-\x7e]/g, "?");
@@ -101,18 +113,20 @@ export function diagramDxf(d: Diagram, title = ""): string {
   const textE = (layer: string, x: number, y: number, h: number, s: string) => { g(0, "TEXT"); g(8, layer); g(10, x); g(20, -y); g(30, 0); g(40, h); g(1, ascii(s)); };
   g(0, "SECTION"); g(2, "HEADER"); g(9, "$ACADVER"); g(1, "AC1009"); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "TABLES"); g(0, "TABLE"); g(2, "LAYER"); g(70, 4);
-  for (const [name, color] of [["BLOCS", 7], ["LIAISONS", 4], ["TEXTES", 3], ["NOTES", 2]] as const) { g(0, "LAYER"); g(2, name); g(70, 0); g(62, color); g(6, "CONTINUOUS"); }
+  for (const [name, color] of [["BLOCS", 7], ["LIAISONS", 4], ["TEXTES", 3], ["NOTES", 2], ["COTES", 1], ...blockLayers.map((n) => [`BLOCS_${n}`, 7] as const)]) { g(0, "LAYER"); g(2, name); g(70, 0); g(62, color); g(6, "CONTINUOUS"); }
   g(0, "ENDTAB"); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "ENTITIES");
   for (const b of d.blocks) {
     const c = rectCorners(b);
-    for (let i = 0; i < 4; i++) lineE("BLOCS", c[i], c[(i + 1) % 4]);
+    const lay = `BLOCS_${ascii0(layerOf(b)).toUpperCase().replace(/[^A-Z0-9_-]/g, "_")}`;
+    for (let i = 0; i < 4; i++) lineE(lay, c[i], c[(i + 1) % 4]);
     textE("TEXTES", b.x - BLOCK_W / 2 + 6, b.y, 10, b.label);
     textE("TEXTES", b.x - BLOCK_W / 2 + 6, b.y + 14, 6, b.name.slice(0, 40));
     b.pins.forEach((p, i) => { const [px, py] = pinPoint(b, i); textE("TEXTES", px + 2, py - 2, 4, p); });
   }
   for (const w of d.wires) { const p = wirePath(d, w); if (p) for (let i = 0; i < p.length - 1; i++) lineE("LIAISONS", p[i], p[i + 1]); }
   for (const n of d.notes) textE("NOTES", n.x, n.y, 6, n.text.slice(0, 200));
+  for (const c of d.dims ?? []) { lineE("COTES", [c.x1, c.y1], [c.x2, c.y2]); textE("COTES", (c.x1 + c.x2) / 2, (c.y1 + c.y2) / 2 - 4, 6, dimText(d, c)); }
   if (title) { const bb = bounds(d); textE("TEXTES", bb.minX, bb.minY - 10, 12, title); }
   g(0, "ENDSEC"); g(0, "EOF");
   return L.join("\n") + "\n";
