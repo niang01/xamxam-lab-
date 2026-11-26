@@ -346,7 +346,7 @@ export default function Marketplace() {
   const openListing = (id: string | null) => setSt((s) => ({ ...s, listing: id }));
   const openInquiry = (id: string) => setSt({ tab: "inquiries", listing: null, inquiry: id });
   return (
-    <Page title={t("nav.market")} subtitle={t("market.subtitle")}>
+    <Page onBack={st.listing ? () => openListing(null) : undefined} title={t("nav.market")} subtitle={t("market.subtitle")}>
       <div role="tablist" className="mb-4 flex flex-wrap gap-1.5">
         {tabs.map((x) => (
           <button key={x} role="tab" data-tab={x} aria-selected={st.tab === x} onClick={() => setSt({ tab: x, listing: null, inquiry: st.inquiry })}

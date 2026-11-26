@@ -29,7 +29,7 @@ export default function Bank() {
   const load = async (id: string) => { setErr(null); try { setOpen(await api<Detail>(`/api/bank/${encodeURIComponent(id)}`)); window.scrollTo({ top: 0 }); } catch (e) { setErr(e); } };
   const act = async (action: string) => { if (!open) return; try { const r = await post<{ id?: string }>(`/api/bank/${encodeURIComponent(open.id)}`, { action }); if (r.id) router.push(`/projects/${r.id}`); else { await load(open.id); reload(); } } catch (e) { setErr(e); } };
   return (
-    <Page title={t("nav.bank")} subtitle={data ? t("bank.subtitle", { n: data.inventory.total, iot: data.inventory.iot }) : ""}>
+    <Page onBack={open ? () => setOpen(null) : undefined} title={t("nav.bank")} subtitle={data ? t("bank.subtitle", { n: data.inventory.total, iot: data.inventory.iot }) : ""}>
       <ErrorBox error={err} />
       {open && (
         <Card title={open.title} testId="bank-detail" actions={<span className="flex flex-wrap gap-2">

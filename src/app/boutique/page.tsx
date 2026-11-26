@@ -63,7 +63,7 @@ export default function Shop() {
       </div>
     </li>);
   return (
-    <Page title={t("nav.shop")} subtitle={t("shop.subtitle")}>
+    <Page onBack={tab !== "catalogue" ? () => setTab("catalogue") : undefined} title={t("nav.shop")} subtitle={t("shop.subtitle")}>
       {cat && <p className="rounded-lg border border-[var(--warn)] px-3 py-2 text-xs" data-testid="payment-status">{cat.payment.message}</p>}
       <Mareme study={studyCtx} project={projectCtx} onCart={reloadCart} />
       <div className="flex flex-wrap gap-1" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" data-tab={k} aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-lg px-3 py-1.5 text-sm ${tab === k ? "bg-[var(--tech)] text-white" : "border border-[var(--line)]"}`}>{t(l)}{k === "panier" && cart?.items.length ? ` (${cart.items.length})` : ""}</button>)}</div>

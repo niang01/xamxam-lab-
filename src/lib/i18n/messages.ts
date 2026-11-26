@@ -1646,6 +1646,7 @@ export const MESSAGES = {
   "avr.time": e("temps simulé", "simulated time"),
   "avr.serial": e("Moniteur série (9600 bauds)", "Serial monitor (9600 baud)"),
   "avr.limits": e("Émulés : cœur AVR, minuterie 0 (millis, delay), ports, convertisseur analogique, liaison série. Non émulés : minuteries 1 et 2 (PWM sur certaines broches, tone), I2C, SPI, EEPROM persistante, bibliothèques externes. Les capteurs et actionneurs réels (calibration, puissance, protections) restent à vérifier sur le montage.", "Emulated: AVR core, timer 0 (millis, delay), ports, analog converter, serial link. Not emulated: timers 1 and 2 (PWM on some pins, tone), I2C, SPI, persistent EEPROM, external libraries. Real sensors and actuators (calibration, power, protections) must be checked on the build."),
+  "auth.waking": e("Réveil du serveur en cours, votre session est conservée : reconnexion automatique dans quelques secondes…", "Waking the server up, your session is kept: reconnecting automatically in a few seconds…"),
   "nav.guide": e("Guides d'utilisation", "User guides"),
   "nav.licence": e("Licence", "Licence"),
   "auth.trialInfo": e("Chaque nouveau compte bénéficie d'un essai gratuit de 90 jours, sans moyen de paiement.", "Every new account gets a free 90-day trial, with no payment method."),

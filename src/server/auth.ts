@@ -1,11 +1,12 @@
 /** Session XAM-XAM LAB : cookie httpOnly signé posé sur une réponse standard, et vue publique de l'utilisateur. */
 import { randomBytes } from "node:crypto";
 import { env } from "./env";
-import { SESSION_COOKIE, signSession } from "./security/session";
+import { SESSION_COOKIE, signSession, verifySession } from "./security/session";
 import { ApiFailure, type User } from "./api";
 import { PROFILE_CAPABILITIES, type Profile } from "@/lib/profiles";
 
 const SESSION_LIFETIME_S = 14 * 24 * 3600;
+const RENEW_BELOW_S = 7 * 24 * 3600;
 
 function cookieHeader(value: string, maxAge: number): string {
   const attrs = [`${SESSION_COOKIE}=${encodeURIComponent(value)}`, "Path=/", "HttpOnly", "SameSite=Lax", `Max-Age=${maxAge}`];
@@ -42,4 +43,12 @@ export function closeSession(res: Response): Response {
 export function publicUser(user: User) {
   const capabilities = user.is_admin ? [...new Set(Object.values(PROFILE_CAPABILITIES).flat())] : PROFILE_CAPABILITIES[user.profile_kind as Profile] ?? [];
   return { ...user, capabilities };
+}
+
+/** Renouvelle le cookie de session lorsqu'il lui reste moins de 7 jours (même version : la révocation reste effective). */
+export async function renewSessionIfNeeded(res: Response, req: Request): Promise<void> {
+  const raw = (req.headers.get("cookie") ?? "").split(";").map((c) => c.trim()).find((c) => c.startsWith(`${SESSION_COOKIE}=`));
+  const p = await verifySession(raw ? decodeURIComponent(raw.slice(SESSION_COOKIE.length + 1)) : null, env.sessionSecret);
+  if (!p || p.exp * 1000 - Date.now() > RENEW_BELOW_S * 1000) return;
+  await openSession(res, p.sub, p.ver, req);
 }

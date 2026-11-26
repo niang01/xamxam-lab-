@@ -39,7 +39,7 @@ function readTheme(): Theme {
 const GROUPS: Group[] = ["core", "lab", "connect", "knowledge", "ecosystem", "me"];
 
 export function LabShell({ children }: { children: ReactNode }) {
-  const { me, meLoaded, t, lang, setLang, fallback, wolofCount, totalKeys, refreshMe } = useApp();
+  const { me, meLoaded, waking, t, lang, setLang, fallback, wolofCount, totalKeys, refreshMe } = useApp();
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -114,7 +114,7 @@ export function LabShell({ children }: { children: ReactNode }) {
           <Brand />
           <div className="flex items-center gap-2">{themeSwitch}{langSwitch}</div>
         </div>
-        {isPublic ? children : <p className="p-6 text-sm text-[var(--fg-2)]">{t("c.loading")}</p>}
+        {isPublic ? children : <p className="p-6 text-sm text-[var(--fg-2)]" data-testid="session-loading">{waking ? t("auth.waking") : t("c.loading")}</p>}
       </div>
     );
   }

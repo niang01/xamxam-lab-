@@ -25,7 +25,7 @@ export default function Exercises() {
   const prog = (k: string) => data?.progress.find((p) => p.template === k);
   const tpls = (data?.templates ?? []).filter((x) => !fil || x.filiere === fil);
   return (
-    <Page title={t("nav.exercises")} subtitle={t("ex.subtitle", { n: data?.templates.length ?? 0 })}>
+    <Page onBack={exam ? () => setExam(null) : undefined} title={t("nav.exercises")} subtitle={t("ex.subtitle", { n: data?.templates.length ?? 0 })}>
       <ErrorBox error={err} />
       {cur && (
         <Card title={`${cur.q.title} — ${t("ex.variant")} ${cur.variant}`} testId="ex-current">

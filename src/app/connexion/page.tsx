@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input } from "@/components/ui";
 import { post } from "@/lib/client/api";
 import { PasswordInput } from "@/components/PasswordInput";
 
 export default function Login() {
-  const { t, refreshMe } = useApp();
+  const { t, refreshMe, me } = useApp();
   const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
   const [err, setErr] = useState<unknown>(null); const [busy, setBusy] = useState(false);
   const [challenge, setChallenge] = useState<string | null>(null);
@@ -17,6 +17,12 @@ export default function Login() {
     const next = new URLSearchParams(window.location.search).get("suite");
     window.location.href = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
   }
+  // Reconnexion automatique : une session encore valable mène directement à la page demandée.
+  useEffect(() => {
+    if (!me) return;
+    const next = new URLSearchParams(window.location.search).get("suite");
+    window.location.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
+  }, [me]);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
     try {

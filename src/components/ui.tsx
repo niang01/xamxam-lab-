@@ -2,13 +2,42 @@
 /** Composants d'interface partagés (identité XAM-XAM : noir profond, bleu technologique, cyan, violet, vert). */
 import type { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { useT } from "./providers";
+import { usePathname, useRouter } from "next/navigation";
 import { RequestError } from "@/lib/client/api";
 import { MESSAGES, type MsgKey } from "@/lib/i18n/messages";
 import type { CalcResult } from "@/lib/eng/result";
 
-export function Page({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
+/** Rubrique parente d'un chemin (« /dimensionnement/pompage » → « /dimensionnement », « /lab/iot » → « /lab »). */
+export function parentPath(path: string): string {
+  const parts = path.split("?")[0].split("/").filter(Boolean);
+  return parts.length <= 1 ? "/" : `/${parts.slice(0, -1).join("/")}`;
+}
+
+/** Commande « Retour » : page précédente de la navigation, sinon rubrique parente (page ouverte depuis un lien). */
+export function BackButton({ href, onBack }: { href?: string; onBack?: () => void }) {
+  const t = useT();
+  const router = useRouter();
+  const path = usePathname() ?? "/";
+  if (path === "/" && !href && !onBack) return null;
+  const go = () => {
+    if (onBack) { onBack(); return; }
+    if (href) { router.push(href); return; }
+    const internal = typeof document !== "undefined" && document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+    if (internal) router.back(); else router.push(parentPath(path));
+  };
+  return (
+    <button type="button" onClick={go} data-testid="back" aria-label={t("c.back")}
+      className="mb-3 inline-flex items-center gap-1 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--fg-2)] hover:border-[var(--cyan)] hover:text-[var(--fg)]">
+      <span aria-hidden>←</span>{t("c.back")}
+    </button>
+  );
+}
+
+/** `onBack` : une vue détaillée ouverte dans la page est d'abord refermée par « Retour ». */
+export function Page({ title, subtitle, actions, children, back, onBack }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode; back?: string | false; onBack?: () => void }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
+      {back !== false && <BackButton href={back || undefined} onBack={onBack} />}
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)] md:text-3xl">{title}</h1>

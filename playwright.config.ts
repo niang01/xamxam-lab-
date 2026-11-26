@@ -19,7 +19,7 @@ export default defineConfig({
   use: { baseURL: EXTERNAL ?? `http://localhost:${PORT}`, ...(EXTERNAL && PROXY ? { proxy: { server: PROXY } } : {}), ignoreHTTPSErrors: process.env.XX_E2E_IGNORE_TLS === "1", trace: "off", launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } },
   projects: [
     { name: "bureau", testIgnore: /mobile\.spec\.ts/, use: { ...devices["Desktop Chrome"], permissions: ["camera", "microphone"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium", args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] } } },
-    { name: "telephone", use: { ...devices["Pixel 7"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } }, testMatch: /(mobile|mot-de-passe|rubriques|dimensionnement)\.spec\.ts/ },
+    { name: "telephone", use: { ...devices["Pixel 7"], launchOptions: { executablePath: process.env.PW_CHROMIUM ?? "/opt/pw-browsers/chromium" } }, testMatch: /(mobile|mot-de-passe|rubriques|dimensionnement|navigation)\.spec\.ts/ },
   ],
   webServer: EXTERNAL ? undefined : {
     command: `npx next start -p ${PORT}`,
