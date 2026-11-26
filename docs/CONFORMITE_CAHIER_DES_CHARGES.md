@@ -1,140 +1,160 @@
-# Conformité au cahier des charges général (25/11/2026)
+# Conformité au cahier des charges général — tableau final (26/11/2026)
 
-Statuts utilisés (partie 20) :
+Reprise du cahier des charges **point par point**, après l'exécution intégrale demandée.
+
+## Lecture du tableau
+
+Colonnes : **Exigence** · **Réalisation** · **Installation** (outil, bibliothèque ou moteur mis en place) · **Configuration** (base, service, variable) · **Tests** · **Résultat**.
+
+Statuts (partie 20) :
 - **Absent** ;
 - **Présent mais non fonctionnel** ;
 - **Partiellement fonctionnel** ;
 - **Fonctionnel** ;
-- **Testé et validé** : fonctionne et a été vérifié par des tests automatiques. Pour une installation réelle, il reste en plus à faire vérifier les résultats par une personne compétente.
+- **Testé et validé** : vérifié par des tests automatiques exécutés, et en production lorsque c'est indiqué « prod ».
 
-Preuves : fichiers de tests du dépôt (`tests/unit`, `tests/integration`, `tests/e2e`) et `docs/RAPPORT_DE_TESTS.md`. Les volumes sont calculés depuis le code.
+Pour une installation réelle, les résultats de calcul restent à faire vérifier par une personne compétente.
 
-## Synthèse chiffrée
+Preuves : `tests/unit`, `tests/integration`, `tests/e2e`, et [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md).
 
-| Élément | Avant ce cahier des charges | Après |
+Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xamxam-db`), commit `ad21a3b` et suivants.
+
+## Synthèse chiffrée (comptée dans le code)
+
+| Élément | Début du cahier des charges | Aujourd'hui |
 |---|---|---|
-| Composants de la bibliothèque | 190 | **397** (23 disciplines, 20 filières), sans doublon |
-| Logiciels de dimensionnement | 0 (calculs isolés) | **7** : installation électrique, photovoltaïque, pompage, solaire thermique, séchage solaire, biomasse/biogaz, compostage |
-| Générateurs de schémas | 9 | **10** (+ unifilaire de tableau électrique) |
-| Banque de projets | 190, dont 100 IoT | **305**, dont **215 IoT** répartis dans **35 secteurs** |
-| Programmes IoT compilés (PlatformIO, ESP32-S3) | 11 | 11 (réutilisés par les projets sectoriels) |
-| Tests unitaires et d'intégration | 218 | **262** |
-| Parcours de bout en bout (ordinateur et Pixel 7) | 17 | **19** |
+| Composants de la bibliothèque (sans doublon, test) | 190 | **389** (23 disciplines, 20 filières) |
+| Logiciels de dimensionnement | 0 | **27** |
+| Générateurs de schémas | 9 | **10** |
+| Banque de projets | 190, dont 100 IoT | **305**, dont **215 IoT**, dans **35 secteurs** ; dossier de **35 rubriques** |
+| Agents d'Aláji IA | 17 | **25**, + outils `list_software` et `run_study` |
+| Rayons de la boutique | 15 | **31** |
+| Programmes Arduino compilés et simulés en ligne | 0 | **4 exemples** + code libre de l'utilisateur |
+| Tests unitaires et d'intégration | 218 | **296** (38 fichiers) |
+| Parcours de bout en bout (ordinateur et Pixel 7) | 17 | **20** |
 
 ## Partie 1 — Laboratoire Électricité et Électrotechnique
 
-| Exigence | État initial | Travail réalisé | État final | Test effectué | Résultat | Limitation | Action restante |
-|---|---|---|---|---|---|---|---|
-| Nom « Électricité et Électrotechnique » | Electrical Lab | Renommé dans le menu, le panneau Aláji et les guides | Testé et validé | e2e `interface` | ✅ | — | — |
-| Domestique : interrupteurs, va-et-vient, permutateurs, prises, points lumineux, boîtes, gaines, goulottes, chemins de câbles, conducteurs, protections, tableaux, compteurs, télérupteurs, minuteries… | 11 éléments | +30 types génériques avec paramètres et unités | Testé et validé | `espaces` (bibliothèque) | ✅ | Types génériques : les références de fabricant sont ajoutées avec leur fiche | Saisie de références réelles |
-| Industriel : moteurs, contacteurs, relais thermiques, disjoncteurs moteurs, sectionneurs, démarreurs, variateurs, transformateurs, armoires, sécurité | Partiel | +16 types | Testé et validé | idem | ✅ | idem | idem |
-| Domotique et automatismes : modules, capteurs, Zigbee, Z-Wave, entrées/sorties d'automate, détecteurs, distributeurs, passerelles Modbus, IHM | Partiel | +25 types | Testé et validé | idem | ✅ | idem | idem |
-| Unifilaire, développé, puissance et commande | 4 générateurs | Unifilaire de tableau généré à partir de l'étude | Testé et validé | `schematics-gen`, `etudes` | ✅ | — | — |
-| Multifilaire, plans d'installation, implantation | — | — | Absent | — | — | Aucun outil de plan coté | Développer un éditeur de plans |
-| Dimensionnement des conducteurs et des protections, calculs, nomenclature, rapport | Calculs séparés | Logiciel « Installation électrique » : Ib, calibres normalisés, section par tableau normatif, chute de tension, appareil général, nomenclature, rapport PDF/Word/Excel | Testé et validé | `etudes` (valeurs recalculées à la main) | ✅ | Tableau normatif à saisir par un administrateur depuis la norme ; court-circuit non vérifié | Saisir le tableau en production |
-| Simulation des circuits | ngspice (électronique) | — | Partiellement fonctionnel | `spice-i18n` | ✅ | Pas de simulation des installations de puissance | — |
+| Exigence | Réalisation | Installation | Configuration | Tests | Résultat |
+|---|---|---|---|---|---|
+| Nom « Électricité et Électrotechnique » | Menu, Aláji, guides | — | — | e2e `interface` | Testé et validé |
+| Matériel domestique, industriel, domotique et automatisme | Types génériques avec paramètres et unités | Bibliothèque (389) | Migrations, fusion des doublons en base | `espaces`, unicité de la bibliothèque | Testé et validé. Références de fabricant à saisir avec leur fiche |
+| Unifilaire, puissance et commande | Générateurs : démarrage direct, étoile-triangle, inversion, unifilaire de tableau et PV | `schematics-gen` | — | `schematics-gen` (conduction vérifiée) | Testé et validé |
+| Plans cotés, calques, implantation | Éditeur 2D : cotation à l'échelle (mm/unité), calques affichables, impression | — | — | `plans` (cotes, calques, DXF), e2e `dimensionnement` (cotation, DXF calque COTES) prod | Testé et validé. Plan architectural du bâtiment non généré automatiquement |
+| Dimensionnement des conducteurs et protections, nomenclature, rapport | Logiciel « Installation électrique » | — | Tableau normatif saisi par l'administrateur | `etudes` (recalcul à la main) | Testé et validé. Le tableau normatif reste à saisir en production (voir interventions) |
+| Simulation des circuits | ngspice (électronique) ; scénarios 4D | ngspice WebAssembly | — | `spice-i18n` | Partiellement fonctionnel : pas de simulation transitoire d'une installation de puissance |
 
-## Parties 2 et 5 — Photovoltaïque et logiciels par discipline
+## Partie 2 et partie 5 — Photovoltaïque et un logiciel par discipline
 
-| Exigence | État initial | Travail réalisé | État final | Test | Résultat | Limitation | Action restante |
-|---|---|---|---|---|---|---|---|
-| Bibliothèque PV : modules mono/poly/bifaciaux, batteries LiFePO4/AGM/GEL/plomb/NMC, BMS, onduleurs, régulateurs, protections DC, MC4, câbles, structures | 9 éléments | +20 types, paramètres de fiche (Voc, Vmp, Isc, coefficients…) | Testé et validé | `espaces` | ✅ | Aucune fiche de fabricant intégrée sans source | Références réelles |
-| Lieu (pays, région, ville) avec autocomplétion, coordonnées GPS | — | Recherche Open-Meteo Geocoding (gratuite, sans clé), dès 2 lettres | Testé et validé | `etudes` (fetch explicite) ; **production** : Thiès trouvé, coordonnées remplies | ✅ | — | — |
-| Irradiation, température, orientation, inclinaison | Climatologie NASA POWER | Bouton NASA POWER ; plan incliné (Erbs, Liu-Jordan, Rb intégré) | Testé et validé | H0 de l'exemple 1.10.1 de Duffie & Beckman, Rb comparé à Klein ; **production** : 12 mois chargés | ✅ | Modèle mensuel (estimation) | — |
-| Besoins, puissance crête, panneaux, batteries, autonomie, onduleur, régulateur, tensions et courants, chaînes, câbles, protections, production, pertes, rendement, schéma, nomenclature, rapport | Calculs séparés | Logiciel « Photovoltaïque » complet | Testé et validé | `etudes` (6 tests), e2e `dimensionnement` | ✅ | Schéma automatique pour les installations avec batteries | Générateur raccordé au réseau |
-| Équipements de la bibliothèque → calculs | — | Choix d'une référence réelle : ses caractéristiques remplissent les champs | Fonctionnel | Revue du code et de l'interface | ✅ | Aucune référence réelle enregistrée aujourd'hui en production | Saisie de références |
-| Un logiciel par discipline (25) | — | 7 logiciels complets + calculateurs existants (électronique, mécanique, froid, réseaux) | Partiellement fonctionnel | `etudes` | ✅ | Absents : génie civil, télécoms, robotique, drones, technologies médicales, informatique, automatisme, instrumentation | Prochains lots |
+| Exigence | Réalisation | Installation | Configuration | Tests | Résultat |
+|---|---|---|---|---|---|
+| Lieu avec autocomplétion et coordonnées GPS | Open-Meteo Geocoding | — | Gratuit, sans clé | `etudes` (`fetchImpl` explicite) ; prod (Thiès) | Testé et validé |
+| Irradiation et température | NASA POWER mensuel ; plan incliné | pvlib (calcul horaire du Solar Lab) | Gratuit, sans clé | Duffie & Beckman 1.10.1 ; prod | Testé et validé |
+| Chaîne complète : besoins, crête, modules, batteries, onduleur, régulateur, chaînes, câbles, protections, production, pertes, schéma, nomenclature, rapport | Logiciel « Photovoltaïque » | — | — | `etudes`, e2e prod (calcul, export Word, schéma, PDF A3) | Testé et validé |
+| Maquette 3D du champ | « Générer la maquette 3D » d'après les dimensions du module | Three.js | — | `etudes` (model3d), e2e prod | Testé et validé. Si une dimension manque, elle est signalée |
+| Un logiciel par discipline (25) | **27 logiciels** : électricité, PV, pompage, solaire thermique, séchage, biomasse, compostage, électronique, électronique de puissance, automatisme, instrumentation, nœud IoT, biomédical, informatique, réseau, télécoms, mécanique, génie industriel, génie civil, bâtiment, froid, plomberie, robotique, drone, irrigation, domotique, bilan carbone | — | — | `disciplines` (16), `etudes` (30), e2e mobile (chaque page sur téléphone) prod | Testé et validé. Les coefficients normatifs ou de fiche absents sont demandés, jamais supposés |
 
 ## Partie 3 — Laboratoire IoT et électronique
 
-| Exigence | État initial | Travail réalisé | État final | Test | Résultat | Limitation | Action restante |
-|---|---|---|---|---|---|---|---|
-| Cartes : ESP32, S3, C3, CAM, ESP8266, Arduino Uno/Mega/Nano/Leonardo, Raspberry Pi/Pico/Pico W, STM32, XIAO, MKR WAN, contrôleur industriel | 8 | **17** cartes (faits constructeur et documentation) | Testé et validé | `espaces` | ✅ | Brochage et mémoire exacts : documentation officielle de chaque révision | — |
-| Capteurs physiques, environnementaux, électriques, de localisation, industriels | ≈ 30 | **64** types | Testé et validé | `espaces` | ✅ | — | — |
-| Actionneurs et affichage | ≈ 10 | **21** | Testé et validé | idem | ✅ | — | — |
-| Communication : Wi-Fi, BLE, GSM, 4G, 5G, NB-IoT, LoRa, LoRaWAN, Zigbee, Z-Wave, RS232, RS485/Modbus, CAN, Ethernet, OPC UA, MQTT, HTTP, passerelles | Partiel | **18** modules + plateformes (MQTT, OPC UA, base de séries temporelles, tableau de bord) | Testé et validé | idem | ✅ | — | — |
-| Éditeur de schémas électroniques, placement, rotation, fils, broches | Présent | — | Fonctionnel | e2e `espaces` | ✅ | — | — |
-| Architecture IoT (capteur → passerelle → serveur → tableau de bord) | Générateur | Utilisé par les projets sectoriels | Fonctionnel | `schematics-gen` | ✅ | — | — |
-| Programmation : éditeur, exemples, compilation | 11 programmes compilés hors ligne | — | Partiellement fonctionnel | `npm run bank:compile` (local) | ✅ | Pas d'éditeur ni de compilation en ligne | Éditeur de code et compilation à la demande |
-| Simulation embarquée (programme + capteurs) | — | — | Absent | — | — | Aucun émulateur de microcontrôleur intégré | Étudier un émulateur libre |
-| Tests réels sur carte (MQTT, agent série) | Présent | — | Testé et validé (passerelle) / À tester sur matériel réel | e2e `iot` | ✅ | Cartes réelles non branchées ici | Essais sur matériel |
-
-## Partie 4 — Secteurs d'application de l'IoT
-
-| Exigence | État initial | Travail réalisé | État final | Test | Résultat |
+| Exigence | Réalisation | Installation | Configuration | Tests | Résultat |
 |---|---|---|---|---|---|
-| 32 secteurs (agriculture, élevage, industrie, électricité, énergies, bâtiments, santé, hôpitaux, transports, logistique, commerce, villes, eau, pêche, environnement, mines, pétrole-gaz, télécoms, centres de données, éducation, sécurité, tourisme, tertiaire, recherche, réseaux intelligents, construction, froid, robotique, drones, grand public, ports-aéroports, déchets) + 3 secteurs supplémentaires (patrimoine et archives, sport, services publics) | IoT surtout agricole | **115 projets sectoriels** + 100 thématiques rattachés à un secteur ; filtre « Secteur » | Testé et validé | `banque` : 35 secteurs, au moins 2 projets chacun ; l'agriculture représente moins de 20 % des projets IoT |
-| Sécurité IoT (partie 17) dans chaque projet | — | Authentification, chiffrement, mémoire tampon, journalisation, mises à jour ; essai de jeton invalide et de coupure | Testé et validé | `banque` |
-| Applications critiques signalées comme prototypes | — | Avertissement dans les 11 secteurs critiques ; santé : « ni dispositif médical, ni diagnostic » ; vétérinaire ; ATEX ; drones | Testé et validé | `banque` |
+| Cartes, capteurs, actionneurs, modules de communication | 17 cartes, 64 capteurs, 21 actionneurs, 18 modules et plateformes | Bibliothèque | — | `espaces` | Testé et validé |
+| Éditeur de schémas électroniques | Placement, rotation, fils, broches, vérification | — | — | e2e `espaces` | Testé et validé |
+| Éditeur de code et compilation | Éditeur CodeMirror (C++), compilation réelle sur le serveur | **avr-gcc, binutils-avr, avr-libc, cœur Arduino AVR** dans l'image Docker et la CI ; CodeMirror 6 | Aucune ; compatibilité avr-gcc 5 (Debian) traitée | `iot-simulation` (5) ; e2e `iot` ; prod (2 832 octets) | Testé et validé |
+| Simulation embarquée (programme et capteurs) | Émulateur ATmega328P : entrées 0–5 V sur A0–A5, entrées D2–D5, sorties D2–D13, moniteur série, temps simulé | **avr8js 0.20.1** (MIT) | — | `iot-simulation` : clignotement, seuil avec hystérésis, alarme temporisée, sécurité pompe ; binaire de prod simulé ; e2e prod | Testé et validé pour l'Arduino Uno. Non émulés : minuteries 1 et 2, I2C, SPI, ESP32 |
+| Téléversement sur carte | Téléchargement du .hex ; lecture série Web Serial | — | — | e2e (.hex) | Fonctionnel. Pas de téléversement depuis le navigateur |
+| Tests réels sur carte (MQTT, agent série) | Passerelle MQTT et agent local | Broker MQTT, serialport | Jetons par appareil | e2e `iot` | Testé et validé sur la passerelle. Matériel réel non branché ici |
 
-Inventaire de la banque IoT par secteur : industrie 24, sécurité 18, eau 14, agriculture 14, énergies renouvelables 14, environnement 13, électricité 10, bâtiment 9, froid 8, recherche 8, robotique 8, élevage 5, transports 5, santé 4, ville 4, et 3 pour chacun des autres secteurs, sauf patrimoine, sport et services publics (2 chacun).
-- Tous les projets IoT de la banque sont **complets** : 17 rubriques, sécurité, essais et pannes.
-- 226 projets de la banque ont un programme d'exemple, compilé mais non essayé sur matériel réel.
+## Partie 4 — IoT dans tous les secteurs
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| 32 secteurs demandés + 3 | 215 projets IoT, filtre « Secteur » ; l'agriculture représente moins de 20 % des projets | `banque` (35 secteurs, au moins 2 projets chacun) ; prod (inventaire 305/215) | Testé et validé |
+| Sécurité IoT (partie 17) dans chaque projet | Authentification, chiffrement, mode dégradé, journalisation, mises à jour, sauvegarde ; aucun secret dans les programmes | `banque` | Testé et validé |
+| Applications critiques | Avertissement « prototype » (santé : ni dispositif médical ni diagnostic ; ATEX ; drones…) | `banque` | Testé et validé |
 
 ## Parties 6 à 10 — Pompage, séchage, biomasse, compostage, solaire thermique
 
-| Logiciel | État initial | État final | Test | Limitation |
+| Logiciel | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Pompage de A à Z | Besoins, HMT, Colebrook-White, point de fonctionnement, NPSH, électrique, groupe, solaire, schéma, nomenclature, rapport | `etudes`, e2e prod | Testé et validé |
+| Séchage solaire | Direct, indirect, mixte, hybride ; psychrométrie ; maquette 3D (chambre, claies, capteur) | `etudes` | Testé et validé. La cinétique de séchage exige un essai |
+| Biomasse et biogaz | Digesteur, biogaz, cogénération, digestat, combustion | `etudes` | Testé et validé. Potentiels méthanogènes saisis par l'utilisateur |
+| Compostage | C/N, humidité, andains, aération, calendrier | `etudes` | Testé et validé |
+| Solaire thermique | Besoins, η0/a1/a2, couverture, ballon, circuit, économies | `etudes` | Testé et validé. Méthode mensuelle |
+
+## Partie 11 — Conception automatique 2D/3D, plans, impression, exports
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Lecture de documents : PDF, Word, Excel, PowerPoint, images, scans | Extraction et OCR (français, anglais) ; Poppler et Tesseract installés | `documents` | Testé et validé |
+| Lecture technique de plans et cahiers des charges | Équipements de la bibliothèque, repères (QF1, KM1…), dimensions et grandeurs avec unités, générateur adapté, informations manquantes | `documents` (cahier de pompage) | Testé et validé sur le texte. Le dessin d'un plan scanné n'est pas vectorisé |
+| Génération 2D | 10 générateurs ; génération depuis une étude, un document ou Aláji | `schematics-gen`, e2e prod | Testé et validé |
+| Génération 3D | Maquette depuis une étude (PV, séchage, froid, génie civil) ; éditeur 3D, masses, STL | `etudes`, e2e `espaces` et `dimensionnement` prod | Testé et validé. Pas de 3D depuis un document ; vues éclatées et plans de fabrication absents |
+| Cotation, calques, légende, nomenclature | Cotes à l'échelle, calques, notes, nomenclature | `plans`, e2e prod | Testé et validé |
+| Impression A4–A1, orientation, cartouche, aperçu, PDF | Planche PDF avec cartouche | `plans`, e2e prod | Testé et validé |
+| Formats SVG, PNG, PDF, DXF | DXF R12 par calque, calque COTES | `plans`, e2e prod | Testé et validé |
+| Format DWG | — | — | **Absent** : format propriétaire, sans outil libre fiable. Ouvrir le DXF dans un logiciel de DAO puis l'enregistrer en DWG |
+
+## Partie 12 — Banque de projets
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Des centaines de projets distincts | 305 projets, 20 filières, 6 niveaux | `banque`, prod | Testé et validé |
+| Dossier de 35 rubriques | Généré depuis les données du projet ; rubriques sans donnée signalées « à compléter » ; exports Markdown, Word, PDF | `banque` ; prod (35 rubriques, Word 200) | Testé et validé |
+| Progression : en cours, terminé, réinitialiser, filtre | Table `bank_progress` | `banque` ; prod (statut conservé en base Neon) | Testé et validé |
+| Code, schéma, réalisation en projet, offres de la boutique | Programmes compilés (PlatformIO), générateurs | `banque`, e2e `rubriques` prod | Testé et validé. Programmes non essayés sur matériel réel |
+
+## Partie 13 — Boutique technique et Marème IA
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Catégories | 31 rayons | `boutique` | Testé et validé |
+| Fiches, photos (appareil photo sur téléphone), stocks, prix déclarés, tri, panier, commande, suivi | Prix, stocks et images déclarés par les vendeurs (rien d'inventé) | `boutique`, e2e `rubriques` prod | Testé et validé. Le catalogue de production est vide tant qu'aucun vendeur ne publie |
+| Import de catalogue | CSV : modèle, vérification sans écriture, import des lignes valides ; profil vendeur exigé | `boutique-plus` ; prod (modèle servi, profil vendeur exigé) | Testé et validé |
+| Retours | Demande motivée, puis acceptation (stock réintégré) ou refus motivé | `boutique-plus` | Testé et validé |
+| Paiement en ligne | Statut réel affiché partout (« paiement en ligne non disponible ») ; règlement avec le vendeur | `mareme`, e2e `rubriques` | **Absent** : aucun prestataire choisi (voir interventions). Rien n'est annoncé comme payé |
+| Livraison | Modes déclarés par le vendeur ; la plateforme ne livre pas | `boutique` | Fonctionnel |
+| Alibaba et Amazon | — | — | **Absent** : accès partenaire requis (voir interventions) |
+| Marème IA : accueil, recherche, comparaison, conseil, panier, livraison, suivi, retours, orientation | Mode « règles » signalé, sur données réelles uniquement | `mareme`, e2e prod | Testé et validé. La rédaction libre exige un fournisseur d'IA |
+
+## Parties 14 à 16 — Aláji IA, intégration des modules, architecture des données
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Aláji présent dans tous les laboratoires et rubriques | Panneau ✦ avec la rubrique ouverte | e2e `interface` prod | Testé et validé |
+| Agents spécialisés | 25 agents, dont solaire thermique, bioénergie, génie civil, industriel, télécoms, agritech, environnement, médical | `alaji` | Testé et validé |
+| Aláji lance les logiciels | Mode règles : envoi vers le logiciel adapté ; outils `list_software` et `run_study` pour un modèle de langage | `alaji` (orientation, `run_study` exécuté par le moteur, donnée absente signalée ; boucle du modèle de langage testée avec un `fetchImpl` explicite) | Testé et validé. En production, le mode règles est actif tant qu'aucun fournisseur d'IA n'est configuré |
+| Contexte d'étude, historique supprimable, vérificateur | Autorisations vérifiées ; suppression journalisée | `alaji`, `etudes` | Testé et validé |
+| Parcours laboratoire → calcul → schéma → nomenclature → projet → boutique → Marème → Aláji | Liens et envois réels entre modules | `etudes`, e2e `dimensionnement` prod | Testé et validé |
+| Données : disciplines, composants, références, études, projets, boutique, IoT, progression | Migrations 0001 à 0019 (jamais modifiées après publication) ; sauvegarde complète | `backup`, prod (Neon) | Testé et validé |
+
+## Partie 17 — Sécurité
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Secrets | Aucun secret dans le code, le dépôt ou l'interface ; variables Render et clés générées et chiffrées en base | `verifier-config`, revue | Testé et validé |
+| Comptes, droits administrateur | Rôles, verrouillage, double authentification, licences signées ; actions d'administration refusées à un compte ordinaire | e2e `comptes`, `mfa` ; prod (sauvegarde et liens de réinitialisation refusés à un compte non administrateur : 403) | Testé et validé |
+| Compilation de code utilisateur | Processus sans shell, chemin d'exécution restreint, 60 s, sortie limitée, dossier temporaire supprimé ; le programme n'est jamais exécuté sur le serveur ; 20 compilations par période | `iot-simulation` | Testé et validé |
+| IoT | Jetons par appareil, TLS, commandes confirmées par une personne, accusés réels | e2e `iot` | Testé et validé |
+
+## Parties 18 à 20 — Déploiement, tests, conformité
+
+| Exigence | Réalisation | Installation et configuration | Tests | Résultat |
 |---|---|---|---|---|
-| Pompage de A à Z : besoins, HMT, pertes de charge, point de fonctionnement, NPSH, électrique, groupe, solaire, schémas, nomenclature, rapport | Puissance seule | Testé et validé | `etudes` (Colebrook comparé à Haaland, point de fonctionnement exact, NPSH, solaire), e2e | Plan d'implantation et modèle 3D absents |
-| Séchage solaire : direct, indirect, mixte, hybride, convection naturelle ou forcée | Absent | Testé et validé | `etudes` (bilan de masse, enthalpie conservée) | Cinétique de séchage non modélisée (essai nécessaire) ; plans de fabrication absents |
-| Biomasse et biogaz : digesteur, biogaz, cogénération, digestat, combustion | Absent | Testé et validé | `etudes` | Potentiels méthanogènes saisis par l'utilisateur ; gazéification non modélisée |
-| Compostage : C/N, humidité, andains, bacs, aération, calendrier | Absent | Testé et validé | `etudes` (ajustement exact du C/N) | Suivi en temps réel : via les projets IoT « compost » |
-| Solaire thermique : besoins, capteurs (η0, a1, a2), couverture, ballon, circuit, économies | Absent | Testé et validé | `etudes` | Méthode mensuelle simplifiée ; thermosiphon non calculé |
-| Bibliothèques associées : chambres, claies, capteurs à air, ventilateurs, digesteurs, gazomètres, brûleurs, torchères, composteurs, retourneurs, capteurs thermiques, ballons, circulateurs… | Absent | Testé et validé | `espaces` | — |
+| Production | Render gratuit (Docker) et Neon gratuit ; déploiement automatique depuis `main` | Image : Node 22, Python 3.12 (pvlib, CoolProp), Poppler, Tesseract, avr-gcc | `/api/health` prod : base postgres, secrets configurés, administrateur existant | Testé et validé |
+| Ordinateur et téléphone | Interface adaptative | — | e2e Pixel 7 en prod : aucune page plus large que l'écran (rubriques et 27 logiciels) | Testé et validé |
+| Persistance | Base Neon | — | prod : progression conservée et relue, études enregistrées | Testé et validé |
+| Tests obligatoires | Typage strict, lint, 296 tests unitaires et d'intégration, 20 parcours de bout en bout ; CI GitHub (avec la chaîne AVR) | — | voir rapport | Testé et validé |
+| Indépendance vis-à-vis de SUUF NAZA | Aucun fichier, service, base ou secret de SUUF NAZA modifié | — | `docs/AUDIT_SEPARATION.md` | Respecté |
 
-## Partie 11 — Conception automatique 2D/3D et plans
+## Interventions nécessaires de l'exploitant (une seule action chacune)
 
-| Exigence | État final | Test | Limitation / action |
-|---|---|---|---|
-| Analyse de documents (PDF, Word, images, scans) | Fonctionnel (lot A) | `documents` | Extraction des images et lecture de plans ou de photos : **absent** |
-| Génération de schémas | Testé et validé (10 générateurs) | `schematics-gen` | Plans mécaniques, de construction et vues éclatées : **absent** |
-| Modèles 3D | Partiellement fonctionnel (maquette paramétrique) | e2e `espaces` | Pas de génération 3D à partir d'un document |
-| Édition, annotation, légende, nomenclature, enregistrement | Fonctionnel | e2e | Cotation et calques : **absent** |
-| Impression A4–A1, portrait/paysage, échelle, marges, cartouche (numéro, date, projet, concepteur), légende, aperçu, PDF | **Testé et validé** (nouveau) | `plans` (formats ISO exacts, cartouche), e2e | Échelle « ajustée à la feuille » (schémas sans cote réelle) |
-| Formats SVG, PNG, PDF, DXF | **Testé et validé** (DXF R12 nouveau) | `plans` | DWG : **absent** (format propriétaire, pas d'outil libre fiable intégré) |
-
-## Parties 12 et 13 — Projets et boutique
-
-| Exigence | État final | Test | Limitation / action |
-|---|---|---|---|
-| Centaines de projets distincts | Fonctionnel : 305 projets | `banque` | Plusieurs disciplines ont moins de 10 projets ; dossier à 17 rubriques et non 35 |
-| Progression (débutant → avancé), réalisés / en cours | Partiellement fonctionnel (favoris, réalisation en projet) | `banque` | Statut terminé/en cours par projet de la banque : à ajouter |
-| 27 catégories de la boutique | Partiellement fonctionnel (15 rayons) | `boutique` | Ajouter les rayons manquants (Arduino, ESP32, batteries, pompes, laboratoire…) |
-| Fiches, photos, stocks, prix réels, panier, commande, suivi | Testé et validé | `boutique`, e2e | Catalogue de production vide tant qu'aucun vendeur ne publie ; paiement en ligne et retours non intégrés |
-| Connexion Alibaba / Amazon | Absent | — | Exige des interfaces et autorisations des fournisseurs |
-| **Marème IA** : accueillir, rechercher, comparer, conseiller, panier, livraison, suivi des commandes, orientation vers le vendeur ou l'administrateur | **Testé et validé** (mode sans clé, données réelles uniquement) | `mareme` (4 tests), e2e `rubriques` | Rédaction libre : nécessite un fournisseur d'IA configuré |
-
-## Parties 14 à 16 — Aláji IA, intégration, données
-
-| Exigence | État final | Test | Limitation / action |
-|---|---|---|---|
-| Aláji dans chaque rubrique (panneau ✦ avec la rubrique ouverte) | Fonctionnel | e2e `interface` | — |
-| Contexte d'une étude (résultats, alertes, données manquantes) transmis à Aláji, avec autorisation vérifiée | **Testé et validé** (nouveau) | `etudes` (refus pour un autre compte) | — |
-| Modes spécialisés (26) | Partiellement fonctionnel (17 agents) | `alaji` | Agents à créer : séchage, biomasse, compostage, solaire thermique, IoT par secteur |
-| Historique supprimable | **Testé et validé** (nouveau : une conversation ou tout l'historique, journalisé) | `alaji` | — |
-| Parcours laboratoire → calcul → schéma → nomenclature → projet → boutique → Marème → Aláji | **Testé et validé** | `etudes`, e2e `dimensionnement` | — |
-| Architecture des données (disciplines, composants, références, études, projets, boutique, IoT) | Fonctionnel | migrations 0001–0017 | — |
-| Sauvegarde complète | **Corrigé** : 27 tables récentes manquaient (licences, boutique, documents, FAD…) ; ajoutées, essais et licences re-signés à la restauration | `backup` | — |
-
-## Partie 17 — Sécurité IoT
-
-Exigences de sécurité intégrées à chacun des 115 projets sectoriels et testées :
-- authentification et jetons hors du code ;
-- chiffrement ;
-- mode dégradé en cas de perte de connexion ;
-- journalisation ;
-- mises à jour ;
-- sauvegarde.
-
-Aucun identifiant Wi-Fi, mot de passe ou jeton n'apparaît dans les programmes : ils sont remplacés par des emplacements à renseigner.
-
-## Dépendances externes et coûts
-
-| Dépendance | Usage | Coût | État |
-|---|---|---|---|
-| NASA POWER | Irradiation et températures mensuelles | Gratuit, sans clé | Intégré |
-| Open-Meteo Geocoding | Recherche de lieux | Gratuit, sans clé | Intégré |
-| Fournisseur d'IA (Anthropic ou compatible OpenAI) | Rédaction libre d'Aláji et de Marème | Payant | Non configuré (aucune dépense engagée) |
-| Prestataire de paiement (mobile money, carte) | Paiement en ligne | Commissions | Non configuré ; paiement hors plateforme affiché |
-| Fournisseurs Alibaba, Amazon | Catalogues externes | Accords et API | Non disponible |
-| PlatformIO | Compilation des programmes | Gratuit | Utilisé hors ligne (pas de compilation en ligne) |
+| Blocage réel | Pourquoi je ne peux pas le lever | Intervention unique |
+|---|---|---|
+| Tableau normatif des courants admissibles (NF C 15-100 / CEI 60364) | Norme protégée par le droit d'auteur : aucune valeur ne doit être inventée | Avec un compte administrateur, saisir le tableau dans Laboratoire Électricité et Électrotechnique → « Tableaux normatifs (courants admissibles) », depuis votre exemplaire de la norme |
+| Rédaction libre d'Aláji et de Marème | Fournisseur d'IA payant, ou jeton gratuit à créer à votre nom | Dans les variables d'environnement Render : `ANTHROPIC_API_KEY` (payant), ou `AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL` et `AI_API_KEY` pour un service compatible OpenAI (par exemple un jeton gratuit Hugging Face, quotas limités) |
+| Paiement en ligne | Contrat avec un prestataire (Wave, Orange Money, carte) à votre nom ; aucun prestataire n'est intégré tant qu'il n'est pas choisi | Choisir le prestataire et ouvrir le compte marchand. L'adaptateur (confirmation par webhook signé) sera ensuite développé et testé avec son environnement de test |
+| Catalogues Alibaba et Amazon | Programmes partenaires soumis à approbation | Demander l'accès développeur ou affilié, puis transmettre les identifiants |
+| Format DWG | Format propriétaire | Aucune : utiliser l'export DXF |
+| Essais sur matériel réel (cartes, capteurs, pompes) | Pas de matériel branché à cet environnement | Téléverser le .hex ou le programme PlatformIO sur votre banc d'essai |

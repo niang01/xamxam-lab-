@@ -8,10 +8,17 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 262/262 (35 fichiers, 25/11) |
-| Parcours de bout en bout (Playwright) | ✅ 19/19 (ordinateur + Pixel 7) |
+| Tests unitaires + intégration | ✅ 296/296 (38 fichiers, 26/11) |
+| Parcours de bout en bout (Playwright) | ✅ 20/20 en local (ordinateur + Pixel 7) ; en production le 26/11 : laboratoire IoT, dimensionnement, téléphone, espaces, interface, marketplace, mots de passe, rubriques |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
+
+## Réalisé le 26/11 (exécution intégrale)
+- 27 logiciels de dimensionnement ; Aláji : 25 agents, outils `list_software` et `run_study`.
+- Laboratoire IoT : compilation Arduino réelle sur le serveur (avr-gcc, cœur Arduino : image Docker et CI), simulation avr8js, .hex.
+- Plans cotés et en calques (PDF, DXF) ; lecture technique des documents ; maquette 3D depuis une étude.
+- Boutique : 31 rayons, tri, import CSV, retours. Banque : dossier de 35 rubriques, progression.
+- Tableau final : docs/CONFORMITE_CAHIER_DES_CHARGES.md (interventions restantes en fin de document).
 
 ## Réalisé le 23/11 (audit complet demandé par l'exploitant)
 1. **Comptes** : clés serveur générées et conservées en base si absentes ; administrateur principal (XX_ADMIN_EMAILS, secours : code des journaux → /installation) ; configuration du profil (/bienvenue) ; mot de passe oublié / réinitialisation (/mot-de-passe-oublie, /reinitialisation) ; vérification d'adresse ; verrouillage après 5 échecs ; messages en français.
