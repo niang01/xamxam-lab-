@@ -14,6 +14,7 @@ export const RUBRICS: Rubric[] = [
   { key: "electronics", path: "/lab/electronics", group: "lab", icon: "∿" },
   { key: "solar", path: "/lab/solar", group: "lab", icon: "☀" },
   { key: "iotlab", path: "/lab/iot", group: "lab", icon: "⌁" },
+  { key: "automatisme", path: "/lab/automatisme", group: "lab", icon: "⊣⊢" },
   { key: "mechanical", path: "/lab/mechanical", group: "lab", icon: "⚙" },
   { key: "refrigeration", path: "/lab/refrigeration", group: "lab", icon: "❄" },
   { key: "network", path: "/lab/network", group: "lab", icon: "⊞" },

@@ -230,6 +230,21 @@ export const GUIDES: Guide[] = [
     limits: ["Émulés : cœur AVR, minuterie 0 (millis, delay), ports, convertisseur analogique, liaison série. Non émulés : minuteries 1 et 2 (PWM sur certaines broches, tone), I2C, SPI, EEPROM persistante, bibliothèques externes.", "La simulation porte sur le microcontrôleur et son programme : capteurs réels, puissance commandée et protections restent à vérifier sur le montage.", "Carte simulée : Arduino Uno. ESP32 : modèle PlatformIO du dépôt, compilé hors plateforme."],
   },
   {
+    slug: "automatisme", title: "Programmer et simuler un automate (Ladder, Grafcet, Modbus)", audience: "Étudiants, techniciens, ingénieurs",
+    summary: "Écrire un programme en langage à contacts ou en Grafcet, le simuler avec des entrées virtuelles, l'enregistrer ; construire et décoder des trames Modbus.",
+    steps: [
+      { title: "Ouvrir le laboratoire", body: "Menu → Automatisme et informatique industrielle. Trois onglets : Ladder, Grafcet, Modbus.", link: { href: "/lab/automatisme", label: "Automatisme" } },
+      { title: "Charger un exemple Ladder", body: "7 programmes : démarrage direct avec auto-maintien, étoile-triangle temporisé, feux tricolores, remplissage d'un réservoir, comptage de pièces, télérupteur, minuterie d'escalier. Les boutons d'arrêt et contacts thermiques câblés en NF sont à 1 au repos (règle de sécurité)." },
+      { title: "Simuler", body: "« Mettre en marche (RUN) » : l'automate exécute un cycle toutes les 10 ms. Cochez une entrée (interrupteur, capteur) ou maintenez « Appui » (bouton-poussoir). Les contacts passants et les bobines alimentées s'affichent en vert ; les temporisations montrent le temps écoulé, les compteurs leur valeur." },
+      { title: "Modifier le programme", body: "Touchez un échelon : choisissez le type de contact (NO, NF, front montant P, front descendant N) et sa variable (I entrée, Q sortie, M mémoire, T temporisation, C compteur), ajoutez des contacts en série ou des branches en parallèle (OU), puis la sortie (bobine, SET, RST, TON, TOF, TP, CTU, CTD, remise à zéro) et sa durée ou présélection. Les erreurs (entrée écrite par le programme, durée manquante, variable inconnue) sont signalées et bloquent la marche." },
+      { title: "Grafcet", body: "Étapes (l'étape initiale a un double cadre), actions (N Q1 continue, S/R mémorisée), transitions avec réceptivité : « . » ET, « + » OU, « / » NON, « ↑I1 » front montant, « t/X1/3s » temporisation. Plusieurs étapes amont ou aval : convergence ou divergence en ET. En simulation, les étapes actives s'affichent en vert." },
+      { title: "Modbus", body: "Choisissez RTU ou TCP, l'esclave, la fonction (01 à 06, 15, 16), l'adresse et la quantité ou les valeurs : la trame est calculée avec son CRC-16 (RTU) ou son en-tête MBAP (TCP). Collez la réponse de l'équipement pour la décoder (registres, bits, exceptions, CRC)." },
+      { title: "Enregistrer", body: "Donnez un nom puis « Enregistrer » ; chaque nouvel enregistrement crée une version. « Mes programmes » les rouvre." },
+    ],
+    example: "Exemple : étoile-triangle — après « Marche », KM1 et KM2 (étoile) s'enclenchent ; au bout de 5 s, KM2 retombe et KM3 (triangle) s'enclenche ; KM2 et KM3 ne sont jamais alimentés ensemble.",
+    limits: ["Automate générique simulé (langages CEI 61131-3 LD et CEI 60848) : pour un automate réel, ressaisir le programme dans le logiciel du constructeur.", "Les fonctions de sécurité machine (arrêt d'urgence, protecteurs) ne doivent jamais reposer sur le seul programme : sécurités câblées obligatoires.", "Modbus : construction et décodage des trames ; la communication avec un équipement réel passe par la passerelle IoT ou un convertisseur USB-RS485."],
+  },
+  {
     slug: "licence", title: "Essai gratuit et licence", audience: "Tous",
     summary: "Comprendre l'essai de 90 jours et activer une licence.",
     steps: [

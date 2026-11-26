@@ -9,6 +9,7 @@ const LABS: [string, string, MsgKey, MsgKey][] = [
   ["/lab/electronics", "nav.electronics", "lab.electronics.desc", "lab.engine.spice"],
   ["/lab/solar", "nav.solar", "lab.solar.desc", "lab.engine.solar"],
   ["/lab/iot", "nav.iotlab", "lab.iot.desc", "lab.engine.iot"],
+  ["/lab/automatisme", "nav.automatisme", "lab.automatisme.desc", "lab.engine.plc"],
   ["/lab/mechanical", "nav.mechanical", "lab.mechanical.desc", "lab.engine.pure"],
   ["/lab/refrigeration", "nav.refrigeration", "lab.refrigeration.desc", "lab.engine.pure"],
   ["/lab/network", "nav.network", "lab.network.desc", "lab.engine.pure"],

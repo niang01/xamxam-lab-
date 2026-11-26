@@ -58,6 +58,7 @@ export const DISCIPLINE_LINKS: Record<string, { label: string; href: string }[]>
   gis: [{ label: "Earth & Space", href: "/earth" }], research: [{ label: "Projets", href: "/projects" }], tutor: [{ label: "Academy", href: "/academy" }],
   startup: [{ label: "Startups", href: "/startups" }, { label: "Marketplace", href: "/marketplace" }], talent: [{ label: "Carrières", href: "/careers" }],
   software: [{ label: "IoT & Embedded Lab", href: "/lab/iot" }],
+  industrial: [{ label: "Automatisme et informatique industrielle (Ladder, Grafcet, Modbus)", href: "/lab/automatisme" }],
 };
 
 // ---------------------------------------------------------------- Vérification
