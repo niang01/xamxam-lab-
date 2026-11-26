@@ -92,3 +92,15 @@ describe("Recherche de lieux (géocodage)", () => {
     expect(await searchPlaces("zzz", "fr", empty)).toEqual([]);
   });
 });
+
+import * as chat from "@/app/api/ai/chat/route";
+describe("Aláji IA avec le contexte d'une étude", () => {
+  it("le résumé des résultats est fourni à Aláji ; étude d'un autre compte refusée", async () => {
+    const s = await call(studies.POST as never, "POST", "/x", { session: user, body: { software: "installation-electrique", input: { ...ELECTRICAL.example, du_max: 1 }, table_id: tableId, save: true, title: "Étude pour Aláji" } });
+    const r = await call(chat.POST as never, "POST", "/x", { session: user, body: { question: "Explique-moi les résultats", study_id: s.json.id, lang: "fr" } });
+    expect(r.status).toBe(200);
+    const answer = r.json.answer as string;
+    expect(answer).toContain("Étude « Étude pour Aláji »"); expect(answer).toContain("Puissance appelée");
+    expect((await call(chat.POST as never, "POST", "/x", { session: other, body: { question: "x", study_id: s.json.id, lang: "fr" } })).status).toBe(404);
+  });
+});

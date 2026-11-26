@@ -3,6 +3,7 @@ import { ok, readInput, endpoint, mustBeSignedIn, uuidParam, ApiFailure, type Us
 import { sql, sqlOne } from "@/server/db";
 import { projectRole } from "@/server/access";
 import { diagramSchema, diagramSvg } from "@/lib/diagram";
+import { diagramDxf, diagramPdf } from "@/lib/diagram-print";
 
 type Ctx = { params: Promise<{ id: string }> };
 type Row = { id: string; owner_id: string; project_id: string | null; title: string; version: number; graph: z.infer<typeof diagramSchema> };
@@ -16,11 +17,22 @@ async function load(id: string, u: User, write: boolean): Promise<Row> {
   return s;
 }
 
-/** Lecture (JSON) ou export SVG (?format=svg). */
+/** Lecture (JSON) ou export : SVG, DXF, planche PDF (?format=pdf&size=A4|A3|A2|A1&orientation=&number=&designer=&project=). */
 export const GET = endpoint<Ctx>(async (req, ctx) => {
   const u = await mustBeSignedIn(req);
   const s = await load(await uuidParam(ctx), u, false);
-  if (new URL(req.url).searchParams.get("format") === "svg") {
+  const sp = new URL(req.url).searchParams;
+  const fmt = sp.get("format");
+  const safe = (s.title || "schema").normalize("NFD").replace(/[^\w.-]+/g, "_").slice(0, 60) || "schema";
+  if (fmt === "dxf") return new Response(diagramDxf(s.graph, s.title), { headers: { "Content-Type": "application/dxf", "Content-Disposition": `attachment; filename="${safe}.dxf"`, "Cache-Control": "no-store" } });
+  if (fmt === "pdf") {
+    const size = (["A4", "A3", "A2", "A1"] as const).find((x) => x === sp.get("size")) ?? "A3";
+    const margin = Math.min(30, Math.max(5, Number(sp.get("margin")) || 10));
+    const clip = (v: string | null, n: number) => (v ?? "").slice(0, n);
+    const { pdf } = diagramPdf(s.graph, { size, orientation: sp.get("orientation") === "portrait" ? "portrait" : "landscape", margin, project: clip(sp.get("project"), 80), title: clip(sp.get("plan_title"), 120) || s.title, number: clip(sp.get("number"), 30), designer: clip(sp.get("designer"), 60) || u.display_name, date: clip(sp.get("date"), 20) || new Date().toLocaleDateString("fr-FR") });
+    return new Response(pdf as BodyInit, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${safe}-${size}.pdf"`, "Cache-Control": "no-store" } });
+  }
+  if (fmt === "svg") {
     return new Response(diagramSvg(s.graph, s.title), { headers: { "Content-Type": "image/svg+xml; charset=utf-8", "Content-Disposition": `attachment; filename="schema-${s.id.slice(0, 8)}.svg"`, "Cache-Control": "no-store" } });
   }
   const versions = await sql("SELECT version, message, created_at FROM schematic_versions WHERE schematic_id=$1 ORDER BY version DESC", [s.id]);

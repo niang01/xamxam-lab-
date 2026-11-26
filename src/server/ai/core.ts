@@ -140,7 +140,7 @@ async function recordVerification(steps: Step[], ctx: { user: User; conversation
   return v;
 }
 
-export async function askCore(question: string, opts: { user: User; conversationId?: string | null; projectId?: string | null; lang?: string; agents?: string[]; fetchImpl?: typeof fetch }): Promise<CoreAnswer> {
+export async function askCore(question: string, opts: { user: User; conversationId?: string | null; projectId?: string | null; lang?: string; agents?: string[]; fetchImpl?: typeof fetch; context?: { title: string; brief: string } | null }): Promise<CoreAnswer> {
   const user = opts.user;
   const projectId = opts.projectId ?? null;
   const lang = opts.lang && LANG_NAMES[opts.lang] ? opts.lang : "fr";
@@ -162,7 +162,11 @@ export async function askCore(question: string, opts: { user: User; conversation
   if (!gov.aiEnabled) return finish({ mode: "rules", model: null, answer: "L'IA est suspendue (arrêt global activé dans le AI Command Center). Aucune opération n'a été exécutée.", steps: [] });
 
   const status = aiStatus();
-  if (status.mode === "rules") return finish(await rulesCore(question, ctx, analysis));
+  if (status.mode === "rules") {
+    const r = await rulesCore(question, ctx, analysis);
+    // Contexte autorisé (étude de dimensionnement de l'utilisateur) : résumé déterministe des résultats du moteur.
+    return finish(opts.context ? { ...r, answer: `${opts.context.brief}\n\n${r.answer}` } : r);
+  }
   const used = (await sqlOne<{ n: number }>("SELECT COUNT(*)::int n FROM ai_messages WHERE role='assistant' AND mode='llm' AND created_at > now() - interval '24 hours'"))?.n ?? 0;
   if (used >= env.aiDailyLimit) {
     const r = await rulesCore(question, ctx, analysis);
@@ -172,7 +176,7 @@ export async function askCore(question: string, opts: { user: User; conversation
   const steps: Step[] = [];
   const roster = agents.map((a) => `- ${a.name} (${a.key}) : ${a.domain} Outils : ${a.tools.join(", ") || "aucun"}. Limites : ${a.limits} Vérification : ${a.verify}`).join("\n");
   const analysisLine = `Analyse préalable (déterministe) : disciplines = ${analysis.disciplines.map((x) => x.key).join(", ") || "non déterminées"} ; type de projet = ${analysis.projectType ?? "non précisé"} ; intentions = ${analysis.intents.join(", ") || "non déterminées"}.`;
-  const system = `${SYSTEM_PROMPT}\n\n${analysisLine}\n\nAgents mobilisés pour cette demande :\n${roster}\n\nNiveau d'autonomie effectif : ${level}/5 (les actions au-delà sont mises en attente d'approbation humaine).${projectId ? `\nProjet courant : ${projectId}.` : ""}\n\n${await languageInstruction(lang)}`;
+  const system = `${SYSTEM_PROMPT}\n\n${opts.context ? `Contexte autorisé fourni par l'utilisateur — ${opts.context.title} (résultats du moteur de calcul testé ; ne pas les recalculer, les expliquer et signaler les points à vérifier) :\n${opts.context.brief}\n\n` : ""}${analysisLine}\n\nAgents mobilisés pour cette demande :\n${roster}\n\nNiveau d'autonomie effectif : ${level}/5 (les actions au-delà sont mises en attente d'approbation humaine).${projectId ? `\nProjet courant : ${projectId}.` : ""}\n\n${await languageInstruction(lang)}`;
   if (status.provider === "openai_compatible") {
     try {
       const answer = await openAiCompatibleLoop({

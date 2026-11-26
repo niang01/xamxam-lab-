@@ -8,7 +8,7 @@ export const BANK_LEVELS: { key: BankLevel; label: string }[] = [
 ];
 
 export interface BankProject {
-  id: string; title: string; filiere: string; domain: string; level: BankLevel; iot: boolean; theme: string;
+  id: string; title: string; filiere: string; domain: string; level: BankLevel; iot: boolean; theme: string; sector?: string;
   objectives: string[]; problem: string; specs: string[]; components: [string, number][];
   principle: string; steps: string[]; code: CodeKey | null; simulation: { label: string; href: string } | null; schematic: string | null;
   expected: string[]; tests: string[]; faults: [string, string, string][]; applications: string[]; improvements: string[];

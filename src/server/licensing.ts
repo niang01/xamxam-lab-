@@ -41,7 +41,7 @@ export function generateLicenceKey(): string {
 export const normalizeKey = (k: string) => k.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^XXL/, "");
 export const keyHash = (k: string) => sha256(`xxl:${normalizeKey(k)}`);
 
-function trialTag(userId: string, start: string, end: string) { return tag(["trial", userId, iso(start), iso(end)]); }
+export function trialTag(userId: string, start: string, end: string) { return tag(["trial", userId, iso(start), iso(end)]); }
 export function licenceTag(l: { id: string; status: string; seats: number; activated_at: string | null; expires_at: string | null }) {
   return tag(["licence", l.id, l.status, l.seats, l.activated_at ? iso(l.activated_at) : null, l.expires_at ? iso(l.expires_at) : null]);
 }

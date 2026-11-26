@@ -10,7 +10,7 @@ import { api, post } from "@/lib/client/api";
 import type { BankProject } from "@/lib/bank/types";
 
 type Item = { id: string; title: string; filiere: string; domain: string; level: string; iot: boolean; components: number; code: boolean; favorite: boolean };
-type List = { items: Item[]; inventory: { total: number; iot: number }; filieres: { key: string; label: string }[]; levels: { key: string; label: string }[] };
+type List = { items: Item[]; inventory: { total: number; iot: number }; sectors: { key: string; label: string; critical: boolean }[]; filieres: { key: string; label: string }[]; levels: { key: string; label: string }[] };
 type Detail = BankProject & { favorite: boolean; component_ids: Record<string, string>; code_source: { title: string; network: boolean; source: string } | null };
 
 function Sec({ n, title, children }: { n: number; title: string; children: React.ReactNode }) { return <section className="space-y-1"><h3 className="font-semibold text-[var(--cyan)]">{n}. {title}</h3><div className="text-sm">{children}</div></section>; }
@@ -19,7 +19,7 @@ function L({ xs }: { xs: string[] }) { return <ul className="list-disc space-y-0
 export default function Bank() {
   const { t } = useApp();
   const router = useRouter();
-  const [f, setF] = useState({ q: "", filiere: "", level: "", iot: "", favoris: "" });
+  const [f, setF] = useState({ q: "", filiere: "", secteur: "", level: "", iot: "", favoris: "" });
   const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
   const { data, reload } = useData<List>(`/api/bank?${qs}`);
   const [open, setOpen] = useState<Detail | null>(null);
@@ -63,6 +63,7 @@ export default function Bank() {
           <Input aria-label={t("c.search")} placeholder={t("c.search")} name="bank-q" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
           <Select aria-label={t("comp.filiere")} name="bank-filiere" value={f.filiere} onChange={(e) => setF({ ...f, filiere: e.target.value })}><option value="">{t("comp.allFilieres")}</option>{data?.filieres.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</Select>
           <Select aria-label={t("bank.level")} name="bank-level" value={f.level} onChange={(e) => setF({ ...f, level: e.target.value })}><option value="">{t("bank.allLevels")}</option>{data?.levels.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</Select>
+          <Select aria-label={t("bank.sector")} name="bank-sector" value={f.secteur} onChange={(e) => setF({ ...f, secteur: e.target.value })}><option value="">{t("bank.allSectors", { n: data?.sectors.length ?? 0 })}</option>{data?.sectors.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</Select>
           <Select aria-label="IoT" name="bank-iot" value={f.iot} onChange={(e) => setF({ ...f, iot: e.target.value })}><option value="">{t("bank.allTypes")}</option><option value="1">IoT</option><option value="0">{t("bank.nonIot")}</option></Select>
           <Select aria-label={t("bank.saved")} name="bank-fav" value={f.favoris} onChange={(e) => setF({ ...f, favoris: e.target.value })}><option value="">{t("bank.all")}</option><option value="1">★ {t("bank.myFavorites")}</option></Select>
         </div>

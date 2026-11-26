@@ -24,6 +24,7 @@ export function DiagramEditor() {
   const [d, setD] = useState<Diagram>(EMPTY);
   const [title, setTitle] = useState("");
   const [id, setId] = useState<string | null>(null);
+  const [pr, setPr] = useState({ size: "A3", orientation: "landscape", margin: "10", project: "", number: "", designer: "" });
   const [pid, setPid] = useState("");
   const [disc, setDisc] = useState("");
   const [q, setQ] = useState("");
@@ -124,6 +125,22 @@ export function DiagramEditor() {
           <Btn kind="ghost" onClick={toBom} data-testid="diagram-bom">{t("dia.toBom")}</Btn>
           {msg && <Pill tone="ok">{msg}</Pill>}
         </div>
+        <details className="mt-2 rounded-lg border border-[var(--line)] p-2 text-sm" data-testid="print-panel">
+          <summary className="cursor-pointer">{t("dia.print")}</summary>
+          {!id ? <p className="mt-1 text-xs text-[var(--fg-3)]">{t("dia.printSaveFirst")}</p> : (
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              <Select aria-label={t("dia.sheet")} value={pr.size} onChange={(e) => setPr({ ...pr, size: e.target.value })} name="print-size">{["A4", "A3", "A2", "A1"].map((x) => <option key={x}>{x}</option>)}</Select>
+              <Select aria-label={t("dia.orientation")} value={pr.orientation} onChange={(e) => setPr({ ...pr, orientation: e.target.value })}><option value="landscape">{t("dia.landscape")}</option><option value="portrait">{t("dia.portrait")}</option></Select>
+              <Input aria-label={t("dia.margin")} placeholder={t("dia.margin")} inputMode="decimal" value={pr.margin} onChange={(e) => setPr({ ...pr, margin: e.target.value })} />
+              <Input aria-label={t("dia.project")} placeholder={t("dia.project")} value={pr.project} onChange={(e) => setPr({ ...pr, project: e.target.value })} />
+              <Input aria-label={t("dia.number")} placeholder={t("dia.number")} value={pr.number} onChange={(e) => setPr({ ...pr, number: e.target.value })} name="print-number" />
+              <Input aria-label={t("dia.designer")} placeholder={t("dia.designer")} value={pr.designer} onChange={(e) => setPr({ ...pr, designer: e.target.value })} />
+              <a className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-center" target="_blank" rel="noreferrer" data-testid="print-pdf" href={`/api/diagrams/${id}?format=pdf&${new URLSearchParams({ size: pr.size, orientation: pr.orientation, margin: pr.margin || "10", project: pr.project, number: pr.number, designer: pr.designer }).toString()}`}>{t("dia.printPdf")}</a>
+              <a className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-center" data-testid="export-dxf" href={`/api/diagrams/${id}?format=dxf`}>DXF</a>
+              <p className="text-xs text-[var(--fg-3)] sm:col-span-3">{t("dia.printInfo")}</p>
+            </div>
+          )}
+        </details>
         <ErrorBox error={err} />
       </Card>
       <Card title={t("gen.title")} testId="generator" actions={<Btn kind="ghost" onClick={() => setShowGen((x) => !x)} data-testid="gen-toggle">{showGen ? t("c.close") : t("gen.open")}</Btn>}>

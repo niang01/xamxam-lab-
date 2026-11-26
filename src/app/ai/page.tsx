@@ -5,7 +5,7 @@ import { useApp } from "@/components/providers";
 import { ProjectPicker } from "@/components/ProjectPicker";
 import { Btn, Card, ErrorBox, Page, Pill, Textarea } from "@/components/ui";
 import { useData } from "@/lib/client/hooks";
-import { api, post } from "@/lib/client/api";
+import { api, del, post } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Step = { id: string; agent_key: string; tool: string; status: string; error: string | null; required_level: number };
@@ -41,6 +41,7 @@ export default function AiCore() {
   }
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conv, setConv] = useState<string | null>(null);
+  const [study, setStudy] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -54,6 +55,7 @@ export default function AiCore() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (sp.get("q")) setText(sp.get("q")!);
     if (sp.get("projet")) setPid(sp.get("projet")!);
+    if (sp.get("etude")) setStudy(sp.get("etude"));
   }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [turns]);
 
@@ -63,7 +65,7 @@ export default function AiCore() {
     setBusy(true); setErr(null); setText("");
     setTurns((x) => [...x, { role: "user", text: qn }]);
     try {
-      const r = await post<Answer>("/api/ai/chat", { question: qn, conversation_id: conv, project_id: pid || null, lang, agents: chosen.length ? chosen : undefined });
+      const r = await post<Answer>("/api/ai/chat", { question: qn, conversation_id: conv, project_id: pid || null, study_id: study, lang, agents: chosen.length ? chosen : undefined });
       setConv(r.conversationId);
       setTurns((x) => [...x, { role: "assistant", text: r.answer, meta: r }]);
       reloadPend(); reloadConvs();
@@ -114,10 +116,12 @@ export default function AiCore() {
           <button key={a.key} title={`${a.domain} — ${a.limits}`} disabled={!a.enabled} onClick={() => setChosen((c) => (c.includes(a.key) ? c.filter((x) => x !== a.key) : [...c, a.key]))}
             className={`rounded-full border px-2.5 py-1 text-xs ${chosen.includes(a.key) ? "border-[var(--cyan)] bg-[color-mix(in_srgb,var(--cyan)_20%,transparent)]" : "border-[var(--line)]"} ${a.enabled ? "" : "line-through opacity-50"}`}>{a.name.replace("AI ", "")}{a.runs > 0 ? ` · ${a.runs}` : ""}</button>))}</div>
       </Card>
+      {study && <p className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs" data-testid="ai-study-context">{t("ai.studyContext")} <button className="underline" onClick={() => setStudy(null)}>{t("c.close")}</button></p>}
       {!!convs?.items.length && (
-        <Card title={t("ai.history")} testId="ai-history">
+        <Card title={t("ai.history")} testId="ai-history" actions={<Btn kind="danger" data-testid="ai-history-clear" onClick={async () => { if (!confirm(t("ai.clearConfirm"))) return; try { await del("/api/ai/conversations"); setConv(null); setTurns([]); reloadConvs(); } catch (e) { setErr(e); } }}>{t("ai.clearHistory")}</Btn>}>
           <ul className="max-h-40 space-y-1 overflow-y-auto text-sm">{convs.items.map((c) => (
-            <li key={c.id}><button className={`text-left hover:underline ${conv === c.id ? "text-[var(--cyan)]" : ""}`} onClick={() => openConv(c.id)}>{new Date(c.created_at).toLocaleDateString()} — {c.title}</button></li>
+            <li key={c.id} className="flex items-center justify-between gap-2"><button className={`text-left hover:underline ${conv === c.id ? "text-[var(--cyan)]" : ""}`} onClick={() => openConv(c.id)}>{new Date(c.created_at).toLocaleDateString()} — {c.title}</button>
+              <button className="text-xs underline" aria-label={t("c.delete")} data-testid="ai-conv-delete" onClick={async () => { if (!confirm(t("ai.deleteConfirm"))) return; try { await del(`/api/ai/conversations/${c.id}`); if (conv === c.id) { setConv(null); setTurns([]); } reloadConvs(); } catch (e) { setErr(e); } }}>{t("c.delete")}</button></li>
           ))}</ul>
         </Card>
       )}

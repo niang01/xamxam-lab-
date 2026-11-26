@@ -131,3 +131,22 @@ describe("Aláji IA — schémas techniques", () => {
     expect((await call(gen.POST as never, "POST", "/x", { session: s, body: { kind: "unifilaire_pv", params: { strings: 99 } } })).status).toBe(400);
   });
 });
+
+import * as convs from "@/app/api/ai/conversations/route";
+import * as conv from "@/app/api/ai/conversations/[id]/route";
+describe("Historique d'Aláji IA supprimable", () => {
+  it("suppression d'une conversation, puis de tout l'historique ; jamais celui d'un autre compte", async () => {
+    await ask("Calcule le courant pour P = 2000 W, U = 230 V");
+    await ask("Loi d'Ohm U = 12 V R = 6 Ω");
+    const list = (await call(convs.GET as never, "GET", "/x", { session: s })).json.items as { id: string }[];
+    expect(list.length).toBeGreaterThanOrEqual(2);
+    const other = await register(registerRoute.POST as never, "autre-ia@test.local");
+    expect((await call(conv.DELETE as never, "DELETE", "/x", { session: other, params: { id: list[0].id } })).status).toBe(404);
+    expect((await call(conv.DELETE as never, "DELETE", "/x", { session: s, params: { id: list[0].id } })).status).toBe(200);
+    expect((await call(conv.GET as never, "GET", "/x", { session: s, params: { id: list[0].id } })).status).toBe(404);
+    const all = await call(convs.DELETE as never, "DELETE", "/x", { session: s });
+    expect(all.json.deleted).toBe(list.length - 1);
+    expect((await call(convs.GET as never, "GET", "/x", { session: s })).json.items).toEqual([]);
+    expect((await sql("SELECT 1 FROM ai_messages m JOIN ai_conversations c ON c.id=m.conversation_id WHERE c.user_id=(SELECT id FROM users WHERE email='alaji@test.local')")).length).toBe(0);
+  });
+});

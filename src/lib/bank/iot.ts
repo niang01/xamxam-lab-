@@ -4,6 +4,7 @@
  * et la démarche. Aucune mesure, aucun prix ni aucun seuil n'est fixé à la place de l'utilisateur.
  */
 import type { CodeKey } from "./codes";
+import { THEME_SECTOR } from "./sectors";
 import { derivedFaults, derivedTests, STEPS, type BankLevel, type BankProject } from "./types";
 
 type Ctx = [name: string, level: BankLevel, problem: string, spec: string, expected: string];
@@ -266,7 +267,7 @@ const THEMES: Theme[] = [
 const slug = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
 export const IOT_PROJECTS: BankProject[] = THEMES.flatMap((t) => t.contexts.map(([name, level, problem, spec, expected]): BankProject => ({
-  id: `iot-${t.key}-${slug(name)}`, title: `${t.title} — ${name}`, filiere: t.filiere, domain: t.domain, level, iot: true, theme: t.title,
+  id: `iot-${t.key}-${slug(name)}`, title: `${t.title} — ${name}`, filiere: t.filiere, domain: t.domain, level, iot: true, theme: t.title, sector: THEME_SECTOR[t.title],
   objectives: t.objectives, problem, specs: [spec, "Seuils, coefficients et durées fixés par l'utilisateur après étalonnage", "Programme et câblage documentés ; essais consignés"],
   components: t.components, principle: t.principle, steps: [...STEPS.iot.slice(0, 4), ...t.steps, ...STEPS.iot.slice(4)], code: t.code, simulation: t.simulation, schematic: t.schematic,
   expected: [expected, "Mesures horodatées consultables dans IoT Gateway"], tests: [...derivedTests(t.components), "Vérifier le comportement après une coupure d'alimentation et de réseau"],

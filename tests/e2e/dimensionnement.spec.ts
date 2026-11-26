@@ -27,6 +27,17 @@ test("dimensionnement : photovoltaïque et pompage (calcul, enregistrement, expo
   await page.click("[data-testid=study-diagram]");
   await expect(page).toHaveURL(/\/schemas\?generer=unifilaire_pv/);
   await expect(page.locator("[data-block]").first()).toBeVisible({ timeout: 30_000 });
+  // Planche imprimable : enregistrer le schéma, puis PDF A3 avec cartouche et DXF
+  await page.fill("input[name=diagram-title]", "Unifilaire PV e2e");
+  await page.click("[data-testid=diagram-save]");
+  await page.locator("[data-testid=print-panel] summary").click();
+  await page.fill("input[name=print-number]", "PV-01");
+  const pdfHref = await page.locator("[data-testid=print-pdf]").getAttribute("href");
+  const pdf = await page.request.get(pdfHref!);
+  expect(pdf.headers()["content-type"]).toContain("application/pdf");
+  expect((await pdf.body()).toString("latin1")).toContain("(PV-01)");
+  const dxf = await page.request.get((await page.locator("[data-testid=export-dxf]").getAttribute("href"))!);
+  expect((await dxf.text())).toContain("AC1009");
 
   // Pompage
   await page.goto("/dimensionnement/pompage");

@@ -44,6 +44,11 @@ const RENAMED: Record<string, string> = {
   "Diode (modèle générique)": "Diode", "Transistor bipolaire NPN": "Transistor NPN", "Transistor MOSFET canal N": "MOSFET canal N",
   "Batterie": "Batterie plomb", "Onduleur": "Onduleur autonome", "Relais": "Module relais",
 };
+/** Doublons retirés de la bibliothèque (25/11/2026) : fusionnés dans l'entrée d'origine, références reportées. */
+const MERGED: Record<string, string> = {
+  "ESP32 DevKit (ESP32-WROOM-32)": "Carte ESP32", "Seeed Studio XIAO ESP32S3": "Seeed XIAO ESP32-S3", "ESP8266 NodeMCU": "Carte ESP8266",
+  "Arduino Uno": "Carte Arduino (famille Uno)", "Arduino Mega 2560": "Carte Arduino Mega", "Carte STM32 Nucleo": "Carte STM32 (Nucleo)",
+};
 const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);
 
 /** Chargement de la bibliothèque générique. Une erreur ici ne doit jamais rendre la plateforme indisponible. */
@@ -68,6 +73,16 @@ async function seedLibrary(db: Db) {
   }
   for (const [from, to] of Object.entries(RENAMED)) {
     await db.query("UPDATE components SET name=$2 WHERE name=$1 AND mpn='generic' AND NOT EXISTS (SELECT 1 FROM components WHERE name=$2 AND mpn='generic')", [from, to]);
+  }
+  for (const [from, to] of Object.entries(MERGED)) {
+    const old = await generic(from), keep = (await generic(to))[0];
+    for (const r of old) {
+      if (keep) {
+        await db.query("UPDATE project_components SET component_id=$2 WHERE component_id=$1", [r.id, keep.id]);
+        await db.query("UPDATE market_listings SET component_id=$2 WHERE component_id=$1", [r.id, keep.id]);
+        await db.query("DELETE FROM components WHERE id=$1", [r.id]);
+      } else await db.query("UPDATE components SET name=$2 WHERE id=$1", [r.id, to]);
+    }
   }
   for (const c of LIBRARY) {
     // Doublons hérités (même nom, catégories différentes) : fusion sur une seule ligne, références reportées.

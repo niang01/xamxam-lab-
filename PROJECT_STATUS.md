@@ -8,7 +8,7 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Contrôle | Résultat |
 |---|---|
 | Typage strict, lint | ✅ 0 erreur |
-| Tests unitaires + intégration | ✅ 244/244 (33 fichiers, 25/11) |
+| Tests unitaires + intégration | ✅ 262/262 (35 fichiers, 25/11) |
 | Parcours de bout en bout (Playwright) | ✅ 19/19 (ordinateur + Pixel 7) |
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
@@ -40,8 +40,8 @@ Audit détaillé : docs/AUDIT_DISCIPLINES.md.
 - Incident de production du 25/11 (≈06:33–06:49 UTC) corrigé dans le commit 27a28f1.
 
 ## Cahier des charges général (25/11, en cours — par lots)
-- Fait : socle des logiciels de dimensionnement ; Installation électrique ; Photovoltaïque ; Pompage ; bibliothèque 401 composants.
-- À suivre : séchage solaire, biomasse/biogaz, compostage, solaire thermique ; IoT multisectoriel (32 secteurs) ; Marème IA ; Aláji IA contextuel et historique supprimable ; impression de plans (A4–A1, cartouche) et DXF ; tableau de conformité.
+- Fait : 7 logiciels de dimensionnement (électricité, PV, pompage, solaire thermique, séchage, biogaz, compostage) ; bibliothèque 397 composants sans doublon ; banque 305 projets dont 215 IoT dans 35 secteurs ; Marème IA ; Aláji avec contexte d'étude et historique supprimable ; planches PDF A4–A1 avec cartouche et DXF ; sauvegarde complète. Conformité : docs/CONFORMITE_CAHIER_DES_CHARGES.md.
+- À suivre : logiciels des autres disciplines (génie civil, télécoms, robotique, automatisme…) ; éditeur de code et simulation embarquée IoT ; plans d'installation cotés ; lecture de plans/photos ; agents spécialisés supplémentaires ; rayons de boutique manquants.
 
 ## Action de l'exploitant
 - Se connecter avec l'adresse déclarée dans `XX_ADMIN_EMAILS` (Render) : le compte devient administrateur principal.

@@ -1,14 +1,16 @@
 /** Banque de projets : index, recherche et filtres (données statiques versionnées avec le code). */
 import { IOT_PROJECTS } from "./iot";
 import { FILIERE_PROJECTS } from "./filieres";
+import { SECTOR_PROJECTS, SECTORS } from "./sectors";
+export { SECTORS } from "./sectors";
 import type { BankProject } from "./types";
 
-export const BANK: BankProject[] = [...IOT_PROJECTS, ...FILIERE_PROJECTS];
+export const BANK: BankProject[] = [...IOT_PROJECTS, ...SECTOR_PROJECTS, ...FILIERE_PROJECTS];
 export const bankById = (id: string) => BANK.find((p) => p.id === id) ?? null;
 
-export function searchBank(f: { q?: string; filiere?: string; level?: string; iot?: boolean; component?: string }): BankProject[] {
+export function searchBank(f: { q?: string; filiere?: string; level?: string; iot?: boolean; component?: string; sector?: string }): BankProject[] {
   const q = (f.q ?? "").toLowerCase().trim();
-  return BANK.filter((p) => (!f.filiere || p.filiere === f.filiere) && (!f.level || p.level === f.level) && (f.iot === undefined || p.iot === f.iot)
+  return BANK.filter((p) => (!f.filiere || p.filiere === f.filiere) && (!f.sector || p.sector === f.sector) && (!f.level || p.level === f.level) && (f.iot === undefined || p.iot === f.iot)
     && (!f.component || p.components.some(([n]) => n === f.component))
     && (!q || `${p.title} ${p.domain} ${p.problem} ${p.theme} ${p.components.map(([n]) => n).join(" ")}`.toLowerCase().includes(q)));
 }
@@ -16,7 +18,7 @@ export function searchBank(f: { q?: string; filiere?: string; level?: string; io
 /** Rapport d'inventaire : nombre de projets par filière, par niveau, IoT / non IoT. */
 export function bankInventory() {
   const by = <K extends string>(k: (p: BankProject) => K) => BANK.reduce((m, p) => ({ ...m, [k(p)]: (m[k(p)] ?? 0) + 1 }), {} as Record<K, number>);
-  return { total: BANK.length, iot: BANK.filter((p) => p.iot).length, byFiliere: by((p) => p.filiere), byLevel: by((p) => p.level), withCode: BANK.filter((p) => p.code).length, withSchematic: BANK.filter((p) => p.schematic).length };
+  return { total: BANK.length, iot: BANK.filter((p) => p.iot).length, byFiliere: by((p) => p.filiere), byLevel: by((p) => p.level), bySector: by((p) => p.sector ?? "—"), sectors: SECTORS.length, withCode: BANK.filter((p) => p.code).length, withSchematic: BANK.filter((p) => p.schematic).length };
 }
 
 /** Projet de la banque → contenu d'un projet personnel (sections, nomenclature, tâches). */

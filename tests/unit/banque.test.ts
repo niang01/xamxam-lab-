@@ -21,13 +21,13 @@ describe("Banque de projets", () => {
       for (const k of ["objectives", "specs", "components", "steps", "expected", "tests", "applications", "improvements"] as const) expect(p[k].length, `${p.id} ${k}`).toBeGreaterThan(0);
     }
   });
-  it("inventaire réel : au moins 190 projets, dont 100 IoT, toutes les filières couvertes", () => {
+  it("inventaire réel : au moins 300 projets, dont 215 IoT, toutes les filières couvertes", () => {
     const inv = bankInventory();
-    expect(inv.total).toBeGreaterThanOrEqual(190); expect(inv.iot).toBe(100);
+    expect(inv.total).toBeGreaterThanOrEqual(300); expect(inv.iot).toBe(215);
     for (const f of FILIERES) expect(inv.byFiliere[f.key] ?? 0, f.key).toBeGreaterThan(0);
   });
   it("recherche et filtres ; conversion en projet personnel", () => {
-    expect(searchBank({ iot: true }).length).toBe(100);
+    expect(searchBank({ iot: true }).length).toBe(215);
     expect(searchBank({ q: "pompage" }).length).toBeGreaterThan(3);
     expect(searchBank({ component: "Carte ESP32", level: "debutant" }).every((p) => p.level === "debutant")).toBe(true);
     const x = bankToProject(BANK[0]);
@@ -64,5 +64,23 @@ describe("Banque d'exercices", () => {
     expect(makeExercise("couple", 0)).toBeNull(); expect(makeExercise("inconnu", 1)).toBeNull();
     expect(makeExam(42, 5, "froid").every((e) => e.filiere === "froid")).toBe(true);
     expect(makeExam(42, 5).map((e) => e.id)).toEqual(makeExam(42, 5).map((e) => e.id));
+  });
+});
+
+import { SECTORS, IOT_SECURITY, SECTOR_PROJECTS } from "@/lib/bank/sectors";
+describe("Banque IoT multisectorielle", () => {
+  it("35 secteurs couverts (≥ 2 projets chacun), au-delà de l'agriculture ; identifiants et titres distincts", () => {
+    expect(SECTORS.length).toBe(35);
+    for (const s of SECTORS) expect(searchBank({ sector: s.key }).length, s.key).toBeGreaterThanOrEqual(2);
+    expect(new Set(SECTOR_PROJECTS.map((p) => p.title)).size).toBe(SECTOR_PROJECTS.length);
+    expect(searchBank({ sector: "agriculture" }).length).toBeLessThan(searchBank({ iot: true }).length / 5);
+  });
+  it("chaque projet sectoriel : exigences de sécurité IoT ; secteurs critiques : avertissement de prototype", () => {
+    for (const p of SECTOR_PROJECTS) {
+      for (const r of IOT_SECURITY) expect(p.specs, p.id).toContain(r);
+      const s = SECTORS.find((x) => x.key === p.sector)!;
+      if (s.critical) expect(p.specs.join(" "), p.id).toMatch(/prototype|certifi|validation/i);
+      expect(p.tests.join(" ")).toContain("jeton invalide");
+    }
   });
 });

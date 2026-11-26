@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
+import { Mareme } from "@/components/Mareme";
 import { useData } from "@/lib/client/hooks";
 import { api, del, patch, post, put, RequestError } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
@@ -19,6 +20,7 @@ const fcfa = (n: number | null) => (n == null ? null : `${Number(n).toLocaleStri
 export default function Shop() {
   const { t } = useApp();
   const [tab, setTab] = useState<Tab>("catalogue");
+  const [studyCtx, setStudyCtx] = useState<string | null>(null); const [projectCtx, setProjectCtx] = useState<string | null>(null);
   const [q, setQ] = useState(""); const [section, setSection] = useState("");
   const { data: cat, reload: reloadCat } = useData<Cat>(`/api/shop/catalog?q=${encodeURIComponent(q)}${section ? `&section=${section}` : ""}`);
   const { data: cart, reload: reloadCart } = useData<CartT>("/api/shop/cart");
@@ -33,7 +35,8 @@ export default function Shop() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const b = sp.get("projet_banque"), p = sp.get("projet"), st = sp.get("etude"), o = sp.get("onglet");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- onglet demandé dans l'URL
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- contexte (étude, projet) et onglet lus dans l'URL après le montage
+    setStudyCtx(st); setProjectCtx(p);
     if (o && ["catalogue", "panier", "commandes", "ventes", "vendeur"].includes(o)) setTab(o as Tab);
     if (b || p || st) api<Offer>(`/api/shop/offers?${b ? `bank=${encodeURIComponent(b)}` : p ? `project=${p}` : `study=${st}`}`).then(setOffers).catch(setErr);
   }, []);
@@ -58,6 +61,7 @@ export default function Shop() {
   return (
     <Page title={t("nav.shop")} subtitle={t("shop.subtitle")}>
       {cat && <p className="rounded-lg border border-[var(--warn)] px-3 py-2 text-xs" data-testid="payment-status">{cat.payment.message}</p>}
+      <Mareme study={studyCtx} project={projectCtx} onCart={reloadCart} />
       <div className="flex flex-wrap gap-1" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" data-tab={k} aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-lg px-3 py-1.5 text-sm ${tab === k ? "bg-[var(--tech)] text-white" : "border border-[var(--line)]"}`}>{t(l)}{k === "panier" && cart?.items.length ? ` (${cart.items.length})` : ""}</button>)}</div>
       {msg && <Pill tone="ok">{msg}</Pill>}<ErrorBox error={err} />
       {offers && (

@@ -2,6 +2,14 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
+## Campagne du 25/11/2026 (fin) — IoT multisectoriel, Marème IA, plans, sauvegarde
+| Contrôle | Résultat |
+|---|---|
+| Typage strict, lint | ✅ 0 erreur |
+| Tests unitaires + intégration | ✅ **262/262** (35 fichiers). Nouveaux : 4 logiciels (solaire thermique, séchage, biomasse, compostage : valeurs recalculées, psychrométrie à enthalpie constante) ; `banque` (35 secteurs, sécurité IoT dans chaque projet, avertissement des secteurs critiques) ; `mareme` (4 : comparaison sur offres réelles, « prix sur demande », paiement réel, suivi des commandes, étude d'un autre compte refusée) ; `plans` (formats ISO A4–A1 exacts, cartouche, DXF R12 valide) ; historique d'Aláji supprimable ; contexte d'étude transmis à Aláji ; sauvegarde étendue et re-signature des essais ; fusion des doublons de cartes en production |
+| Parcours de bout en bout | ✅ **19/19** (ordinateur + Pixel 7), dont Marème IA et planche PDF/DXF d'un schéma enregistré |
+| Défauts trouvés par l'auto-vérification | (1) 6 doublons de cartes introduits dans la bibliothèque : retirés, fiches d'origine enrichies, fusion en production avec report des références (testé). (2) Sauvegarde incomplète depuis plusieurs versions : 27 tables manquantes (licences, essais, boutique, documents, FAD, appareils…) — ajoutées ; sans re-signature, essais et licences restaurés auraient été « altérés » : re-signés avec la clé de la base cible. (3) Marème IA : un mot court (« te ») faisait remonter des articles hors sujet — mots de moins de 3 lettres ignorés, seuls les meilleurs résultats présentés. |
+
 ## Campagne du 25/11/2026 (suite) — logiciels de dimensionnement, bibliothèque étendue
 | Contrôle | Résultat |
 |---|---|

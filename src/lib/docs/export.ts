@@ -49,7 +49,7 @@ export function toXlsx(sheets: { name: string; rows: string[][] }[]): Uint8Array
 
 // --------------------------------------------------------------- PDF (texte, Helvetica, codage WinAnsi)
 const WIN: Record<string, number> = { "€": 0x80, "‚": 0x82, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97, "œ": 0x9c, "Œ": 0x8c };
-function winAnsi(s: string): number[] {
+export function winAnsi(s: string): number[] {
   const out: number[] = [];
   for (const ch of s.normalize("NFC")) {
     const c = ch.codePointAt(0)!;
@@ -59,7 +59,7 @@ function winAnsi(s: string): number[] {
   }
   return out;
 }
-const pdfStr = (bytes: number[]) => "(" + bytes.map((b) => (b === 40 || b === 41 || b === 92 ? "\\" + String.fromCharCode(b) : b < 32 || b > 126 ? "\\" + b.toString(8).padStart(3, "0") : String.fromCharCode(b))).join("") + ")";
+export const pdfStr = (bytes: number[]) => "(" + bytes.map((b) => (b === 40 || b === 41 || b === 92 ? "\\" + String.fromCharCode(b) : b < 32 || b > 126 ? "\\" + b.toString(8).padStart(3, "0") : String.fromCharCode(b))).join("") + ")";
 
 /** PDF A4 multi-pages (texte seul, coupure des lignes à ~95 caractères). */
 export function toPdf(title: string, markdown: string): Uint8Array {

@@ -60,6 +60,13 @@ test("rubriques : document analysé et exporté, projet de la banque réalisé, 
   const stock = (await (await s.get("/api/shop/vendor")).json()) as { listings: { id: string; quantity: number }[] };
   expect(stock.listings.find((l) => l.id === listingId)!.quantity).toBe(3);
 
+  // Marème IA : l'article réellement en rayon est proposé, avec son prix déclaré
+  await page.goto("/boutique");
+  await page.fill("input[name=mareme-q]", `DHT22 e2e ${stamp}`);
+  await page.click("[data-testid=mareme-send]");
+  await expect(page.locator("[data-testid=mareme-log]")).toContainText(`Capteur DHT22 e2e ${stamp}`);
+  await expect(page.locator("[data-testid=mareme-log]")).toContainText("FCFA");
+
   // FAD et appareils
   await page.goto("/fad");
   await expect(page.getByRole("heading", { name: "Mes cours" })).toBeVisible();
