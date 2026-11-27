@@ -41,7 +41,7 @@ test("navigation : Retour sur chaque page, reconnexion automatique après une in
   await expect(page.locator("[data-testid=session-loading]")).toContainText("Réveil du serveur", { timeout: 10_000 });
   await expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 });
   await expect(page).toHaveURL(/\/projects$/);
-  await page.unroute("**/api/auth/me");
+  await page.unrouteAll({ behavior: "ignoreErrors" });
 
   // Page de connexion avec une session valable : suite directe
   await page.goto("/connexion?suite=/boutique");
