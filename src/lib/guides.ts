@@ -245,6 +245,18 @@ export const GUIDES: Guide[] = [
     limits: ["Automate générique simulé (langages CEI 61131-3 LD et CEI 60848) : pour un automate réel, ressaisir le programme dans le logiciel du constructeur.", "Les fonctions de sécurité machine (arrêt d'urgence, protecteurs) ne doivent jamais reposer sur le seul programme : sécurités câblées obligatoires.", "Modbus : construction et décodage des trames ; la communication avec un équipement réel passe par la passerelle IoT ou un convertisseur USB-RS485."],
   },
   {
+    slug: "travaux-pratiques", title: "Cours intégrés, travaux pratiques, schémas types et simulations", audience: "Étudiants, formateurs, techniciens",
+    summary: "Suivre un cours intégré, réaliser un TP guidé dans le laboratoire ouvert sur le bon cas, partir d'un schéma type ou lancer une simulation prête à l'emploi.",
+    steps: [
+      { title: "Cours intégrés", body: "Menu → Academy : 12 cours rédigés pour XAM-XAM LAB (électricité, électrotechnique, installations, électronique, automatisme, informatique industrielle, IoT, photovoltaïque, pompage, froid, réseaux, mécanique), 5 leçons et un quiz chacun ; un certificat vérifiable est délivré au seuil de réussite.", link: { href: "/academy", label: "Academy" } },
+      { title: "Choisir un TP", body: "Menu → Travaux pratiques et simulations : 21 TP filtrables par discipline. Chaque fiche donne objectifs, outils, manipulations, résultats attendus (recalculés par les moteurs de la plateforme) et questions pour le compte rendu.", link: { href: "/travaux-pratiques", label: "Travaux pratiques" } },
+      { title: "Ouvrir l'outil", body: "Le lien « Outils » ouvre le laboratoire directement sur le cas du TP : circuit d'exemple, programme Ladder ou grafcet, croquis Arduino, schéma généré ou logiciel de dimensionnement. « Retour » ramène à la fiche." },
+      { title: "Schémas types", body: "Onglet « Schémas types » : aperçu des 10 schémas générés avec leurs symboles normalisés ; « Ouvrir dans l'éditeur » permet de les modifier, de les imprimer et de les exporter." },
+      { title: "Simulations", body: "Onglet « Simulations » : programmes d'automate, grafcets, croquis Arduino, circuits ngspice, scénarios 4D et calculs thermodynamiques prêts à lancer." },
+    ],
+    limits: ["Les résultats attendus sont ceux des simulateurs et des cas d'exemple ; sur une installation réelle, les mesures font foi.", "Les valeurs des tableaux normatifs ne sont pas reproduites dans les cours : consultez la norme applicable."],
+  },
+  {
     slug: "licence", title: "Essai gratuit et licence", audience: "Tous",
     summary: "Comprendre l'essai de 90 jours et activer une licence.",
     steps: [

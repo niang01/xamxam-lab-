@@ -79,6 +79,7 @@ export async function mareme(u: User, message: string, ctx: { study?: string | n
       words.length ? `Aucun article en rayon ne correspond à « ${words.join(" ")} » pour le moment.` : "Dites-moi ce que vous cherchez (ex. « capteur de température », « batterie 12 V », « ESP32 »).",
       ...(lib.length ? [`Fiche générique de la bibliothèque : ${lib[0].name} — ${lib[0].description} Caractéristiques à vérifier sur l'offre : ${lib[0].params.map((p) => `${p.label}${p.unit ? ` (${p.unit})` : ""}`).join(", ")}.`] : []),
       `Rayons de la boutique : ${SHOP_SECTIONS.map(([, l]) => l).join(", ")}.`,
+      "Les fiches de référence de 389 types d'équipements (symbole normalisé, caractéristiques à vérifier) sont dans l'onglet « Équipements de référence » ; elles ne remplacent pas une offre de vendeur.",
     ], [], ["Catalogue publié", ...(lib.length ? ["Bibliothèque de composants"] : [])]);
   }
   const priced = items.filter((i) => i.price_xof != null).sort((a, b) => a.price_xof! - b.price_xof!);

@@ -5,16 +5,19 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
 import { Mareme } from "@/components/Mareme";
+import { SymbolIcon } from "@/components/SymbolIcon";
+import { glyphFor } from "@/lib/symbols";
+import { LIBRARY, DISCIPLINE_LABEL, type Discipline } from "@/lib/library";
 import { useData } from "@/lib/client/hooks";
 import { api, del, patch, post, put, RequestError } from "@/lib/client/api";
 import type { MsgKey } from "@/lib/i18n/messages";
 
-type Item = { id: string; title: string; description: string; price_xof: number | null; quantity: number | null; location: string | null; delivery: string[]; shop_section: string; datasheet_url: string | null; seller: string; seller_verified: boolean; image_id: string | null };
+type Item = { id: string; component_name?: string | null; symbol2d?: string | null; title: string; description: string; price_xof: number | null; quantity: number | null; location: string | null; delivery: string[]; shop_section: string; datasheet_url: string | null; seller: string; seller_verified: boolean; image_id: string | null };
 type Cat = { sections: { key: string; label: string }[]; payment: { online: boolean; message: string }; items: Item[] };
 type CartT = { items: { listing_id: string; qty: number; title: string; price_xof: number | null; seller: string; available: boolean }[]; total_xof: number; has_unpriced: boolean };
 type Order = { id: string; status: string; total_xof: number | null; has_unpriced: boolean; delivery_method: string; delivery_address: string | null; phone: string | null; created_at: string; buyer_name: string; seller_name: string; items: { title: string; qty: number; unit_price_xof: number | null }[]; events: { status: string; note: string | null; created_at: string }[] };
 type Offer = { lines: { name: string; qty: number; offers: { id: string; title: string; price_xof: number | null; quantity: number | null; seller: string; seller_verified: boolean }[] }[] };
-type Tab = "catalogue" | "panier" | "commandes" | "ventes" | "vendeur";
+type Tab = "catalogue" | "references" | "panier" | "commandes" | "ventes" | "vendeur";
 const fcfa = (n: number | null) => (n == null ? null : `${Number(n).toLocaleString("fr-FR")} FCFA`);
 
 export default function Shop() {
@@ -39,13 +42,13 @@ export default function Shop() {
     const b = sp.get("projet_banque"), p = sp.get("projet"), st = sp.get("etude"), o = sp.get("onglet");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- contexte (étude, projet) et onglet lus dans l'URL après le montage
     setStudyCtx(st); setProjectCtx(p);
-    if (o && ["catalogue", "panier", "commandes", "ventes", "vendeur"].includes(o)) setTab(o as Tab);
+    if (o && ["catalogue", "references", "panier", "commandes", "ventes", "vendeur"].includes(o)) setTab(o as Tab);
     if (b || p || st) api<Offer>(`/api/shop/offers?${b ? `bank=${encodeURIComponent(b)}` : p ? `project=${p}` : `study=${st}`}`).then(setOffers).catch(setErr);
   }, []);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- préremplissage du formulaire avec le profil chargé
   useEffect(() => { if (vend?.vendor) setVf({ business_name: vend.vendor.business_name, phone: vend.vendor.phone ?? "", address: vend.vendor.address ?? "", description: vend.vendor.description ?? "" }); }, [vend]);
   const label = (k: string) => cat?.sections.find((s) => s.key === k)?.label ?? k;
-  const tabs: [Tab, MsgKey][] = [["catalogue", "shop.catalogue"], ["panier", "shop.cart"], ["commandes", "shop.myOrders"], ["ventes", "shop.sales"], ["vendeur", "shop.vendor"]];
+  const tabs: [Tab, MsgKey][] = [["catalogue", "shop.catalogue"], ["references", "shop.references"], ["panier", "shop.cart"], ["commandes", "shop.myOrders"], ["ventes", "shop.sales"], ["vendeur", "shop.vendor"]];
   const OrderCard = ({ o, seller }: { o: Order; seller: boolean }) => (
     <li className="rounded-lg border border-[var(--line)] p-3 text-sm" data-order={o.status}>
       <div className="flex flex-wrap items-center justify-between gap-2"><span><strong>{seller ? o.buyer_name : o.seller_name}</strong> · {new Date(o.created_at).toLocaleString()}</span><Pill tone={o.status === "delivered" ? "ok" : ["cancelled", "refused"].includes(o.status) ? "danger" : "info"}>{t(`shop.st.${o.status}` as MsgKey)}</Pill></div>
@@ -84,7 +87,9 @@ export default function Shop() {
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{cat.items.map((i) => (
               <li key={i.id} className="flex flex-col rounded-xl border border-[var(--line)] p-3 text-sm" data-product={i.title}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- image servie par la plateforme */}
-                {i.image_id ? <img src={`/api/shop/images/${i.image_id}`} alt={i.title} className="mb-2 h-32 w-full rounded-lg object-contain" /> : <div className="mb-2 flex h-32 items-center justify-center rounded-lg bg-[var(--bg-2)] text-xs text-[var(--fg-3)]">{t("shop.noImage")}</div>}
+                {i.image_id ? <img src={`/api/shop/images/${i.image_id}`} alt={i.title} className="mb-2 h-32 w-full rounded-lg object-contain" />
+                  : glyphFor(i.component_name ?? i.title, i.symbol2d ?? "") ? <div className="mb-2 flex h-32 flex-col items-center justify-center gap-1 rounded-lg bg-[var(--bg-2)]" data-illustration><SymbolIcon name={i.component_name ?? i.title} code={i.symbol2d ?? null} size={96} /><span className="text-[10px] text-[var(--fg-3)]">{t("shop.symbolNotPhoto")}</span></div>
+                  : <div className="mb-2 flex h-32 items-center justify-center rounded-lg bg-[var(--bg-2)] text-xs text-[var(--fg-3)]">{t("shop.noImage")}</div>}
                 <strong>{i.title}</strong><span className="text-xs text-[var(--fg-3)]">{label(i.shop_section)} · {i.seller}{i.seller_verified ? ` · ✓ ${t("shop.verified")}` : ""}</span>
                 <span className="mt-1">{fcfa(i.price_xof) ?? t("shop.onRequest")}</span>
                 <span className="text-xs">{i.quantity == null ? t("shop.stockNa") : t("shop.stock", { n: i.quantity })}</span>
@@ -95,6 +100,7 @@ export default function Shop() {
           <p className="mt-3 text-xs text-[var(--fg-3)]">{t("shop.declared")}</p>
         </Card>
       )}
+      {tab === "references" && <References onSearch={(name) => { setQ(name); setTab("catalogue"); }} />}
       {tab === "panier" && (
         <Card title={t("shop.cart")} testId="shop-cart">
           {!cart?.items.length ? <p className="text-sm">{t("shop.cartEmpty")}</p> : (<>
@@ -146,5 +152,34 @@ export default function Shop() {
         </div>
       )}
     </Page>
+  );
+}
+
+/** Fiches de référence des équipements (bibliothèque) : illustration normalisée et caractéristiques à vérifier.
+ *  Aucun prix ni stock : seuls les vendeurs les déclarent sur leurs annonces. */
+function References({ onSearch }: { onSearch: (name: string) => void }) {
+  const { t } = useApp();
+  const [rq, setRq] = useState(""); const [disc, setDisc] = useState("");
+  const items = LIBRARY.filter((c) => (!disc || c.discipline === disc) && (!rq || `${c.name} ${c.description}`.toLowerCase().includes(rq.toLowerCase())));
+  return (
+    <Card testId="shop-references">
+      <p className="text-sm text-[var(--fg-2)]">{t("shop.referencesInfo", { n: LIBRARY.length })}</p>
+      <div className="my-3 grid gap-2 sm:grid-cols-2">
+        <Input aria-label={t("c.search")} placeholder={t("c.search")} name="ref-q" value={rq} onChange={(e) => setRq(e.target.value)} />
+        <Select aria-label={t("comp.discipline")} name="ref-discipline" value={disc} onChange={(e) => setDisc(e.target.value)}><option value="">{t("comp.allDisciplines")}</option>{Object.entries(DISCIPLINE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
+      </div>
+      <p className="text-xs text-[var(--fg-3)]">{items.length} / {LIBRARY.length}</p>
+      <ul className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.slice(0, 60).map((c) => (
+        <li key={c.name} className="flex flex-col rounded-xl border border-[var(--line)] p-3 text-sm" data-reference={c.name}>
+          <div className="flex items-start gap-2"><SymbolIcon name={c.name} code={c.symbol} size={56} /><div className="min-w-0"><strong>{c.name}</strong><p className="text-xs text-[var(--fg-3)]">{DISCIPLINE_LABEL[c.discipline as Discipline]}</p></div></div>
+          <p className="mt-1 text-xs text-[var(--fg-2)]">{c.description}</p>
+          {c.params.length > 0 && <p className="mt-1 text-xs"><span className="text-[var(--fg-3)]">{t("shop.checkSpecs")}</span> {c.params.map((p) => `${p.label}${p.unit ? ` (${p.unit})` : ""}`).join(" · ")}</p>}
+          <div className="mt-auto flex flex-wrap gap-2 pt-2 text-xs">
+            <button type="button" className="rounded-lg border border-[var(--cyan)] px-2 py-1 text-[var(--cyan)]" data-ref-search={c.name} onClick={() => onSearch(c.name)}>{t("shop.findOffers")}</button>
+            <Link className="rounded-lg border border-[var(--line)] px-2 py-1" href="/marketplace?onglet=new">{t("shop.sellThis")}</Link>
+          </div>
+        </li>))}</ul>
+      {items.length > 60 && <p className="mt-2 text-xs text-[var(--fg-3)]">{t("shop.refineSearch")}</p>}
+    </Card>
   );
 }

@@ -1,7 +1,7 @@
 import { sqlOne } from "./db";
 import { ApiFailure, type User } from "./api";
 
-export interface CourseRow { id: string; author_id: string; title: string; domain: string; level: string; lang: string; summary: string | null; lessons: { title: string; body: string }[]; quiz: { q: string; choices: string[]; answer: number }[]; pass_mark: number; lab_link: string | null; published: boolean }
+export interface CourseRow { id: string; author_id: string | null; builtin_key?: string | null; title: string; domain: string; level: string; lang: string; summary: string | null; lessons: { title: string; body: string }[]; quiz: { q: string; choices: string[]; answer: number }[]; pass_mark: number; lab_link: string | null; published: boolean }
 
 export async function loadCourse(id: string, u: User): Promise<CourseRow> {
   const c = await sqlOne<CourseRow>("SELECT * FROM courses WHERE id=$1", [id]);

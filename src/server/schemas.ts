@@ -57,7 +57,7 @@ export const courseSchema = z.object({
   quiz: z.array(z.object({ q: z.string().trim().min(3).max(500), choices: z.array(z.string().trim().min(1).max(200)).min(2).max(6), answer: z.number().int().min(0) })).max(50)
     .refine((qs) => qs.every((x) => x.answer < x.choices.length), "Bonne réponse hors des choix"),
   pass_mark: z.number().int().min(1).max(100).default(70),
-  lab_link: z.string().regex(/^\/lab\/[a-z]+$|^\/components$|^\/studio$/).nullable().optional(),
+  lab_link: z.string().regex(/^\/lab\/[a-z]+$|^\/components$|^\/studio$|^\/schemas$|^\/dimensionnement(\/[a-z-]+)?$/).nullable().optional(),
   published: z.boolean().default(false),
 });
 

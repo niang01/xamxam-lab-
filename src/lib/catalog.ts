@@ -30,6 +30,7 @@ export const RUBRICS: Rubric[] = [
   { key: "fad", path: "/fad", group: "knowledge", icon: "⌂" },
   { key: "academy", path: "/academy", group: "knowledge", icon: "✎" },
   { key: "exercises", path: "/exercices", group: "knowledge", icon: "✓" },
+  { key: "tp", path: "/travaux-pratiques", group: "knowledge", icon: "⚗" },
   { key: "collab", path: "/collab", group: "knowledge", icon: "⇌" },
   { key: "startups", path: "/startups", group: "ecosystem", icon: "▲" },
   { key: "challenges", path: "/challenges", group: "ecosystem", icon: "★" },

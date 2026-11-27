@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import type { Db } from "./db";
 import { LIBRARY } from "@/lib/library";
+import { BUILTIN_COURSES } from "@/lib/courses-builtin";
 
 type C = [category: string, name: string, symbol: string | null, description: string, fn: string, pins: string[], precautions: string | null];
 
@@ -63,6 +64,24 @@ const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);
 export async function seed(db: Db) {
   try { await seedLibrary(db); }
   catch (e) { console.error("[xamxam] bibliothèque non mise à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
+  try { await seedCourses(db); }
+  catch (e) { console.error("[xamxam] cours intégrés non mis à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
+}
+
+/** Cours intégrés : insérés ou mis à jour par leur clé (l'identifiant, donc les inscriptions et certificats, est conservé). */
+async function seedCourses(db: Db) {
+  const fingerprint = createHash("sha256").update(JSON.stringify(BUILTIN_COURSES)).digest("hex");
+  const done = (await db.query<{ value: string }>("SELECT value FROM server_keys WHERE name='courses_version'")).rows[0]?.value;
+  if (done === fingerprint) return;
+  for (const c of BUILTIN_COURSES) {
+    await db.query(
+      `INSERT INTO courses(author_id, builtin_key, title, domain, level, lang, summary, lessons, quiz, pass_mark, lab_link, published)
+       VALUES (NULL,$1,$2,$3,$4,'fr',$5,$6,$7,$8,$9,true)
+       ON CONFLICT (builtin_key) DO UPDATE SET title=EXCLUDED.title, domain=EXCLUDED.domain, level=EXCLUDED.level, summary=EXCLUDED.summary,
+         lessons=EXCLUDED.lessons, quiz=EXCLUDED.quiz, pass_mark=EXCLUDED.pass_mark, lab_link=EXCLUDED.lab_link, published=true`,
+      [c.key, c.title, c.domain, c.level, c.summary, JSON.stringify(c.lessons), JSON.stringify(c.quiz), c.pass_mark, c.lab_link]);
+  }
+  await db.query("INSERT INTO server_keys(name, value) VALUES ('courses_version',$1) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value", [fingerprint]);
 }
 
 async function seedLibrary(db: Db) {

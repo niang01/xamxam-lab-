@@ -39,8 +39,11 @@ export default function Electronics() {
     const s = await api<{ id: string; version: number; title: string; graph: Graph; project_id: string | null }>(`/api/schematics/${id}`);
     setSchema({ id: s.id, version: s.version, title: s.title }); setTitle(s.title); setGraph(s.graph); if (s.project_id) setPid(s.project_id);
   }, []);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronisation avec une source externe (URL, session, WebGL)
-  useEffect(() => { const id = new URLSearchParams(window.location.search).get("schema"); if (id) void load(id).catch(setErr); }, [load]);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search), id = sp.get("schema"), ex = sp.get("exemple");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronisation avec l'adresse (schéma enregistré ou exemple ouvert depuis un TP)
+    if (id) void load(id).catch(setErr); else if (ex && EXAMPLES[ex]) setGraph(structuredClone(EXAMPLES[ex]));
+  }, [load]);
 
   async function save() {
     setErr(null); setMsg("");

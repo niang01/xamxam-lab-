@@ -47,11 +47,12 @@ function CoilShape({ o, x, y, energized, state }: { o: Coil; x: number; y: numbe
   );
 }
 
-export function LadderLab() {
+export function LadderLab({ initial }: { initial?: string } = {}) {
   const t = useT();
-  const [prog, setProg] = useState<LadderProgram>(() => clone(LADDER_EXAMPLES[0]));
-  const [ex, setEx] = useState(LADDER_EXAMPLES[0].key);
-  const [inputs, setInputs] = useState<Record<string, boolean>>(() => ncDefaults(LADDER_EXAMPLES[0]));
+  const first = LADDER_EXAMPLES.find((x) => x.key === initial) ?? LADDER_EXAMPLES[0];
+  const [prog, setProg] = useState<LadderProgram>(() => clone(first));
+  const [ex, setEx] = useState(first.key);
+  const [inputs, setInputs] = useState<Record<string, boolean>>(() => ncDefaults(first));
   const [running, setRunning] = useState(false);
   const [st, setSt] = useState<PlcState & { power: boolean[] }>({ ...emptyState(), power: [] });
   const [edit, setEdit] = useState<number | null>(null);

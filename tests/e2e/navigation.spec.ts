@@ -13,11 +13,21 @@ test("navigation : Retour sur chaque page, reconnexion automatique après une in
   await expect(page).toHaveURL(/\/dimensionnement\/pompage/);
   await page.click("[data-testid=back]");
   await expect(page).toHaveURL(/\/dimensionnement$/);
-  // Retour depuis une page ouverte directement : rubrique parente
-  await page.goto("/lab/iot");
+  // Retour après une navigation par lien interne : page précédente
+  await page.goto("/travaux-pratiques");
   await page.waitForLoadState("networkidle");
+  await page.click("[data-tp=feux-tricolores] button");
+  await page.click("[data-tp-tool]");
+  await expect(page).toHaveURL(/ladder=feux/);
   await page.click("[data-testid=back]");
-  await expect(page).toHaveURL(/\/lab$/);
+  await expect(page).toHaveURL(/\/travaux-pratiques$/);
+  // Page ouverte directement dans un nouvel onglet (lien partagé) : rubrique parente
+  const tab = await page.context().newPage();
+  await tab.goto("/lab/iot");
+  await tab.waitForLoadState("networkidle");
+  await tab.click("[data-testid=back]");
+  await expect(tab).toHaveURL(/\/lab$/);
+  await tab.close();
   // Toutes les rubriques internes proposent « Retour » (sauf le tableau de bord)
   for (const p of ["/projects", "/boutique", "/banque-projets", "/schemas", "/studio", "/settings", "/guide"]) {
     await page.goto(p);

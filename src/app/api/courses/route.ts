@@ -6,10 +6,10 @@ import { audit } from "@/server/audit";
 
 export const GET = endpoint(async (req) => {
   const u = await mustBeSignedIn(req);
-  const items = await sql(`SELECT c.id, c.title, c.domain, c.level, c.lang, c.summary, c.published, c.author_id, u.display_name AS author, jsonb_array_length(c.lessons) AS lessons_n, jsonb_array_length(c.quiz) AS quiz_n,
+  const items = await sql(`SELECT c.id, c.title, c.domain, c.level, c.lang, c.summary, c.published, c.author_id, COALESCE(u.display_name, 'XAM-XAM LAB') AS author, (c.builtin_key IS NOT NULL) AS builtin, jsonb_array_length(c.lessons) AS lessons_n, jsonb_array_length(c.quiz) AS quiz_n,
       e.best_score, (SELECT COUNT(*)::int FROM enrollments x WHERE x.course_id=c.id) AS learners
-    FROM courses c JOIN users u ON u.id=c.author_id LEFT JOIN enrollments e ON e.course_id=c.id AND e.user_id=$1
-    WHERE c.published OR c.author_id=$1 ORDER BY c.created_at DESC`, [u.id]);
+    FROM courses c LEFT JOIN users u ON u.id=c.author_id LEFT JOIN enrollments e ON e.course_id=c.id AND e.user_id=$1
+    WHERE c.published OR c.author_id=$1 ORDER BY (c.builtin_key IS NULL), c.created_at DESC`, [u.id]);
   return ok({ items });
 });
 

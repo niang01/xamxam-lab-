@@ -2,6 +2,7 @@
 /** Coque de l'application : menu des 26 rubriques groupées, sélecteur WO/FR/EN, notifications, compte. */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { recordNavigation } from "./ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { useApp } from "./providers";
 import { RUBRICS, type Group } from "@/lib/catalog";
@@ -41,6 +42,8 @@ const GROUPS: Group[] = ["core", "lab", "connect", "knowledge", "ecosystem", "me
 export function LabShell({ children }: { children: ReactNode }) {
   const { me, meLoaded, waking, t, lang, setLang, fallback, wolofCount, totalKeys, refreshMe } = useApp();
   const path = usePathname();
+  // Historique interne pour la commande « Retour » (page précédente réelle, y compris après une navigation par lien).
+  useEffect(() => { if (path) recordNavigation(path); }, [path]);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);

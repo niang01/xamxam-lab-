@@ -13,6 +13,18 @@ export function parentPath(path: string): string {
   return parts.length <= 1 ? "/" : `/${parts.slice(0, -1).join("/")}`;
 }
 
+/** Historique de navigation interne (onglet courant) : sert à « Retour » ; tenu par LabShell à chaque changement de page. */
+const NAV_KEY = "xx.nav";
+const readNav = (): string[] => { try { return JSON.parse(sessionStorage.getItem(NAV_KEY) ?? "[]") as string[]; } catch { return []; } };
+export function recordNavigation(path: string) {
+  try {
+    const h = readNav();
+    if (h[h.length - 1] === path) return;
+    if (h[h.length - 2] === path) h.pop(); else h.push(path);   // retour arrière (bouton du navigateur ou « Retour »)
+    sessionStorage.setItem(NAV_KEY, JSON.stringify(h.slice(-50)));
+  } catch { /* stockage indisponible : « Retour » mène à la rubrique parente */ }
+}
+
 /** Commande « Retour » : page précédente de la navigation, sinon rubrique parente (page ouverte depuis un lien). */
 export function BackButton({ href, onBack }: { href?: string; onBack?: () => void }) {
   const t = useT();
@@ -22,8 +34,8 @@ export function BackButton({ href, onBack }: { href?: string; onBack?: () => voi
   const go = () => {
     if (onBack) { onBack(); return; }
     if (href) { router.push(href); return; }
-    const internal = typeof document !== "undefined" && document.referrer.startsWith(window.location.origin) && window.history.length > 1;
-    if (internal) router.back(); else router.push(parentPath(path));
+    const h = readNav();
+    if (h.length > 1 && h[h.length - 1] === path) router.back(); else router.push(parentPath(path));
   };
   return (
     <button type="button" onClick={go} data-testid="back" aria-label={t("c.back")}

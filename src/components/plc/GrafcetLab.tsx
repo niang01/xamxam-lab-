@@ -33,13 +33,14 @@ function layout(g: GrafcetProgram) {
   return { pos, levels: Math.max(...cols.keys()) + 1, width: Math.max(...[...cols.values()].map((c) => c.length)) * 200 + 240 };
 }
 
-export function GrafcetLab() {
+export function GrafcetLab({ initial }: { initial?: string } = {}) {
   const t = useT();
-  const [g, setG] = useState<GrafcetProgram>(() => clone(GRAFCET_EXAMPLES[0]));
-  const [ex, setEx] = useState(GRAFCET_EXAMPLES[0].key);
+  const first = GRAFCET_EXAMPLES.find((x) => x.key === initial) ?? GRAFCET_EXAMPLES[0];
+  const [g, setG] = useState<GrafcetProgram>(() => clone(first));
+  const [ex, setEx] = useState(first.key);
   const [inputs, setInputs] = useState<Record<string, boolean>>({});
   const [running, setRunning] = useState(false);
-  const [st, setSt] = useState<GState>(() => initialState(GRAFCET_EXAMPLES[0]));
+  const [st, setSt] = useState<GState>(() => initialState(first));
   const [err, setErr] = useState<unknown>(null);
   const inRef = useRef(inputs); useEffect(() => { inRef.current = inputs; }, [inputs]);
   const check = useMemo(() => checkGrafcet(g), [g]);

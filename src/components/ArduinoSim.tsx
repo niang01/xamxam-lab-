@@ -42,7 +42,11 @@ export function ArduinoSim() {
     if (!host.current) return;
     const v = new EditorView({ doc: SKETCHES[0].source, extensions: [basicSetup, cpp(), EditorView.lineWrapping], parent: host.current });
     view.current = v;
+    // Ouverture depuis un TP : /lab/iot?croquis=seuil
+    const k = new URLSearchParams(window.location.search).get("croquis");
+    if (k && SKETCHES.some((s) => s.key === k)) choose(k);
     return () => v.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lecture unique de l'adresse au montage
   }, []);
 
   function choose(key: string) {

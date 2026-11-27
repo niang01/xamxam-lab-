@@ -14,6 +14,6 @@ describe("Guides intégrés", () => {
     }
   });
   it("les rubriques livrées ont leur guide", () => {
-    for (const slug of ["dimensionnement", "programmation-arduino", "automatisme", "documents", "generer-schemas", "banque-projets", "exercices", "boutique", "fad", "licence", "administrateur"]) expect(GUIDES.some((g) => g.slug === slug), slug).toBe(true);
+    for (const slug of ["dimensionnement", "programmation-arduino", "automatisme", "travaux-pratiques", "documents", "generer-schemas", "banque-projets", "exercices", "boutique", "fad", "licence", "administrateur"]) expect(GUIDES.some((g) => g.slug === slug), slug).toBe(true);
   });
 });

@@ -74,3 +74,40 @@ test("rubriques : document analysé et exporté, projet de la banque réalisé, 
   await expect(page.locator("[data-testid=my-devices]")).toContainText("cet appareil");
   await sellerCtx.close();
 });
+
+/** Banques : cours intégrés, travaux pratiques ouverts sur le bon cas, schémas types, simulations ; boutique illustrée. */
+test("banques : cours intégrés, TP, schémas types, simulations, références de la boutique", async ({ page }) => {
+  test.setTimeout(150_000);
+  await signup(page, `banques-${Date.now()}@e2e.local`, "student");
+  await page.click("button[data-lang=fr]");
+  // Cours intégrés publiés dans l'Academy
+  await page.goto("/academy");
+  await expect(page.getByText("Automatisme : programmer un automate en Ladder et en Grafcet")).toBeVisible({ timeout: 20_000 });
+  // TP : fiche, outil ouvert sur le bon programme
+  await page.goto("/travaux-pratiques");
+  await expect(page.locator("[data-tp]")).toHaveCount(21);
+  await page.selectOption("select[name=tp-discipline]", "Automatisme");
+  await page.click("[data-tp=grafcet-perceuse] button");
+  await expect(page.locator("[data-testid=tp-expected]")).toContainText("2 s");
+  await page.click("[data-tp-tool]");
+  await expect(page).toHaveURL(/grafcet=perceuse/);
+  await expect(page.locator("[data-testid=grafcet-example]")).toHaveValue("perceuse");
+  await page.click("[data-testid=back]");
+  await expect(page).toHaveURL(/\/travaux-pratiques/);
+  // Schémas types illustrés et simulations
+  await page.click("[data-tab=schemas]");
+  await expect(page.locator("[data-preview]")).toHaveCount(10);
+  await expect(page.locator("[data-preview=demarrage_direct] [data-symbol=motor3]")).toHaveCount(1);
+  await page.click("[data-tab=simulations]");
+  await expect(page.locator("[data-testid=simulation-bank] a")).toHaveCount(22);
+  // TP Arduino : croquis préchargé
+  await page.goto("/lab/iot?croquis=seuil");
+  await expect(page.locator("[data-testid=sim-sketch]")).toHaveValue("seuil");
+  // Boutique : fiches de référence illustrées, recherche en rayon
+  await page.goto("/boutique");
+  await page.click("[data-tab=references]");
+  await page.fill("input[name=ref-q]", "Contacteur");
+  await expect(page.locator("[data-reference=Contacteur] svg[data-glyph=contactor]")).toBeVisible();
+  await page.click("[data-ref-search=Contacteur]");
+  await expect(page.locator("input[name=shop-q]")).toHaveValue("Contacteur");
+});

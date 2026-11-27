@@ -32,6 +32,6 @@ export const POST = endpoint<Ctx>(async (req, ctx) => {
     ON CONFLICT (assignment_id, user_id) DO UPDATE SET text=$3, file_name=$4, file_mime=$5, file_data=$6, late=$7, submitted_at=now()`,
     [a.id, u.id, text, file?.name ?? null, file?.mime ?? null, file ? Buffer.from(file.bytes) : null, late]);
   const author = await sqlOne<{ author_id: string }>("SELECT author_id FROM courses WHERE id=$1", [a.course_id]);
-  if (author) await notify(author.author_id, "course", "Nouvelle remise", `${u.display_name} a remis « ${a.title} »${late ? " (en retard)" : ""}.`, `/academy/${a.course_id}`);
+  if (author?.author_id) await notify(author.author_id, "course", "Nouvelle remise", `${u.display_name} a remis « ${a.title} »${late ? " (en retard)" : ""}.`, `/academy/${a.course_id}`);
   return ok({ ok: true, late }, 201);
 });

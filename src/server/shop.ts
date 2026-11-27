@@ -14,8 +14,8 @@ export const LISTING_VISIBLE = "l.status='published' AND l.moderation='visible' 
 export async function catalog(f: { q: string; section: string | null; maxPrice: number | null; sort?: "recent" | "price_asc" | "price_desc" }) {
   return sql(`SELECT l.id, l.title, l.description, l.category, l.condition, l.price_xof, l.quantity, l.location, l.delivery, l.specs, l.shop_section, l.datasheet_url, l.component_id,
       l.seller_id, COALESCE(v.business_name, u.display_name) AS seller, COALESCE(v.verified, false) AS seller_verified,
-      (SELECT id FROM listing_images i WHERE i.listing_id=l.id ORDER BY created_at LIMIT 1) AS image_id
-    FROM market_listings l JOIN users u ON u.id=l.seller_id LEFT JOIN shop_vendors v ON v.user_id=l.seller_id
+      (SELECT id FROM listing_images i WHERE i.listing_id=l.id ORDER BY created_at LIMIT 1) AS image_id, c.name AS component_name, c.symbol2d
+    FROM market_listings l JOIN users u ON u.id=l.seller_id LEFT JOIN shop_vendors v ON v.user_id=l.seller_id LEFT JOIN components c ON c.id=l.component_id
     WHERE ${LISTING_VISIBLE} AND ($1='' OR l.title ILIKE '%'||$1||'%' OR l.description ILIKE '%'||$1||'%') AND ($2::text IS NULL OR l.shop_section=$2) AND ($3::bigint IS NULL OR l.price_xof <= $3)
     ORDER BY ${f.sort === "price_asc" ? "l.price_xof ASC NULLS LAST," : f.sort === "price_desc" ? "l.price_xof DESC NULLS LAST," : "l.sponsored DESC,"} l.created_at DESC LIMIT 300`, [f.q, f.section, f.maxPrice]);
 }
