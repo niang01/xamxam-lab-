@@ -13,6 +13,24 @@ En ligne : https://xamxam-lab.onrender.com (Render, plan free, déploiement auto
 | Production : inscription, profil, connexion, déconnexion, session, tableau de bord | ✅ téléphone, tablette, ordinateur (23/11) |
 | APK Android (debug, relié à l'adresse publique) | ✅ compilé ; ❌ non essayé sur un vrai téléphone |
 
+## EN COURS (27/11) — Lot P : catalogue de références réelles — POINT DE REPRISE
+Fait (commité) :
+- 605 références réelles (bibliothèques KiCad CC BY-SA 4.0 : modèle, fabricant déduit du domaine officiel de la fiche, fiche technique,
+  brochage, empreinte, variantes) dans data/catalogue/references.json, chargées en base (migration 0021, statut « catalogue », clé stable,
+  rien supprimé) ; 289 modèles 3D de boîtiers (public/catalogue/3d) ; brochages interactifs (ESP32 uPesy, Arduino UNO R3, Pico).
+- Bibliothèque : filtres fabricant / type / « avec photo », fiche détaillée (ComponentSheet), comparaison ; boutique : références réelles ;
+  Marème propose les références réelles ; tests unitaires et d'intégration du catalogue.
+Reste à faire :
+1. Photos : réseau Wikimedia autorisé (commons, upload, thumb.wikimedia.org). Originaux limités (429, Retry-After 600) → miniatures
+   via Special:FilePath?width=640 (fonctionne). Collecte : scripts/catalogue/candidates.py (catégories propres au modèle uniquement)
+   → planches de contrôle → VALIDATION VISUELLE OBLIGATOIRE (photo = modèle exact) → data/catalogue/photos.json → build.py.
+   Données de collecte : data/catalogue/collecte/ (probe-out.json : 33 modèles KiCad ont une catégorie Commons ; explore3.json :
+   catégories par marque/modèle, ~1 900 photos libres dont la sélection par titre de modèle est à faire).
+2. Fiches hors KiCad (disjoncteurs, contacteurs, compteurs, compresseurs, SSD, oxymètres, multimètres, cartes) dans
+   data/catalogue/extra.json à partir des photos dont le titre identifie le modèle ; fiche technique = null si non vérifiable.
+3. e2e (bibliothèque, fiche, boutique), docs (CONFORMITE, RAPPORT_DE_TESTS, ETAT_REALISATION), bilan par filière, production.
+Reconstruire : python3 scripts/catalogue/build.py data/catalogue/collecte/kicad_refs.json data/catalogue/photos.json data/catalogue/collecte/models3d.json
+
 ## Réalisé le 27/11 (rectification)
 - Retour sur toutes les pages ; reconnexion automatique corrigée (tentatives, session glissante).
 - 69 symboles normalisés ; laboratoire Automatisme (Ladder, Grafcet, Modbus, /api/plc).

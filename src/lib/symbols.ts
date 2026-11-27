@@ -78,6 +78,11 @@ export const GLYPHS: Record<string, G> = {
   led: g("Diode électroluminescente (LED)", CEI, [...leads(6), [[-6, -7], [-6, 7], [6, 0], [-6, -7]], L([6, -7], [6, 7]), L([2, -9], [9, -16]), arrowHead(9, -16, 1, -1), L([7, -6], [14, -13]), arrowHead(14, -13, 1, -1)]),
   npn: g("Transistor bipolaire NPN", CEI, [circle(0, 0, 14), L([-30, 0], [-5, 0]), L([-5, -9], [-5, 9]), L([-5, -4], [8, -12], [8, -20]), L([-5, 4], [8, 12], [8, 20]), arrowHead(8, 12, 1, 0.6)]),
   nmos: g("Transistor MOSFET à canal N (enrichissement)", CEI, [circle(0, 0, 14), L([-30, 4], [-8, 4]), L([-8, -8], [-8, 8]), L([-4, -9], [-4, -5]), L([-4, -2], [-4, 2]), L([-4, 5], [-4, 9]), L([-4, -7], [8, -7], [8, -20]), L([-4, 7], [8, 7], [8, 20]), L([-4, 0], [8, 0], [8, 7]), arrowHead(-4, 0, -1, 0)]),
+  pnp: g("Transistor bipolaire PNP", CEI, [circle(0, 0, 14), L([-30, 0], [-5, 0]), L([-5, -9], [-5, 9]), L([-5, -4], [8, -12], [8, -20]), L([-5, 4], [8, 12], [8, 20]), arrowHead(-4, 4, -1, -0.6)]),
+  pmos: g("Transistor MOSFET à canal P (enrichissement)", CEI, [circle(0, 0, 14), L([-30, 4], [-8, 4]), L([-8, -8], [-8, 8]), L([-4, -9], [-4, -5]), L([-4, -2], [-4, 2]), L([-4, 5], [-4, 9]), L([-4, -7], [8, -7], [8, -20]), L([-4, 7], [8, 7], [8, 20]), L([-4, 0], [8, 0], [8, 7]), arrowHead(8, 0, 1, 0)]),
+  scr: g("Thyristor", CEI, [...leads(6), [[-6, -7], [-6, 7], [6, 0], [-6, -7]], L([6, -7], [6, 7]), L([4, 1], [10, 10], [10, 18])]),
+  triac: g("Triac", CEI, [L([-30, 0], [-8, 0]), L([8, 0], [30, 0]), L([-8, -12], [-8, 12]), L([8, -12], [8, 12]), [[-8, -10], [8, -4], [-8, 2], [-8, -10]], [[8, 10], [-8, 4], [8, -2], [8, 10]], L([4, 8], [12, 18])]),
+  bridge: g("Pont redresseur", CEI, [L([-30, 0], [-14, 0]), L([14, 0], [30, 0]), [[-14, 0], [0, -14], [14, 0], [0, 14], [-14, 0]], [[-9, -1], [-3, -11], [-1, -5], [-9, -1]], [[3, 11], [9, 1], [1, 5], [3, 11]]]),
   opamp: g("Amplificateur opérationnel", CEI, [[[-14, -14], [-14, 14], [14, 0], [-14, -14]], L([-30, -7], [-14, -7]), L([-30, 7], [-14, 7]), L([14, 0], [30, 0])], [T(-9, -4, "−", 8), T(-9, 10, "+", 8)]),
   vsource: g("Source de tension", CEI, [...leads(10), circle(0, 0, 10)], [T(-4, 3, "+", 8), T(5, 3, "−", 8)]),
   isource: g("Source de courant", CEI, [...leads(10), circle(0, 0, 10), L([-6, 0], [6, 0]), arrowHead(6, 0, 1, 0)]),
@@ -156,6 +161,7 @@ const BY_CODE: Record<string, string> = {
   H: "lamp", E: "lamp", XS: "socket", X: "socket", GND: "chassis", BAT: "battery", PV: "pv", INV: "inverter", VFD: "vfd", MPPT: "dcdc", PWM: "dcdc",
   Wh: "meter", R: "resistor", C: "capacitor", L: "inductor", D: "diode", DZ: "zener", LED: "led", I: "isource", HA: "buzzer",
   SQ: "limit_switch", S: "push_no", YV: "solenoid_valve", CY: "cylinder", Y: "valve_52", PI: "manometer", PU: "pump", FAN: "fan",
+  NPN: "npn", PNP: "pnp", NMOS: "nmos", PMOS: "pmos", OPAMP: "opamp", SCR: "scr", TRIAC: "triac", BRIDGE: "bridge", RF: "radio", MOTOR: "motor_dc", SERVO: "servo",
   RES: "tank", ANT: "antenna", MCU: "mcu", SBC: "mcu", DB: "database", TSDB: "database", F: "thermal_relay",
 };
 

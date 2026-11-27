@@ -4,6 +4,8 @@
  * (statut « à vérifier » jusqu'à vérification).
  */
 import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import type { Db } from "./db";
 import { LIBRARY } from "@/lib/library";
 import { BUILTIN_COURSES } from "@/lib/courses-builtin";
@@ -64,6 +66,8 @@ const SIMULABLE = new Set(["R", "C", "L", "D", "V", "I", "GND"]);
 export async function seed(db: Db) {
   try { await seedLibrary(db); }
   catch (e) { console.error("[xamxam] bibliothèque non mise à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
+  try { await seedCatalogue(db); }
+  catch (e) { console.error("[xamxam] catalogue de références non mis à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
   try { await seedCourses(db); }
   catch (e) { console.error("[xamxam] cours intégrés non mis à jour (la plateforme reste disponible) :", e instanceof Error ? e.message : e); }
 }
@@ -134,4 +138,51 @@ async function seedLibrary(db: Db) {
     }
   }
   await db.query("INSERT INTO server_keys(name, value) VALUES ('library_version', $1) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value", [fingerprint]);
+}
+
+/** Référence du catalogue (data/catalogue/references.json, construit par scripts/catalogue/build.py). */
+export interface CatalogueRef {
+  key: string; model: string; manufacturer: string | null; manufacturer_source: string | null; discipline: string; category: string; subcategory: string;
+  code: string | null; description_en: string; keywords: string; datasheet: string; footprint: string | null;
+  pins: { n: string; name: string; type: string }[]; variants: string[];
+  photos: { file: string; author: string; license: string; license_url: string | null; source: string; title: string; view?: string }[];
+  model3d: string | null; sources: { label: string; url: string | null; license?: string }[]; board?: string;
+}
+export function loadCatalogue(): CatalogueRef[] {
+  const file = path.join(/* turbopackIgnore: true */ process.cwd(), "data", "catalogue", "references.json");
+  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as CatalogueRef[]) : [];
+}
+const SIMULABLE_CODES: Record<string, string> = { D: "D", DZ: "D", LED: "D" };
+
+/**
+ * Catalogue de références réelles : ajout ou mise à jour par clé stable. Rien n'est supprimé (les références ajoutées
+ * par les utilisateurs, et celles retirées d'une future version du fichier, sont conservées).
+ */
+async function seedCatalogue(db: Db) {
+  const refs = loadCatalogue();
+  if (!refs.length) return;
+  const fingerprint = createHash("sha256").update(JSON.stringify(refs)).digest("hex");
+  const done = (await db.query<{ value: string }>("SELECT value FROM server_keys WHERE name='catalogue_version'")).rows[0]?.value;
+  if (done === fingerprint) return;
+  for (const r of refs) {
+    const desc = `${r.subcategory} ${r.model}${r.manufacturer ? ` (${r.manufacturer})` : ""}.${r.description_en ? ` Description de la bibliothèque KiCad (en anglais) : ${r.description_en}` : ""}`;
+    const specs: Record<string, string> = {};
+    if (r.footprint) specs["Empreinte (KiCad)"] = r.footprint;
+    if (r.keywords) specs["Mots-clés"] = r.keywords;
+    if (r.manufacturer_source) specs["Fabricant déduit de"] = r.manufacturer_source;
+    if (r.variants.length) specs["Variantes"] = r.variants.slice(0, 12).join(", ");
+    const pins = [...new Set(r.pins.map((p) => p.name && p.name !== "~" ? p.name : p.n))].slice(0, 60);
+    await db.query(
+      `INSERT INTO components(catalogue_key, category, subcategory, name, description, function, manufacturer, mpn, datasheet_url, specs, pins, pinout,
+         symbol_kind, symbol2d, discipline, status, source, photos, model3d, footprint, sources, variants)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'catalogue',$16,$17,$18,$19,$20,$21)
+       ON CONFLICT (catalogue_key) DO UPDATE SET category=EXCLUDED.category, subcategory=EXCLUDED.subcategory, name=EXCLUDED.name, description=EXCLUDED.description,
+         function=EXCLUDED.function, manufacturer=EXCLUDED.manufacturer, mpn=EXCLUDED.mpn, datasheet_url=EXCLUDED.datasheet_url, specs=EXCLUDED.specs,
+         pins=EXCLUDED.pins, pinout=EXCLUDED.pinout, symbol_kind=EXCLUDED.symbol_kind, symbol2d=EXCLUDED.symbol2d, discipline=EXCLUDED.discipline,
+         source=EXCLUDED.source, photos=EXCLUDED.photos, model3d=EXCLUDED.model3d, footprint=EXCLUDED.footprint, sources=EXCLUDED.sources, variants=EXCLUDED.variants`,
+      [r.key, r.category, r.subcategory, r.model, desc, r.subcategory, r.manufacturer, r.model, r.datasheet || null, JSON.stringify(specs), JSON.stringify(pins),
+        JSON.stringify(r.board ? { board: r.board, pins: r.pins } : { pins: r.pins }), r.code ? SIMULABLE_CODES[r.code] ?? null : null, r.code, r.discipline,
+        r.sources.map((x) => x.label).join(" ; "), JSON.stringify(r.photos), r.model3d, r.footprint, JSON.stringify(r.sources), JSON.stringify(r.variants)]);
+  }
+  await db.query("INSERT INTO server_keys(name, value) VALUES ('catalogue_version',$1) ON CONFLICT (name) DO UPDATE SET value=EXCLUDED.value", [fingerprint]);
 }

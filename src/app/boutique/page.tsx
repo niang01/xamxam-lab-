@@ -6,6 +6,9 @@ import { useApp } from "@/components/providers";
 import { Btn, Card, ErrorBox, Field, Input, Page, Pill, Select, Textarea } from "@/components/ui";
 import { Mareme } from "@/components/Mareme";
 import { SymbolIcon } from "@/components/SymbolIcon";
+import { ComponentSheet, PhotoCredit, type Photo } from "@/components/ComponentSheet";
+
+type RealRef = { id: string; name: string; mpn: string | null; manufacturer: string | null; category: string; subcategory: string | null; symbol2d: string | null; datasheet_url: string | null; photos: Photo[] };
 import { glyphFor } from "@/lib/symbols";
 import { LIBRARY, DISCIPLINE_LABEL, type Discipline } from "@/lib/library";
 import { useData } from "@/lib/client/hooks";
@@ -43,6 +46,7 @@ export default function Shop() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- contexte (étude, projet) et onglet lus dans l'URL après le montage
     setStudyCtx(st); setProjectCtx(p);
     if (o && ["catalogue", "references", "panier", "commandes", "ventes", "vendeur"].includes(o)) setTab(o as Tab);
+    const q0 = sp.get("q"); if (q0) setQ(q0.slice(0, 120));   // depuis la fiche d'une référence de la bibliothèque
     if (b || p || st) api<Offer>(`/api/shop/offers?${b ? `bank=${encodeURIComponent(b)}` : p ? `project=${p}` : `study=${st}`}`).then(setOffers).catch(setErr);
   }, []);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- préremplissage du formulaire avec le profil chargé
@@ -157,9 +161,12 @@ export default function Shop() {
 
 /** Fiches de référence des équipements (bibliothèque) : illustration normalisée et caractéristiques à vérifier.
  *  Aucun prix ni stock : seuls les vendeurs les déclarent sur leurs annonces. */
+/** Catalogue multidisciplinaire : références réelles (photo libre, fabricant, modèle, documentation) puis types génériques. */
 function References({ onSearch }: { onSearch: (name: string) => void }) {
   const { t } = useApp();
-  const [rq, setRq] = useState(""); const [disc, setDisc] = useState("");
+  const [rq, setRq] = useState(""); const [disc, setDisc] = useState(""); const [maker, setMaker] = useState(""); const [photo, setPhoto] = useState(false); const [open, setOpen] = useState<string | null>(null);
+  const { data: real } = useData<{ items: RealRef[]; manufacturers: { manufacturer: string; n: number }[]; totals: { catalogue: number; photos: number } }>(
+    `/api/components?kind=catalogue&q=${encodeURIComponent(rq)}${disc ? `&discipline=${disc}` : ""}${maker ? `&manufacturer=${encodeURIComponent(maker)}` : ""}${photo ? "&photo=1" : ""}`);
   const items = LIBRARY.filter((c) => (!disc || c.discipline === disc) && (!rq || `${c.name} ${c.description}`.toLowerCase().includes(rq.toLowerCase())));
   return (
     <Card testId="shop-references">
@@ -168,6 +175,26 @@ function References({ onSearch }: { onSearch: (name: string) => void }) {
         <Input aria-label={t("c.search")} placeholder={t("c.search")} name="ref-q" value={rq} onChange={(e) => setRq(e.target.value)} />
         <Select aria-label={t("comp.discipline")} name="ref-discipline" value={disc} onChange={(e) => setDisc(e.target.value)}><option value="">{t("comp.allDisciplines")}</option>{Object.entries(DISCIPLINE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
       </div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Select aria-label={t("comp.f.manufacturer")} name="ref-maker" value={maker} onChange={(e) => setMaker(e.target.value)} className="!w-auto max-w-full"><option value="">{t("ref.allMakers")}</option>{real?.manufacturers.map((m) => <option key={m.manufacturer} value={m.manufacturer}>{m.manufacturer} ({m.n})</option>)}</Select>
+        <label className="inline-flex items-center gap-1 text-sm"><input type="checkbox" name="ref-photo" checked={photo} onChange={(e) => setPhoto(e.target.checked)} />{t("ref.withPhoto")}</label>
+      </div>
+      <h3 className="text-sm font-semibold">{t("shop.realRefs", { n: real?.totals.catalogue ?? 0, ph: real?.totals.photos ?? 0 })}</h3>
+      <ul className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="shop-real-refs">{(real?.items ?? []).slice(0, 48).map((c) => (
+        <li key={c.id} className="flex flex-col rounded-xl border border-[var(--line)] p-3 text-sm" data-real-ref={c.name}>
+          {c.photos.length ? /* eslint-disable-next-line @next/next/no-img-element -- photo servie par la plateforme */ <img src={`/catalogue/photos/${c.photos[0].file}`} alt={c.name} className="mb-2 h-32 w-full rounded-lg bg-white object-contain" loading="lazy" />
+            : <div className="mb-2 flex h-32 items-center justify-center rounded-lg bg-[var(--bg-2)]"><SymbolIcon name={c.name} code={c.symbol2d} size={80} /></div>}
+          {c.photos[0] && <PhotoCredit p={c.photos[0]} />}
+          <strong>{c.name}</strong><span className="text-xs text-[var(--fg-3)]">{c.manufacturer ?? "—"} · {c.subcategory ?? c.category}</span>
+          <span className="mt-1 text-xs text-[var(--warn)]">{t("shop.notForSale")}</span>
+          <div className="mt-auto flex flex-wrap gap-2 pt-2 text-xs">
+            <button type="button" className="rounded-lg border border-[var(--cyan)] px-2 py-1 text-[var(--cyan)]" data-real-open={c.name} onClick={() => setOpen(open === c.id ? null : c.id)}>{t("shop.sheet")}</button>
+            <button type="button" className="rounded-lg border border-[var(--line)] px-2 py-1" onClick={() => onSearch(c.mpn ?? c.name)}>{t("shop.findOffers")}</button>
+            {c.datasheet_url && <a className="rounded-lg border border-[var(--line)] px-2 py-1" href={c.datasheet_url} target="_blank" rel="noreferrer noopener">{t("comp.datasheet")}</a>}
+          </div>
+          {open === c.id && <div className="mt-2"><ComponentSheet id={c.id} /></div>}
+        </li>))}</ul>
+      <h3 className="mt-4 text-sm font-semibold">{t("shop.genericTypes", { n: LIBRARY.length })}</h3>
       <p className="text-xs text-[var(--fg-3)]">{items.length} / {LIBRARY.length}</p>
       <ul className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.slice(0, 60).map((c) => (
         <li key={c.name} className="flex flex-col rounded-xl border border-[var(--line)] p-3 text-sm" data-reference={c.name}>

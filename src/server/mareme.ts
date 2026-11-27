@@ -75,12 +75,17 @@ export async function mareme(u: User, message: string, ctx: { study?: string | n
   const compare = /compar|moins cher|meilleur prix|différence/.test(low);
   if (!items.length) {
     const lib = words.length ? await sql<{ name: string; description: string; params: { label: string; unit: string }[] }>("SELECT name, description, params FROM components WHERE mpn='generic' AND (name ILIKE '%'||$1||'%') LIMIT 3", [words[0]]) : [];
+    // Références réelles du catalogue (fabricant, modèle, fiche technique) : orientation vers la fiche, jamais de prix.
+    const refs = words.length ? await sql<{ name: string; manufacturer: string | null; subcategory: string | null }>(
+      `SELECT name, manufacturer, subcategory FROM components WHERE status='catalogue' AND (${words.slice(0, 3).map((_, i) => `(name ILIKE '%'||$${i + 1}||'%' OR COALESCE(subcategory,'') ILIKE '%'||$${i + 1}||'%')`).join(" OR ")})
+       ORDER BY (jsonb_array_length(photos) > 0) DESC, name LIMIT 5`, words.slice(0, 3)) : [];
     return reply("search", [
       words.length ? `Aucun article en rayon ne correspond à « ${words.join(" ")} » pour le moment.` : "Dites-moi ce que vous cherchez (ex. « capteur de température », « batterie 12 V », « ESP32 »).",
       ...(lib.length ? [`Fiche générique de la bibliothèque : ${lib[0].name} — ${lib[0].description} Caractéristiques à vérifier sur l'offre : ${lib[0].params.map((p) => `${p.label}${p.unit ? ` (${p.unit})` : ""}`).join(", ")}.`] : []),
+      ...(refs.length ? [`Références réelles documentées dans la bibliothèque (sans prix ni stock vérifiés) : ${refs.map((r) => `${r.name}${r.manufacturer ? ` (${r.manufacturer})` : ""}${r.subcategory ? ` — ${r.subcategory}` : ""}`).join(" ; ")}. Fiches détaillées : Bibliothèque de composants ou onglet « Équipements de référence ».`] : []),
       `Rayons de la boutique : ${SHOP_SECTIONS.map(([, l]) => l).join(", ")}.`,
       "Les fiches de référence de 389 types d'équipements (symbole normalisé, caractéristiques à vérifier) sont dans l'onglet « Équipements de référence » ; elles ne remplacent pas une offre de vendeur.",
-    ], [], ["Catalogue publié", ...(lib.length ? ["Bibliothèque de composants"] : [])]);
+    ], [], ["Catalogue publié", ...(lib.length || refs.length ? ["Bibliothèque de composants"] : [])]);
   }
   const priced = items.filter((i) => i.price_xof != null).sort((a, b) => a.price_xof! - b.price_xof!);
   const text = compare && items.length > 1
