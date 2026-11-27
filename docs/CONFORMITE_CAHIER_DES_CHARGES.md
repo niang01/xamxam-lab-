@@ -1,4 +1,4 @@
-# Conformité au cahier des charges général — tableau final (26/11/2026)
+# Conformité au cahier des charges général — tableau final (27/11/2026)
 
 Reprise du cahier des charges **point par point**, après l'exécution intégrale demandée.
 
@@ -17,7 +17,7 @@ Pour une installation réelle, les résultats de calcul restent à faire vérifi
 
 Preuves : `tests/unit`, `tests/integration`, `tests/e2e`, et [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md).
 
-Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xamxam-db`), commit `ad21a3b` et suivants.
+Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xamxam-db`), commit `2b7991f` et suivants (vérifiée le 27/11/2026 sur ordinateur et Pixel 7).
 
 ## Synthèse chiffrée (comptée dans le code)
 
@@ -30,8 +30,12 @@ Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xam
 | Agents d'Aláji IA | 17 | **25**, + outils `list_software` et `run_study` |
 | Rayons de la boutique | 15 | **31** |
 | Programmes Arduino compilés et simulés en ligne | 0 | **4 exemples** + code libre de l'utilisateur |
-| Tests unitaires et d'intégration | 218 | **296** (38 fichiers) |
-| Parcours de bout en bout (ordinateur et Pixel 7) | 17 | **20** |
+| Symboles normalisés dessinés (CEI 60617, ISO 1219, ISA 5.1) | 0 | **69** (éditeur, bibliothèque, PDF, DXF) |
+| Programmes d'automate d'exemple (Ladder, Grafcet) | 0 | **7 + 4**, éditeur et simulateur |
+| Cours intégrés | 0 (cours créés par les formateurs seulement) | **12** (60 leçons, 72 questions) |
+| Travaux pratiques guidés | 0 | **21** ; 10 schémas types illustrés ; 22 simulations prêtes |
+| Tests unitaires et d'intégration | 218 | **334** (45 fichiers) |
+| Parcours de bout en bout (ordinateur et Pixel 7) | 17 | **26** |
 
 ## Partie 1 — Laboratoire Électricité et Électrotechnique
 
@@ -42,7 +46,7 @@ Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xam
 | Unifilaire, puissance et commande | Générateurs : démarrage direct, étoile-triangle, inversion, unifilaire de tableau et PV | `schematics-gen` | — | `schematics-gen` (conduction vérifiée) | Testé et validé |
 | Plans cotés, calques, implantation | Éditeur 2D : cotation à l'échelle (mm/unité), calques affichables, impression | — | — | `plans` (cotes, calques, DXF), e2e `dimensionnement` (cotation, DXF calque COTES) prod | Testé et validé. Plan architectural du bâtiment non généré automatiquement |
 | Dimensionnement des conducteurs et protections, nomenclature, rapport | Logiciel « Installation électrique » | — | Tableau normatif saisi par l'administrateur | `etudes` (recalcul à la main) | Testé et validé. Le tableau normatif reste à saisir en production (voir interventions) |
-| Simulation des circuits | ngspice (électronique) ; scénarios 4D | ngspice WebAssembly | — | `spice-i18n` | Partiellement fonctionnel : pas de simulation transitoire d'une installation de puissance |
+| Simulation des circuits | ngspice (électronique) ; scénarios 4D ; **schémas de commande simulés en Ladder** (démarrage direct, étoile-triangle, télérupteur, minuterie) | ngspice WebAssembly, moteur Ladder | — | `spice-i18n`, `automate` (comportements vérifiés) ; e2e `automatisme` prod | Testé et validé pour la commande. Pas de simulation transitoire des grandeurs de puissance (courants de démarrage) |
 
 ## Partie 2 et partie 5 — Photovoltaïque et un logiciel par discipline
 
@@ -60,6 +64,10 @@ Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xam
 |---|---|---|---|---|---|
 | Cartes, capteurs, actionneurs, modules de communication | 17 cartes, 64 capteurs, 21 actionneurs, 18 modules et plateformes | Bibliothèque | — | `espaces` | Testé et validé |
 | Éditeur de schémas électroniques | Placement, rotation, fils, broches, vérification | — | — | e2e `espaces` | Testé et validé |
+| Symboles conventionnels illustrés | 69 symboles CEI 60617 / ISO 1219 / ISA 5.1, choisis selon la fonction (contact NF/NO, bobine, contacts principaux…) ; vignettes dans la bibliothèque et la palette ; calque SYMBOLES du DXF | — | — | `symboles` (6), e2e `espaces`, `dimensionnement` prod | Testé et validé. Équipements complexes : élément fonctionnel rectangulaire (forme CEI) |
+| Automatisme : programmation d'automates (Ladder CEI 61131-3) | Éditeur d'échelons, contacts NO/NF/fronts, SET/RST, TON/TOF/TP, CTU/CTD, simulation au cycle de 10 ms avec circulation du courant, 7 exemples, programmes enregistrés et versionnés | Moteur pur `src/lib/plc/ladder.ts` | Table `schematics` (lab ladder) | `automate` (9), `automate-api` (2), e2e prod | Testé et validé. Automate générique : ressaisie nécessaire dans le logiciel du constructeur |
+| Grafcet (CEI 60848) | Étapes, transitions, réceptivités (. + / ↑ t/Xn/…), divergences/convergences en ET, simulation, 4 exemples | Moteur pur `grafcet.ts` | Table `schematics` (lab grafcet) | `automate` (4), e2e prod | Testé et validé |
+| Informatique industrielle : Modbus | Trames RTU (CRC-16) et TCP (MBAP), décodage des réponses et exceptions | `modbus.ts` | — | trame de référence « 01 03 00 00 00 0A C5 CD », e2e prod | Testé et validé. Liaison avec un équipement réel : passerelle IoT ou convertisseur RS-485 |
 | Éditeur de code et compilation | Éditeur CodeMirror (C++), compilation réelle sur le serveur | **avr-gcc, binutils-avr, avr-libc, cœur Arduino AVR** dans l'image Docker et la CI ; CodeMirror 6 | Aucune ; compatibilité avr-gcc 5 (Debian) traitée | `iot-simulation` (5) ; e2e `iot` ; prod (2 832 octets) | Testé et validé |
 | Simulation embarquée (programme et capteurs) | Émulateur ATmega328P : entrées 0–5 V sur A0–A5, entrées D2–D5, sorties D2–D13, moniteur série, temps simulé | **avr8js 0.20.1** (MIT) | — | `iot-simulation` : clignotement, seuil avec hystérésis, alarme temporisée, sécurité pompe ; binaire de prod simulé ; e2e prod | Testé et validé pour l'Arduino Uno. Non émulés : minuteries 1 et 2, I2C, SPI, ESP32 |
 | Téléversement sur carte | Téléchargement du .hex ; lecture série Web Serial | — | — | e2e (.hex) | Fonctionnel. Pas de téléversement depuis le navigateur |
@@ -110,6 +118,7 @@ Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xam
 | Exigence | Réalisation | Tests | Résultat |
 |---|---|---|---|
 | Catégories | 31 rayons | `boutique` | Testé et validé |
+| Produits, composants, équipements et images | Articles sans photo illustrés par leur symbole normalisé (mention « photo non fournie ») ; onglet « Équipements de référence » : 389 types avec caractéristiques à vérifier, recherche en rayon, mise en vente ; Marème y renvoie | e2e `banques` prod | Testé et validé. Prix, stocks et photos réels : déclarés par les vendeurs uniquement (catalogue de production vide tant qu'aucun vendeur ne publie) |
 | Fiches, photos (appareil photo sur téléphone), stocks, prix déclarés, tri, panier, commande, suivi | Prix, stocks et images déclarés par les vendeurs (rien d'inventé) | `boutique`, e2e `rubriques` prod | Testé et validé. Le catalogue de production est vide tant qu'aucun vendeur ne publie |
 | Import de catalogue | CSV : modèle, vérification sans écriture, import des lignes valides ; profil vendeur exigé | `boutique-plus` ; prod (modèle servi, profil vendeur exigé) | Testé et validé |
 | Retours | Demande motivée, puis acceptation (stock réintégré) ou refus motivé | `boutique-plus` | Testé et validé |
@@ -128,6 +137,16 @@ Production : https://xamxam-lab.onrender.com (Render gratuit, base **Neon** `xam
 | Contexte d'étude, historique supprimable, vérificateur | Autorisations vérifiées ; suppression journalisée | `alaji`, `etudes` | Testé et validé |
 | Parcours laboratoire → calcul → schéma → nomenclature → projet → boutique → Marème → Aláji | Liens et envois réels entre modules | `etudes`, e2e `dimensionnement` prod | Testé et validé |
 | Données : disciplines, composants, références, études, projets, boutique, IoT, progression | Migrations 0001 à 0019 (jamais modifiées après publication) ; sauvegarde complète | `backup`, prod (Neon) | Testé et validé |
+
+## Rectification du 27/11/2026 — éléments demandés intégrés
+
+| Exigence | Réalisation | Tests | Résultat |
+|---|---|---|---|
+| Commandes « Retour » manquantes | Bouton « Retour » sur toutes les pages internes : page précédente réelle (historique interne de l'onglet), sinon rubrique parente ; une vue détaillée (projet, annonce, épreuve, onglet de boutique, fiche de TP) est d'abord refermée | e2e `navigation` (ordinateur et Pixel 7) prod | Testé et validé |
+| Reconnexion automatique des comptes | Cause : un serveur en veille (hébergement gratuit) ou une erreur réseau étaient pris pour « non connecté » et renvoyaient à la connexion. Correction : nouvelles tentatives avec message « réveil du serveur », session glissante renouvelée tant que le compte est actif, page de connexion qui mène directement à la suite si la session est valable ; révocation toujours effective | `session` (3), e2e `navigation` (indisponibilité simulée) prod | Testé et validé |
+| Banque de cours | 12 cours intégrés originaux (électricité, électrotechnique, installations, électronique, automatisme, informatique industrielle, IoT, photovoltaïque, pompage, froid, réseaux, mécanique), quiz et certificat ; migration 0020 | `cours`, `cours-integres`, e2e prod | Testé et validé |
+| Banque de TP, de schémas et de simulations | 21 TP ouvrant le laboratoire sur le bon cas ; 10 schémas types illustrés ; 22 simulations prêtes | `tp` (5, résultats recalculés), e2e prod | Testé et validé |
+| Existant conservé | Aucune fonctionnalité retirée ; suites complètes repassées (334 tests, 26 parcours) ; parcours existants rejoués en production | rapport de tests | Testé et validé |
 
 ## Partie 17 — Sécurité
 

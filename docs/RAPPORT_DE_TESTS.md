@@ -2,6 +2,15 @@
 
 Campagne exécutée le **18/11/2026** (dépôt `niang01/xamxam-lab-`) dans l'environnement de développement (Linux, Node 22.23, Python 3.13 + pvlib 0.16.1 + CoolProp 8.0.0, Chromium 1243). Aucun résultat n'est reporté sans avoir été exécuté.
 
+## Campagne du 27/11/2026 — rectification : Retour, reconnexion, symboles, automatisme, banques, boutique
+| Contrôle | Résultat |
+|---|---|
+| Typage strict, lint | ✅ 0 erreur |
+| Tests unitaires + intégration | ✅ **334/334** (45 fichiers). Nouveaux : `session` (3 : session glissante, expirée, révoquée) ; `symboles` (6) ; `automate` (18 : démarrage direct, étoile-triangle sans chevauchement, feux, remplissage, comptage, télérupteur, minuterie, grafcets vérin/perceuse/mélangeur, Modbus de référence, orientation d'Aláji) ; `automate-api` (2) ; `cours` (2, réponses recalculées) ; `cours-integres` (2, identifiants stables) ; `tp` (5, liens et résultats recalculés) |
+| Parcours de bout en bout (local) | ✅ **26/26** (ordinateur + Pixel 7), dont `navigation`, `automatisme`, `banques` |
+| Production (commit `2b7991f`, 27/11 ≈00:30 UTC) | ✅ 17/17 parcours rejoués sur ordinateur et Pixel 7 : automatisme, navigation et reconnexion (serveur indisponible simulé), rubriques, banques, espaces, dimensionnement, téléphone (aucune page plus large que l'écran, y compris les nouvelles), laboratoire IoT, interface, marketplace, mots de passe. Migration 0020 appliquée sur Neon ; 12 cours intégrés publiés. |
+| Défauts trouvés et corrigés | (1) Reconnexion : une indisponibilité passagère renvoyait à la connexion. (2) Retour : après un lien interne, `document.referrer` ne change pas : historique interne ajouté. (3) Compteur Ladder : la remise à zéro effaçait le bit de sortie à chaque cycle. (4) Entrées câblées NF non initialisées au premier chargement du simulateur. (5) Symboles : choix par le seul code faux pour les contacts auxiliaires et les boutons d'arrêt (KM1 13-14 dessiné en bobine) : choix par la fonction. (6) Test de sécurité : l'empreinte de contenu `courses_version` n'est pas un secret, exclue comme `library_version`. |
+
 ## Campagne du 26/11/2026 — exécution intégrale : 27 logiciels, programmation et simulation Arduino, plans cotés, maquette 3D, boutique, banque
 | Contrôle | Résultat |
 |---|---|

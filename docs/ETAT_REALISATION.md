@@ -1,14 +1,15 @@
-# XAM-XAM LAB — état de réalisation (26/11/2026)
+# XAM-XAM LAB — état de réalisation (27/11/2026)
 
 Synthèse avant mise en production : [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
 
-Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 296 tests unitaires et d'intégration, 20 parcours de bout en bout (26/11), build sans avertissement.
+Projet autonome (code, base, comptes, API, configuration propres), dans son propre dépôt `niang01/xamxam-lab-` (commit initial sans historique d'un autre projet). Preuves : [RAPPORT_DE_TESTS.md](RAPPORT_DE_TESTS.md) — 334 tests unitaires et d'intégration, 26 parcours de bout en bout (27/11), build sans avertissement.
 
 ## 1. Terminé et testé
 Audit détaillé par discipline et par espace : [AUDIT_DISCIPLINES.md](AUDIT_DISCIPLINES.md).
 
 | Domaine | Fonctions |
 |---|---|
+| Rectification (27/11) | Commandes **Retour** sur toutes les pages ; **reconnexion automatique** corrigée (serveur en veille, session glissante) ; **69 symboles normalisés** dans l'éditeur, la bibliothèque et les exports ; laboratoire **Automatisme et informatique industrielle** (Ladder, Grafcet, Modbus simulés) ; **12 cours intégrés**, **21 TP**, 10 schémas types, 22 simulations ; boutique illustrée et équipements de référence. |
 | Exécution intégrale (26/11) | **27 logiciels de dimensionnement** (20 nouveaux, dont génie civil, télécoms, robotique, drones, biomédical, informatique, automatisme, instrumentation, bilan carbone) ; Aláji : 25 agents, outils `list_software` et `run_study` ; **programmation et simulation Arduino Uno** (compilation réelle avr-gcc sur le serveur, émulateur avr8js, .hex) ; plans **cotés et en calques** (PDF, DXF) ; **lecture technique** des documents ; **maquette 3D** depuis une étude ; boutique : 31 rayons, tri, import CSV, retours ; banque : **dossier de 35 rubriques**, progression. Tableau final : [CONFORMITE_CAHIER_DES_CHARGES.md](CONFORMITE_CAHIER_DES_CHARGES.md). |
 | IoT multisectoriel, Marème IA, plans (25/11) | Banque de 305 projets dont 215 IoT dans 35 secteurs (filtre « Secteur », sécurité IoT dans chaque projet) ; Marème IA (boutique, données réelles) ; Aláji : contexte d'étude, historique supprimable ; planches PDF A4–A1 avec cartouche, DXF ; sauvegarde complète. Détail : [CONFORMITE_CAHIER_DES_CHARGES.md](CONFORMITE_CAHIER_DES_CHARGES.md). |
 | Logiciels de dimensionnement (25/11) | Rubrique « Logiciels de dimensionnement » (/dimensionnement) : socle commun (moteur pur testé, références réelles de la bibliothèque, données manquantes signalées, nomenclature, schéma 2D, rapport PDF/Word/Excel/Markdown, envoi vers projet et boutique). **Installation électrique** (Ib, calibres normalisés, sections d'après le tableau normatif, chutes de tension, appareil général, unifilaire de tableau). **Photovoltaïque** (recherche de lieu avec autocomplétion, NASA POWER, plan incliné, besoins, chaînes, batteries, onduleur, câbles, protections, production, pertes). **Pompage** (besoins, HMT, Darcy-Weisbach/Colebrook-White, point de fonctionnement, NPSH, réseau/groupe/solaire). Bibliothèque portée à 401 composants (électricité domestique et industrielle, domotique, automatisme, PV, pompage, thermique, biomasse, compostage, cartes IoT, capteurs, actionneurs, communication, électronique). Laboratoire renommé « Électricité et Électrotechnique ». |
